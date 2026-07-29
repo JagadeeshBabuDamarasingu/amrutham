@@ -1,9 +1,8 @@
 -- Not present in specs/phase-1-v1/02-architecture.md §4 at all — AllergyRecord
 -- is named in the M1 milestone and the vault layout but was never shaped.
 -- Field choice agreed with the user: mirrors family_history_entry.
--- @DataClassName avoids colliding with model/allergy.dart's AllergyRecord
--- (the domain model) — see person.drift for the pattern.
-@DataClassName('AllergyRecordRow')
+-- `AS AllergyRecordRow` avoids colliding with model/allergy.dart's
+-- AllergyRecord (the domain model) — see person.drift for the pattern.
 CREATE TABLE allergy_record (
     id TEXT NOT NULL PRIMARY KEY,
     person_id TEXT NOT NULL REFERENCES person(id),
@@ -12,4 +11,4 @@ CREATE TABLE allergy_record (
     severity TEXT,
     certainty TEXT NOT NULL,
     notes TEXT
-);
+) AS AllergyRecordRow;

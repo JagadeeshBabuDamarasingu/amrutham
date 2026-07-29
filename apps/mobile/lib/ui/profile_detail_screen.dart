@@ -6,6 +6,8 @@ import '../model/ids.dart';
 import '../providers/app_providers.dart';
 import 'add_allergy_screen.dart';
 import 'add_family_history_screen.dart';
+import 'add_medication_course_screen.dart';
+import 'course_detail_screen.dart';
 
 class ProfileDetailScreen extends ConsumerWidget {
   const ProfileDetailScreen({super.key, required this.personId});
@@ -17,6 +19,7 @@ class ProfileDetailScreen extends ConsumerWidget {
     final profilesAsync = ref.watch(profilesProvider);
     final familyHistoryAsync = ref.watch(familyHistoryProvider(personId));
     final allergiesAsync = ref.watch(allergiesProvider(personId));
+    final coursesAsync = ref.watch(medicationCoursesProvider(personId));
 
     final displayName = profilesAsync.maybeWhen(
       data: (profiles) {
@@ -33,6 +36,48 @@ class ProfileDetailScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _SectionHeader(
+            title: 'Medications',
+            onAdd: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => AddMedicationCourseScreen(personId: personId),
+              ),
+            ),
+          ),
+          coursesAsync.when(
+            data: (courses) {
+              if (courses.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text('No medications yet.'),
+                );
+              }
+              return Column(
+                children: courses
+                    .map(
+                      (course) => Card(
+                        child: ListTile(
+                          title: Text(course.medicationName),
+                          subtitle: Text(course.status.name),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => CourseDetailScreen(
+                                personId: personId,
+                                courseId: course.id,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stackTrace) =>
+                Text('Something went wrong: $error'),
+          ),
+          const SizedBox(height: 24),
           _SectionHeader(
             title: 'Family history',
             onAdd: () => Navigator.of(context).push(

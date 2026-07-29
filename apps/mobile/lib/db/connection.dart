@@ -1,5 +1,9 @@
 import 'dart:io';
 
+// QueryExecutor and LazyDatabase live in drift.dart's export surface;
+// package:drift/native.dart only imports it internally, it doesn't
+// re-export it — both imports are needed.
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';

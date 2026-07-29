@@ -4,7 +4,9 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:amrutham/db/database.dart';
+// drift's auto-named `Table` subclass collides with model/person.dart's
+// EmergencyContact — see medication_repository.dart's import comment.
+import 'package:amrutham/db/database.dart' hide EmergencyContact;
 import 'package:amrutham/model/certainty.dart';
 import 'package:amrutham/model/person.dart';
 import 'package:amrutham/repository/profile_repository.dart';

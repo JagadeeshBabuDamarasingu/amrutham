@@ -1,8 +1,9 @@
--- @DataClassName renames the generated row class to avoid colliding with the
+-- `AS PersonRow` renames the generated row class to avoid colliding with the
 -- domain model class of the same name in model/ (model/person.dart,
 -- model/allergy.dart) — the domain model is the clean business type, *Row is
--- the raw DB row the repository layer converts to/from.
-@DataClassName('PersonRow')
+-- the raw DB row the repository layer converts to/from. Note: this is the
+-- `.drift`-file syntax for a custom data class name — `@DataClassName(...)`
+-- is a Dart-table-class-only annotation and is NOT valid here.
 CREATE TABLE person (
     id TEXT NOT NULL PRIMARY KEY,
     display_name TEXT NOT NULL,
@@ -11,17 +12,16 @@ CREATE TABLE person (
     sex TEXT,
     blood_group TEXT,
     created_at INTEGER NOT NULL
-);
+) AS PersonRow;
 
 -- Not present in specs/phase-1-v1/02-architecture.md §4 (the domain model
 -- carries PersonProfile.emergencyContacts but no table was ever specified for
 -- it) — added as an ordinary one-to-many table, same pattern as
 -- family_history_entry/allergy_record.
-@DataClassName('EmergencyContactRow')
 CREATE TABLE emergency_contact (
     id TEXT NOT NULL PRIMARY KEY,
     person_id TEXT NOT NULL REFERENCES person(id),
     name TEXT NOT NULL,
     phone TEXT NOT NULL,
     relationship TEXT
-);
+) AS EmergencyContactRow;

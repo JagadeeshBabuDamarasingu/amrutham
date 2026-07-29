@@ -1,6 +1,6 @@
--- @DataClassName avoids colliding with model/family_history.dart's
--- FamilyHistoryEntry (the domain model) — see person.drift for the pattern.
-@DataClassName('FamilyHistoryEntryRow')
+-- `AS FamilyHistoryEntryRow` avoids colliding with
+-- model/family_history.dart's FamilyHistoryEntry (the domain model) — see
+-- person.drift for the pattern and the `.drift`-file-vs-Dart-annotation note.
 CREATE TABLE family_history_entry (
     id TEXT NOT NULL PRIMARY KEY,
     person_id TEXT NOT NULL REFERENCES person(id),
@@ -11,4 +11,4 @@ CREATE TABLE family_history_entry (
     outcome TEXT,
     certainty TEXT NOT NULL,
     notes TEXT
-);
+) AS FamilyHistoryEntryRow;

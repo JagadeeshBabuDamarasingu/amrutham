@@ -1,7 +1,10 @@
 import 'package:drift/drift.dart';
 import 'package:ulid/ulid.dart';
 
-import '../db/database.dart';
+// See medication_repository.dart's import comment: drift's auto-named
+// `Table` subclasses (not the `AS ...Row` data classes) collide with our
+// domain-model classes of the same name.
+import '../db/database.dart' hide AllergyRecord, FamilyHistoryEntry, EmergencyContact;
 import '../model/allergy.dart';
 import '../model/certainty.dart';
 import '../model/family_history.dart';

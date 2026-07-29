@@ -24,7 +24,16 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # State management / DI — wires UI to the repository layer (repository/).
-  flutter_riverpod: ^3.4.1
+  # Pinned to the 2.x line, not 3.x: riverpod 3.x pulled its test helpers
+  # into the main (non-dev) `riverpod` package, which drags a real
+  # dependency on `test` — and therefore `analyzer`/`test_api`/`matcher` —
+  # into the app's own dependency graph. That collides with both
+  # flutter_test's SDK-pinned test_api/matcher versions and drift_dev's
+  # analyzer requirement, an unresolvable three-way conflict on this SDK
+  # (pub's own solver suggested this exact downgrade). The Provider/
+  # StreamProvider/FutureProvider/.family/ConsumerWidget/ConsumerStatefulWidget
+  # API used throughout this app is unchanged between 2.x and 3.x.
+  flutter_riverpod: ^2.6.1
 
   # Local DB — rebuildable cache, never the source of truth (that's the
   # plain-files vault, built in M5). SQLCipher encryption via the build hook
@@ -47,6 +56,22 @@ dependencies:
   path_provider: ^2.1.6
   path: ^1.9.1
 
+  # Reminder engine (F2, "the core loop"). Wraps OS-level scheduled
+  # notifications (AlarmManager+NotificationCompat / UNUserNotificationCenter)
+  # rather than best-effort background-work APIs — see
+  # specs/phase-1-v1/02-architecture.md §6. Needs Android compileSdk 35+ /
+  # AGP 8.11.1+ (already satisfied — this project tracks flutter.compileSdkVersion
+  # and AGP 9.1.0) plus core library desugaring (see android/app/build.gradle.kts).
+  flutter_local_notifications: ^22.2.0
+  # zonedSchedule() requires TZDateTime; direct dependency per the plugin's
+  # own lint recommendation even though it's already a transitive dependency.
+  timezone: ^0.11.1
+  # Resolves the device's IANA timezone name so `timezone`'s local location
+  # can be set correctly — without this, reminders silently fire in UTC
+  # instead of the user's local time, which is unacceptable for a medication
+  # reminder.
+  flutter_timezone: ^5.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -57,6 +82,20 @@ dev_dependencies:
   # .drift schema files in lib/db/.
   drift_dev: ^2.34.5
   build_runner: ^2.15.3
+
+# Dev-tooling-only version pin, not a runtime dependency. This Flutter SDK's
+# flutter_test pins `meta` at exactly 1.18.0, which trails what the
+# analyzer/build_runner/drift_dev code-gen chain currently requires
+# (analyzer >=13.3.0 needs meta ^1.18.3) — a recurring lag between the
+# Flutter-SDK-vendored meta version and pub.dev's independently-versioned
+# analyzer-tooling ecosystem, not anything specific to this project. `meta`
+# is annotations-only (@required, @immutable, etc.) with an extremely
+# stable API, so overriding it here is low-risk and affects code generation
+# only, never the shipped app. Safe to remove once the installed Flutter
+# SDK's own meta pin catches up — check by deleting this and re-running
+# `flutter pub get`.
+dependency_overrides:
+  meta: ^1.19.0
 
 flutter:
   uses-material-design: true

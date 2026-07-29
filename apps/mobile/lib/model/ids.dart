@@ -7,3 +7,7 @@ extension type const PersonId(String value) {}
 extension type const FamilyHistoryEntryId(String value) {}
 
 extension type const AllergyRecordId(String value) {}
+
+extension type const MedicationCourseId(String value) {}
+
+extension type const SchedulePhaseId(String value) {}

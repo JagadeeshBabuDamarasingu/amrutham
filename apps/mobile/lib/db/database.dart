@@ -9,6 +9,7 @@ part 'database.g.dart';
     'person.drift',
     'family_history.drift',
     'allergy.drift',
+    'medication.drift',
   },
 )
 class AppDatabase extends _$AppDatabase {
