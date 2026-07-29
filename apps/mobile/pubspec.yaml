@@ -1,0 +1,62 @@
+name: amrutham
+description: "Amrutham — offline-first family health records."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+
+# Build-hook config (Dart native-assets hooks, stable since Dart 3.10 — no
+# experiment flag needed). Fetches true SQLCipher, NOT sqlite3mc: a benchmark
+# in the phase-1 architecture spec found the generic SQLite3MultipleCiphers
+# path is 3.81x slower than SQLCipher on iOS (no hardware crypto acceleration).
+# See specs/phase-1-v1/02-architecture.md §2.
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlcipher
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management / DI — wires UI to the repository layer (repository/).
+  flutter_riverpod: ^3.4.1
+
+  # Local DB — rebuildable cache, never the source of truth (that's the
+  # plain-files vault, built in M5). SQLCipher encryption via the build hook
+  # above, not the sqlcipher_flutter_libs package (formally end-of-life,
+  # superseded as of drift 2.32.0+).
+  drift: ^2.34.3
+  sqlite3: ^3.5.0
+
+  # Device DB key storage — Android Keystore / iOS Keychain-backed.
+  # Pin strictly; this package has a documented history of
+  # migration-triggered data-loss bugs. Never bump the major version without
+  # a full backup-then-restore test against production-shaped data first.
+  flutter_secure_storage: ^10.3.1
+
+  # ID generation — lexicographically sortable, embeds a timestamp.
+  ulid: ^2.0.1
+
+  # Locate the per-platform app-data directory for the drift DB file, and
+  # join paths portably.
+  path_provider: ^2.1.6
+  path: ^1.9.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+  # drift's code generator — produces typed Dart query classes from the
+  # .drift schema files in lib/db/.
+  drift_dev: ^2.34.5
+  build_runner: ^2.15.3
+
+flutter:
+  uses-material-design: true
