@@ -5,13 +5,42 @@ import 'package:amrutham/ui/app_shell.dart';
 
 void main() {
   test('guides have unique ids, and none claims a review nobody did', () {
-    final ids = learnGuides.map((g) => g.id).toSet();
-    expect(ids, hasLength(learnGuides.length));
-    for (final g in learnGuides) {
+    final ids = allGuides.map((g) => g.id).toSet();
+    expect(ids, hasLength(allGuides.length));
+    for (final g in allGuides) {
       expect(g.blocks, isNotEmpty, reason: g.id);
       // Review dates may only be set by a person who reviewed the guide.
       expect(g.reviewedOn, isNull, reason: '${g.id} must stay Draft until reviewed');
       expect(g.isDraft, isTrue);
+    }
+  });
+
+  test('every clinical guide links to an official source and carries the disclaimer', () {
+    for (final g in clinicalGuides) {
+      if (g.id == 'privacy-sensitive') continue; // describes Amrutham itself
+      final hasSource = g.blocks.any((b) => b is LearnSourceLink) ||
+          g.blocks.any((b) => b is LearnTabs || b is LearnHelpLink);
+      expect(hasSource, isTrue, reason: '${g.id} needs a source link or the help page');
+      expect(g.footer, isNotNull, reason: g.id);
+      expect(g.footer!.toLowerCase(), contains('not medical advice'), reason: g.id);
+    }
+  });
+
+  test('crisis guides lead people to help, and no guide gives a dose or a vaccine schedule', () {
+    final crisis = allGuides.firstWhere((g) => g.id == 'thoughts-of-ending-life');
+    expect(crisis.blocks.any((b) => b is LearnHelpLink), isTrue);
+    final dose = RegExp(r'\b\d+\s?(mg|ml|mcg)\b|\bweeks? old\b|\bmonths? old\b', caseSensitive: false);
+    String texts(LearnBlock b) => switch (b) {
+      LearnParagraph(:final text) => text,
+      LearnNote(:final text) => text,
+      LearnList(:final items) => items.join(' '),
+      LearnBullets(:final items) => items.map((e) => e.$2).join(' '),
+      _ => '',
+    };
+    for (final g in allGuides) {
+      for (final b in g.blocks) {
+        expect(dose.hasMatch(texts(b)), isFalse, reason: '${g.id}: ${texts(b)}');
+      }
     }
   });
 
@@ -31,7 +60,7 @@ void main() {
 
   test('no guide states a rupee amount or a percentage as a fact', () {
     final numbers = RegExp(r'₹|\d+\s?%|\blakh\b|\bcrore\b', caseSensitive: false);
-    for (final g in learnGuides) {
+    for (final g in allGuides) {
       for (final b in g.blocks) {
         final text = switch (b) {
           LearnParagraph(:final text) => text,
