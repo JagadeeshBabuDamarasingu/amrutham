@@ -29,7 +29,13 @@ class SecureStorageDbKeyProvider implements DbKeyProvider {
   @override
   Future<List<int>> getOrCreateDbKey() async {
     final existing = await _storage.read(key: _storageKey);
-    if (existing != null) return base64Decode(existing);
+    if (existing != null) {
+      final key = base64Decode(existing);
+      // A 32-byte key was written by the old drift/SQLCipher build. No Realm
+      // file can exist under it (Realm rejects anything but 64 bytes), so
+      // replacing it loses nothing.
+      if (key.length == _keyLengthBytes) return key;
+    }
 
     final random = Random.secure();
     final bytes = List<int>.generate(
