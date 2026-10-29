@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_providers.dart';
 import 'app_style.dart';
+import 'restore_screen.dart';
 
 /// First launch only. The recovery code is deliberately not asked for here —
 /// it comes right before the first record is saved (recovery_flow_screen.dart).
@@ -87,39 +88,6 @@ class WelcomeScreen extends ConsumerWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Placeholder until the plain-files vault and its encrypted backup exist
-/// (milestone M5): a recovery code has nothing to unlock before then.
-class RestoreVaultScreen extends StatelessWidget {
-  const RestoreVaultScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: onboardBg,
-      appBar: AppBar(backgroundColor: onboardBg),
-      body: const Padding(
-        padding: EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Restore a vault',
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Restoring from a recovery code needs the vault backup, which '
-              "isn't built yet. Keep your code safe; it will work here once "
-              'backups arrive. For now, tap back and start fresh.',
-              style: TextStyle(fontSize: 16, height: 1.45, color: onboardMuted),
-            ),
-          ],
         ),
       ),
     );
