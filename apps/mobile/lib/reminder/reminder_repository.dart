@@ -132,7 +132,7 @@ class ReminderRepository {
     required String title,
     required String body,
     required tz.TZDateTime scheduledDate,
-    required DateTimeComponents matchComponents,
+    required DateTimeComponents? matchComponents,
     required bool exactAllowed,
   }) async {
     await _notifications.zonedSchedule(
@@ -155,6 +155,39 @@ class ReminderRepository {
           : AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: matchComponents,
     );
+  }
+
+  static int _visitId(HistoryEventId id) =>
+      _fnv1a32('visit#${id.value}') & 0x7fffffff;
+
+  /// Whether a "day before" reminder is armed for this planned visit. The
+  /// armed notification is the only record, so nothing extra is stored.
+  Future<bool> hasVisitReminder(HistoryEventId id) async =>
+      (await _notifications.pendingNotificationRequests()).any(
+        (n) => n.id == _visitId(id),
+      );
+
+  /// Turns the 9 am day-before reminder for a visit on or off. Returns false
+  /// if it could not be armed because that moment has already passed.
+  Future<bool> setVisitReminder({
+    required HistoryEventId id,
+    required String title,
+    required DateTime visit,
+    required bool on,
+  }) async {
+    await _notifications.cancel(id: _visitId(id));
+    if (!on) return true;
+    final at = tz.TZDateTime(tz.local, visit.year, visit.month, visit.day - 1, 9);
+    if (at.isBefore(tz.TZDateTime.now(tz.local))) return false;
+    await _scheduleOne(
+      notificationId: _visitId(id),
+      title: 'Tomorrow: $title',
+      body: 'You set a reminder for this visit.',
+      scheduledDate: at,
+      matchComponents: null,
+      exactAllowed: await canScheduleExactReminders(),
+    );
+    return true;
   }
 
   Future<void> _cancelAllSlotsFor(SchedulePhaseId phaseId) async {

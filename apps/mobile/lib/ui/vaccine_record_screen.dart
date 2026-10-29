@@ -89,7 +89,9 @@ class VaccineRecordScreen extends ConsumerWidget {
             ),
           if (next != null) ...[
             const SectionLabel('Next visit'),
-            Container(
+            GestureDetector(
+              onLongPress: () => _confirmDelete(context, ref, next),
+              child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: const Color(0xFFFAEFD0),
@@ -107,8 +109,10 @@ class VaccineRecordScreen extends ConsumerWidget {
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                   ),
                   if (next.title.isNotEmpty) Text(next.title),
+                  _VisitReminder(event: next),
                 ],
               ),
+            ),
             ),
           ],
           const SizedBox(height: 16),
@@ -167,6 +171,8 @@ class VaccineRecordScreen extends ConsumerWidget {
     if (ok != true) return;
     final repository = await ref.read(historyRepositoryProvider.future);
     await repository.deleteEvent(e.id);
+    final reminders = await ref.read(reminderRepositoryProvider.future);
+    await reminders.setVisitReminder(id: e.id, title: e.title, visit: e.eventDate, on: false);
   }
 }
 
@@ -252,6 +258,60 @@ class _AddVaccineSheetState extends State<_AddVaccineSheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Remind me the day before": off until the person turns it on.
+class _VisitReminder extends ConsumerStatefulWidget {
+  const _VisitReminder({required this.event});
+
+  final HistoryEvent event;
+
+  @override
+  ConsumerState<_VisitReminder> createState() => _VisitReminderState();
+}
+
+class _VisitReminderState extends ConsumerState<_VisitReminder> {
+  bool _on = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final reminders = await ref.read(reminderRepositoryProvider.future);
+    final on = await reminders.hasVisitReminder(widget.event.id);
+    if (mounted) setState(() => _on = on);
+  }
+
+  Future<void> _toggle(bool value) async {
+    final reminders = await ref.read(reminderRepositoryProvider.future);
+    if (value) await reminders.requestNotificationPermission();
+    final ok = await reminders.setVisitReminder(
+      id: widget.event.id,
+      title: widget.event.title,
+      visit: widget.event.eventDate,
+      on: value,
+    );
+    if (!mounted) return;
+    setState(() => _on = value && ok);
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('That is too soon to remind you the day before.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: const Text('Remind me the day before'),
+      value: _on,
+      onChanged: _toggle,
     );
   }
 }
