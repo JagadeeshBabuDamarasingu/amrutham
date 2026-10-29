@@ -95,7 +95,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           top: false,
           child: Column(
             children: [
-              SizedBox(height: artHeight, child: const _Artwork()),
+              // Up to 60% of the screen, but it gives way to the text below on
+              // short screens (small phones, split-screen) instead of overflowing.
+              Flexible(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: artHeight),
+                  child: const SizedBox.expand(child: _Artwork()),
+                ),
+              ),
               const SizedBox(height: 4),
               const Text(
                 'Amrutham',
@@ -151,6 +158,7 @@ class _Artwork extends StatelessWidget {
       child: Image.asset(
         'assets/images/dhanvantari.webp',
         width: double.infinity,
+        height: double.infinity,
         fit: BoxFit.cover,
         alignment: Alignment.topCenter,
         semanticLabel: 'Dhanvantari, the god of medicine',
