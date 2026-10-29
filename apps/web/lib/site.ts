@@ -9,6 +9,6 @@ export const site = {
 	// See .env.example: the id is still Flutter's default until the app is renamed.
 	playStoreUrl:
 		process.env.NEXT_PUBLIC_PLAY_STORE_URL ??
-		"https://play.google.com/store/apps/details?id=com.example.amrutham",
+		"https://play.google.com/store/apps/details?id=app.amrutham",
 	contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || null,
 } as const;
