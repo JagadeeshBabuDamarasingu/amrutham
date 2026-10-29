@@ -96,6 +96,8 @@ class EmergencyContactRow extends _EmergencyContactRow
 
 class PersonRow extends _PersonRow
     with RealmEntity, RealmObjectBase, RealmObject {
+  static var _defaultsSet = false;
+
   PersonRow(
     String id,
     String displayName,
@@ -105,7 +107,15 @@ class PersonRow extends _PersonRow
     String? sex,
     String? bloodGroup,
     Iterable<EmergencyContactRow> emergencyContacts = const [],
+    bool isDeceased = false,
+    DateTime? dateOfDeath,
+    String? causeOfDeath,
   }) {
+    if (!_defaultsSet) {
+      _defaultsSet = RealmObjectBase.setDefaults<PersonRow>({
+        'isDeceased': false,
+      });
+    }
     RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'displayName', displayName);
     RealmObjectBase.set(this, 'relationship', relationship);
@@ -118,6 +128,9 @@ class PersonRow extends _PersonRow
       RealmList<EmergencyContactRow>(emergencyContacts),
     );
     RealmObjectBase.set(this, 'createdAt', createdAt);
+    RealmObjectBase.set(this, 'isDeceased', isDeceased);
+    RealmObjectBase.set(this, 'dateOfDeath', dateOfDeath);
+    RealmObjectBase.set(this, 'causeOfDeath', causeOfDeath);
   }
 
   PersonRow._();
@@ -176,6 +189,25 @@ class PersonRow extends _PersonRow
       RealmObjectBase.set(this, 'createdAt', value);
 
   @override
+  bool get isDeceased => RealmObjectBase.get<bool>(this, 'isDeceased') as bool;
+  @override
+  set isDeceased(bool value) => RealmObjectBase.set(this, 'isDeceased', value);
+
+  @override
+  DateTime? get dateOfDeath =>
+      RealmObjectBase.get<DateTime>(this, 'dateOfDeath') as DateTime?;
+  @override
+  set dateOfDeath(DateTime? value) =>
+      RealmObjectBase.set(this, 'dateOfDeath', value);
+
+  @override
+  String? get causeOfDeath =>
+      RealmObjectBase.get<String>(this, 'causeOfDeath') as String?;
+  @override
+  set causeOfDeath(String? value) =>
+      RealmObjectBase.set(this, 'causeOfDeath', value);
+
+  @override
   Stream<RealmObjectChanges<PersonRow>> get changes =>
       RealmObjectBase.getChanges<PersonRow>(this);
 
@@ -196,6 +228,9 @@ class PersonRow extends _PersonRow
       'bloodGroup': bloodGroup.toEJson(),
       'emergencyContacts': emergencyContacts.toEJson(),
       'createdAt': createdAt.toEJson(),
+      'isDeceased': isDeceased.toEJson(),
+      'dateOfDeath': dateOfDeath.toEJson(),
+      'causeOfDeath': causeOfDeath.toEJson(),
     };
   }
 
@@ -218,6 +253,9 @@ class PersonRow extends _PersonRow
           sex: fromEJson(ejson['sex']),
           bloodGroup: fromEJson(ejson['bloodGroup']),
           emergencyContacts: fromEJson(ejson['emergencyContacts']),
+          isDeceased: fromEJson(ejson['isDeceased'], defaultValue: false),
+          dateOfDeath: fromEJson(ejson['dateOfDeath']),
+          causeOfDeath: fromEJson(ejson['causeOfDeath']),
         ),
       _ => raiseInvalidEJson(ejson),
     };
@@ -244,6 +282,13 @@ class PersonRow extends _PersonRow
         collectionType: RealmCollectionType.list,
       ),
       SchemaProperty('createdAt', RealmPropertyType.timestamp),
+      SchemaProperty('isDeceased', RealmPropertyType.bool),
+      SchemaProperty(
+        'dateOfDeath',
+        RealmPropertyType.timestamp,
+        optional: true,
+      ),
+      SchemaProperty('causeOfDeath', RealmPropertyType.string, optional: true),
     ]);
   }();
 
@@ -1692,6 +1737,161 @@ class ExpenseRow extends _ExpenseRow
         SchemaProperty('addedAt', RealmPropertyType.timestamp),
       ],
     );
+  }();
+
+  @override
+  SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
+}
+
+class RecordRow extends _RecordRow
+    with RealmEntity, RealmObjectBase, RealmObject {
+  RecordRow(
+    String id,
+    String personId,
+    String type,
+    String title,
+    DateTime recordDate,
+    DateTime addedAt, {
+    String? source,
+    Iterable<String> files = const [],
+  }) {
+    RealmObjectBase.set(this, 'id', id);
+    RealmObjectBase.set(this, 'personId', personId);
+    RealmObjectBase.set(this, 'type', type);
+    RealmObjectBase.set(this, 'title', title);
+    RealmObjectBase.set(this, 'recordDate', recordDate);
+    RealmObjectBase.set(this, 'source', source);
+    RealmObjectBase.set<RealmList<String>>(
+      this,
+      'files',
+      RealmList<String>(files),
+    );
+    RealmObjectBase.set(this, 'addedAt', addedAt);
+  }
+
+  RecordRow._();
+
+  @override
+  String get id => RealmObjectBase.get<String>(this, 'id') as String;
+  @override
+  set id(String value) => RealmObjectBase.set(this, 'id', value);
+
+  @override
+  String get personId =>
+      RealmObjectBase.get<String>(this, 'personId') as String;
+  @override
+  set personId(String value) => RealmObjectBase.set(this, 'personId', value);
+
+  @override
+  String get type => RealmObjectBase.get<String>(this, 'type') as String;
+  @override
+  set type(String value) => RealmObjectBase.set(this, 'type', value);
+
+  @override
+  String get title => RealmObjectBase.get<String>(this, 'title') as String;
+  @override
+  set title(String value) => RealmObjectBase.set(this, 'title', value);
+
+  @override
+  DateTime get recordDate =>
+      RealmObjectBase.get<DateTime>(this, 'recordDate') as DateTime;
+  @override
+  set recordDate(DateTime value) =>
+      RealmObjectBase.set(this, 'recordDate', value);
+
+  @override
+  String? get source => RealmObjectBase.get<String>(this, 'source') as String?;
+  @override
+  set source(String? value) => RealmObjectBase.set(this, 'source', value);
+
+  @override
+  RealmList<String> get files =>
+      RealmObjectBase.get<String>(this, 'files') as RealmList<String>;
+  @override
+  set files(covariant RealmList<String> value) =>
+      throw RealmUnsupportedSetError();
+
+  @override
+  DateTime get addedAt =>
+      RealmObjectBase.get<DateTime>(this, 'addedAt') as DateTime;
+  @override
+  set addedAt(DateTime value) => RealmObjectBase.set(this, 'addedAt', value);
+
+  @override
+  Stream<RealmObjectChanges<RecordRow>> get changes =>
+      RealmObjectBase.getChanges<RecordRow>(this);
+
+  @override
+  Stream<RealmObjectChanges<RecordRow>> changesFor([List<String>? keyPaths]) =>
+      RealmObjectBase.getChangesFor<RecordRow>(this, keyPaths);
+
+  @override
+  RecordRow freeze() => RealmObjectBase.freezeObject<RecordRow>(this);
+
+  EJsonValue toEJson() {
+    return <String, dynamic>{
+      'id': id.toEJson(),
+      'personId': personId.toEJson(),
+      'type': type.toEJson(),
+      'title': title.toEJson(),
+      'recordDate': recordDate.toEJson(),
+      'source': source.toEJson(),
+      'files': files.toEJson(),
+      'addedAt': addedAt.toEJson(),
+    };
+  }
+
+  static EJsonValue _toEJson(RecordRow value) => value.toEJson();
+  static RecordRow _fromEJson(EJsonValue ejson) {
+    if (ejson is! Map<String, dynamic>) return raiseInvalidEJson(ejson);
+    return switch (ejson) {
+      {
+        'id': EJsonValue id,
+        'personId': EJsonValue personId,
+        'type': EJsonValue type,
+        'title': EJsonValue title,
+        'recordDate': EJsonValue recordDate,
+        'addedAt': EJsonValue addedAt,
+      } =>
+        RecordRow(
+          fromEJson(id),
+          fromEJson(personId),
+          fromEJson(type),
+          fromEJson(title),
+          fromEJson(recordDate),
+          fromEJson(addedAt),
+          source: fromEJson(ejson['source']),
+          files: fromEJson(ejson['files']),
+        ),
+      _ => raiseInvalidEJson(ejson),
+    };
+  }
+
+  static final schema = () {
+    RealmObjectBase.registerFactory(RecordRow._);
+    register(_toEJson, _fromEJson);
+    return const SchemaObject(ObjectType.realmObject, RecordRow, 'RecordRow', [
+      SchemaProperty('id', RealmPropertyType.string, primaryKey: true),
+      SchemaProperty(
+        'personId',
+        RealmPropertyType.string,
+        indexType: RealmIndexType.regular,
+      ),
+      SchemaProperty('type', RealmPropertyType.string),
+      SchemaProperty('title', RealmPropertyType.string),
+      SchemaProperty(
+        'recordDate',
+        RealmPropertyType.timestamp,
+        indexType: RealmIndexType.regular,
+      ),
+      SchemaProperty('source', RealmPropertyType.string, optional: true),
+      SchemaProperty(
+        'files',
+        RealmPropertyType.string,
+        collectionType: RealmCollectionType.list,
+      ),
+      SchemaProperty('addedAt', RealmPropertyType.timestamp),
+    ]);
   }();
 
   @override

@@ -31,11 +31,15 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
   String? _sex;
   String? _bloodGroup;
   DateTime? _dateOfBirth;
+  bool _deceased = false;
+  DateTime? _dateOfDeath;
+  final _cause = TextEditingController();
   bool _saving = false;
 
   @override
   void dispose() {
     _name.dispose();
+    _cause.dispose();
     super.dispose();
   }
 
@@ -52,6 +56,11 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       dateOfBirth: _dateOfBirth,
       sex: _sex == 'Not stated' ? null : _sex,
       bloodGroup: _bloodGroup,
+      isDeceased: _deceased,
+      dateOfDeath: _deceased ? _dateOfDeath : null,
+      causeOfDeath: _deceased && _cause.text.trim().isNotEmpty
+          ? _cause.text.trim()
+          : null,
     );
 
     if (!mounted) return;
@@ -70,6 +79,16 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       initialDate: _dateOfBirth ?? DateTime(1990),
     );
     if (picked != null) setState(() => _dateOfBirth = picked);
+  }
+
+  Future<void> _pickDateOfDeath() async {
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: _dateOfBirth ?? DateTime(1900),
+      lastDate: DateTime.now(),
+      initialDate: _dateOfDeath ?? DateTime.now(),
+    );
+    if (picked != null) setState(() => _dateOfDeath = picked);
   }
 
   @override
@@ -160,6 +179,43 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
                 ),
             ],
           ),
+          const SectionLabel('Status'),
+          SegmentedButton<bool>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(value: false, label: Text('Living')),
+              ButtonSegment(value: true, label: Text('Deceased')),
+            ],
+            selected: {_deceased},
+            onSelectionChanged: (s) => setState(() => _deceased = s.first),
+          ),
+          if (_deceased) ...[
+            const SectionLabel('Date of death (optional)'),
+            OutlinedButton(
+              onPressed: _pickDateOfDeath,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+                alignment: Alignment.centerLeft,
+              ),
+              child: Text(
+                _dateOfDeath == null
+                    ? 'Choose a date, or leave it blank'
+                    : '${_dateOfDeath!.day} ${monthNames[_dateOfDeath!.month - 1]} ${_dateOfDeath!.year}',
+              ),
+            ),
+            const SectionLabel('Cause, in your words (optional)'),
+            TextField(
+              controller: _cause,
+              maxLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(hintText: 'Heart problem, sudden. Age about 71.'),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Kept as you wrote it. Unverified.',
+              style: TextStyle(fontSize: 13, color: onboardMuted),
+            ),
+          ],
           const SizedBox(height: 28),
           _saving
               ? const Center(child: CircularProgressIndicator())

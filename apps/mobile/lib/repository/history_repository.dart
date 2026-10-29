@@ -63,7 +63,7 @@ class HistoryRepository {
     personId: PersonId(row.personId),
     kind: HistoryKind.values.byName(row.kind),
     title: row.title,
-    eventDate: row.eventDate,
+    eventDate: row.eventDate.toLocal(),
     provider: row.provider,
     notes: row.notes,
   );

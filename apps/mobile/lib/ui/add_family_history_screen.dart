@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/certainty.dart';
 import '../model/ids.dart';
 import '../providers/app_providers.dart';
+import 'app_style.dart';
 
 class AddFamilyHistoryScreen extends ConsumerStatefulWidget {
   const AddFamilyHistoryScreen({super.key, required this.personId});
@@ -17,7 +18,6 @@ class AddFamilyHistoryScreen extends ConsumerStatefulWidget {
 
 class _AddFamilyHistoryScreenState
     extends ConsumerState<AddFamilyHistoryScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _relationshipController = TextEditingController();
   final _conditionController = TextEditingController();
   final _onsetAgeController = TextEditingController();
@@ -37,7 +37,6 @@ class _AddFamilyHistoryScreenState
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
 
     final repository = await ref.read(profileRepositoryProvider.future);
@@ -59,80 +58,71 @@ class _AddFamilyHistoryScreenState
     Navigator.of(context).pop();
   }
 
+  bool get _valid =>
+      _relationshipController.text.trim().isNotEmpty &&
+      _conditionController.text.trim().isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add family history')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: _relationshipController,
-              decoration: const InputDecoration(
-                labelText: 'Relationship (e.g. mother, paternal uncle)',
-              ),
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Relationship is required'
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _conditionController,
-              decoration: const InputDecoration(labelText: 'Condition'),
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Condition is required'
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<Certainty>(
-              initialValue: _certainty,
-              decoration: const InputDecoration(labelText: 'Certainty'),
-              items: Certainty.values
-                  .map(
-                    (c) => DropdownMenuItem(value: c, child: Text(c.name)),
-                  )
-                  .toList(),
-              onChanged: (value) =>
-                  setState(() => _certainty = value ?? _certainty),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _onsetAgeController,
-              decoration: const InputDecoration(
-                labelText: 'Approx. age at onset (optional)',
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _outcomeController,
-              decoration: const InputDecoration(
-                labelText: 'Outcome (optional)',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'Notes (optional)',
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Save entry'),
-            ),
-          ],
+      appBar: AppBar(
+        leading: TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
         ),
+        leadingWidth: 88,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        children: [
+          const Text(
+            'Add family history',
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.8),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Recorded as you know it. Never scored or turned into a risk.',
+            style: TextStyle(color: onboardMuted),
+          ),
+          const SectionLabel('Which relative'),
+          TextField(
+            controller: _relationshipController,
+            onChanged: (_) => setState(() {}),
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(hintText: 'Mother, paternal uncle…'),
+          ),
+          const SectionLabel('Condition'),
+          TextField(
+            controller: _conditionController,
+            onChanged: (_) => setState(() {}),
+            textCapitalization: TextCapitalization.sentences,
+          ),
+          const SectionLabel('How sure are you'),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final c in Certainty.values)
+                ChoiceChip(
+                  label: Text(c.name[0].toUpperCase() + c.name.substring(1)),
+                  selected: _certainty == c,
+                  onSelected: (_) => setState(() => _certainty = c),
+                ),
+            ],
+          ),
+          const SectionLabel('Approx. age at onset (optional)'),
+          TextField(
+            controller: _onsetAgeController,
+            keyboardType: TextInputType.number,
+          ),
+          const SectionLabel('Outcome (optional)'),
+          TextField(controller: _outcomeController),
+          const SectionLabel('Notes (optional)'),
+          TextField(controller: _notesController, maxLines: 3),
+          const SizedBox(height: 28),
+          _saving
+              ? const Center(child: CircularProgressIndicator())
+              : OnboardButton(label: 'Save', onPressed: _valid ? _save : null),
+        ],
       ),
     );
   }

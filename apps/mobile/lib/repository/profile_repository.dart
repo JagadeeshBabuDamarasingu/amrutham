@@ -31,7 +31,7 @@ class ProfileRepository {
       id: PersonId(row.id),
       displayName: row.displayName,
       relationship: RelationshipType.values.byName(row.relationship),
-      dateOfBirth: row.dateOfBirth,
+      dateOfBirth: row.dateOfBirth?.toLocal(),
       sex: row.sex,
       bloodGroup: row.bloodGroup,
       emergencyContacts: row.emergencyContacts
@@ -43,7 +43,10 @@ class ProfileRepository {
             ),
           )
           .toList(),
-      createdAt: row.createdAt,
+      createdAt: row.createdAt.toLocal(),
+      isDeceased: row.isDeceased,
+      dateOfDeath: row.dateOfDeath?.toLocal(),
+      causeOfDeath: row.causeOfDeath,
     );
   }
 
@@ -54,6 +57,9 @@ class ProfileRepository {
     String? sex,
     String? bloodGroup,
     List<EmergencyContact> emergencyContacts = const [],
+    bool isDeceased = false,
+    DateTime? dateOfDeath,
+    String? causeOfDeath,
   }) async {
     final id = PersonId(Ulid().toString());
     final createdAt = DateTime.now();
@@ -68,6 +74,9 @@ class ProfileRepository {
           dateOfBirth: dateOfBirth,
           sex: sex,
           bloodGroup: bloodGroup,
+          isDeceased: isDeceased,
+          dateOfDeath: dateOfDeath,
+          causeOfDeath: causeOfDeath,
           emergencyContacts: emergencyContacts
               .map(
                 (c) => EmergencyContactRow(
@@ -90,6 +99,9 @@ class ProfileRepository {
       bloodGroup: bloodGroup,
       emergencyContacts: emergencyContacts,
       createdAt: createdAt,
+      isDeceased: isDeceased,
+      dateOfDeath: dateOfDeath,
+      causeOfDeath: causeOfDeath,
     );
   }
 

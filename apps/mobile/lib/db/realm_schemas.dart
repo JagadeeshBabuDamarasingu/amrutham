@@ -29,6 +29,11 @@ class _PersonRow {
   String? bloodGroup;
   late List<_EmergencyContactRow> emergencyContacts;
   late DateTime createdAt;
+  // A remembered family member: read-only, no reminders. The date can be
+  // unknown, so "deceased" is its own flag rather than "date of death is set".
+  bool isDeceased = false;
+  DateTime? dateOfDeath;
+  String? causeOfDeath;
 }
 
 @RealmModel()
@@ -183,5 +188,24 @@ class _ExpenseRow {
   String? paidBy;
   @Indexed()
   late DateTime spentOn;
+  late DateTime addedAt;
+}
+
+/// A filed document (prescription, lab report, scan, bill). The files
+/// themselves are plain files under the vault folder; this row only remembers
+/// where they are and what they are, so the folder stays readable without the
+/// app. `files` are paths relative to the vault folder.
+@RealmModel()
+class _RecordRow {
+  @PrimaryKey()
+  late String id;
+  @Indexed()
+  late String personId;
+  late String type;
+  late String title;
+  @Indexed()
+  late DateTime recordDate;
+  String? source;
+  late List<String> files;
   late DateTime addedAt;
 }

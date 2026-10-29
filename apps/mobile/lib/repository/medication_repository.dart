@@ -32,8 +32,8 @@ class MedicationRepository {
       personId: PersonId(row.personId),
       medicationName: row.medicationName,
       status: CourseStatus.values.byName(row.status),
-      startDate: row.startDate,
-      endDate: row.endDate,
+      startDate: row.startDate.toLocal(),
+      endDate: row.endDate?.toLocal(),
       prescriberName: row.prescriberName,
       reason: row.reason,
     );
@@ -122,8 +122,8 @@ class MedicationRepository {
       isPrn: row.isPrn,
       prnReason: row.prnReason,
       prnMaxFrequency: row.prnMaxFrequency,
-      phaseStart: row.phaseStart,
-      phaseEnd: row.phaseEnd,
+      phaseStart: row.phaseStart.toLocal(),
+      phaseEnd: row.phaseEnd?.toLocal(),
     );
   }
 

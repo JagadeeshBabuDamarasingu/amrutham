@@ -55,7 +55,9 @@ class FamilyScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  list.length == 1 ? '1 person' : '${list.length} people',
+                  '${list.where((p) => !p.isDeceased).length} '
+                  '${list.where((p) => !p.isDeceased).length == 1 ? 'person' : 'people'}'
+                  '${list.any((p) => p.isDeceased) ? ' · ${list.where((p) => p.isDeceased).length} remembered' : ''}',
                   style: const TextStyle(color: onboardMuted),
                 ),
                 const SizedBox(height: 16),
@@ -67,10 +69,20 @@ class FamilyScreen extends ConsumerWidget {
                     ),
                   ),
                 for (var i = 0; i < list.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _PersonCard(person: list[i], colorIndex: i),
-                  ),
+                  if (!list[i].isDeceased)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _PersonCard(person: list[i], colorIndex: i),
+                    ),
+                if (list.any((p) => p.isDeceased)) ...[
+                  const SectionLabel('Remembered'),
+                  for (final p in list)
+                    if (p.isDeceased)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _PersonCard(person: p, colorIndex: 3),
+                      ),
+                ],
               ],
             ),
           ),
@@ -103,7 +115,13 @@ class _PersonCard extends ConsumerWidget {
     final meds = ref.watch(activeCoursesProvider(person.id)).valueOrNull;
     final parts = [
       person.relationship.label,
-      ?person.ageYears?.toString(),
+      if (person.isDeceased)
+        [
+          if (person.dateOfBirth != null) '${person.dateOfBirth!.year}',
+          if (person.dateOfDeath != null) '${person.dateOfDeath!.year}',
+        ].join(' – ')
+      else
+        ?person.ageYears?.toString(),
       if (meds != null && meds.isNotEmpty)
         '${meds.length} active medication${meds.length == 1 ? '' : 's'}',
     ];

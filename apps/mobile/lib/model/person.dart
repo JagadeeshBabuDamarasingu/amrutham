@@ -36,6 +36,9 @@ class PersonProfile {
   final String? bloodGroup;
   final List<EmergencyContact> emergencyContacts;
   final DateTime createdAt;
+  final bool isDeceased;
+  final DateTime? dateOfDeath;
+  final String? causeOfDeath;
 
   const PersonProfile({
     required this.id,
@@ -46,6 +49,9 @@ class PersonProfile {
     this.bloodGroup,
     this.emergencyContacts = const [],
     required this.createdAt,
+    this.isDeceased = false,
+    this.dateOfDeath,
+    this.causeOfDeath,
   });
 
   PersonProfile copyWith({
@@ -65,6 +71,9 @@ class PersonProfile {
       bloodGroup: bloodGroup ?? this.bloodGroup,
       emergencyContacts: emergencyContacts ?? this.emergencyContacts,
       createdAt: createdAt,
+      isDeceased: isDeceased,
+      dateOfDeath: dateOfDeath,
+      causeOfDeath: causeOfDeath,
     );
   }
 }

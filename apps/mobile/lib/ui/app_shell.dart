@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_style.dart';
 import 'family_screen.dart';
+import 'records_screen.dart';
 import 'today_screen.dart';
 
 /// The four tabs from the Doop frames. Records and Learn aren't built yet,
@@ -31,7 +32,7 @@ class _AppShellState extends State<AppShell> {
         children: const [
           TodayScreen(),
           FamilyScreen(),
-          _ComingSoon('Records'),
+          RecordsScreen(),
           _ComingSoon('Learn'),
         ],
       ),

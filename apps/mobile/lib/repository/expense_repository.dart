@@ -70,7 +70,7 @@ class ExpenseRepository {
     amountPaise: row.amountPaise,
     category: ExpenseCategory.values.byName(row.category),
     paidBy: row.paidBy,
-    spentOn: row.spentOn,
-    addedAt: row.addedAt,
+    spentOn: row.spentOn.toLocal(),
+    addedAt: row.addedAt.toLocal(),
   );
 }

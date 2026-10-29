@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/certainty.dart';
 import '../model/ids.dart';
 import '../providers/app_providers.dart';
+import 'app_style.dart';
 
 class AddAllergyScreen extends ConsumerStatefulWidget {
   const AddAllergyScreen({super.key, required this.personId});
@@ -15,7 +16,6 @@ class AddAllergyScreen extends ConsumerStatefulWidget {
 }
 
 class _AddAllergyScreenState extends ConsumerState<AddAllergyScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _substanceController = TextEditingController();
   final _reactionController = TextEditingController();
   final _severityController = TextEditingController();
@@ -33,7 +33,6 @@ class _AddAllergyScreenState extends ConsumerState<AddAllergyScreen> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
 
     final repository = await ref.read(profileRepositoryProvider.future);
@@ -54,73 +53,69 @@ class _AddAllergyScreenState extends ConsumerState<AddAllergyScreen> {
     Navigator.of(context).pop();
   }
 
+  bool get _valid =>
+      _substanceController.text.trim().isNotEmpty &&
+      _reactionController.text.trim().isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add allergy')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: _substanceController,
-              decoration: const InputDecoration(
-                labelText: 'Substance (e.g. penicillin, peanuts)',
-              ),
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Substance is required'
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _reactionController,
-              decoration: const InputDecoration(labelText: 'Reaction'),
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Reaction is required'
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<Certainty>(
-              initialValue: _certainty,
-              decoration: const InputDecoration(labelText: 'Certainty'),
-              items: Certainty.values
-                  .map(
-                    (c) => DropdownMenuItem(value: c, child: Text(c.name)),
-                  )
-                  .toList(),
-              onChanged: (value) =>
-                  setState(() => _certainty = value ?? _certainty),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _severityController,
-              decoration: const InputDecoration(
-                labelText: 'Severity (optional)',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'Notes (optional)',
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Save allergy'),
-            ),
-          ],
+      appBar: AppBar(
+        leading: TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
         ),
+        leadingWidth: 88,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        children: [
+          const Text(
+            'Add an allergy',
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.8),
+          ),
+          const SectionLabel('Substance'),
+          TextField(
+            controller: _substanceController,
+            onChanged: (_) => setState(() {}),
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(hintText: 'Penicillin, peanuts…'),
+          ),
+          const SectionLabel('Reaction'),
+          TextField(
+            controller: _reactionController,
+            onChanged: (_) => setState(() {}),
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(hintText: 'Rash'),
+          ),
+          const SectionLabel('How sure are you'),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final c in Certainty.values)
+                ChoiceChip(
+                  label: Text(_certaintyLabel(c)),
+                  selected: _certainty == c,
+                  onSelected: (_) => setState(() => _certainty = c),
+                ),
+            ],
+          ),
+          const SectionLabel('Severity (optional)'),
+          TextField(controller: _severityController),
+          const SectionLabel('Notes (optional)'),
+          TextField(controller: _notesController, maxLines: 3),
+          const SizedBox(height: 28),
+          _saving
+              ? const Center(child: CircularProgressIndicator())
+              : OnboardButton(label: 'Save allergy', onPressed: _valid ? _save : null),
+        ],
       ),
     );
   }
+
+  static String _certaintyLabel(Certainty c) => switch (c) {
+    Certainty.confirmed => 'Confirmed by a doctor',
+    Certainty.reported => 'Reported',
+    Certainty.suspected => 'Suspected',
+  };
 }

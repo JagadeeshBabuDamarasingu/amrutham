@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:realm/realm.dart';
 
 import '../crypto/key_manager.dart';
@@ -10,6 +14,7 @@ import '../model/family_history.dart';
 import '../model/care_provider.dart';
 import '../model/dose_log.dart';
 import '../model/expense.dart';
+import '../model/health_record.dart';
 import '../model/history_event.dart';
 import '../model/ids.dart';
 import '../model/measurement.dart';
@@ -20,6 +25,7 @@ import '../reminder/reminder_repository.dart';
 import '../repository/care_team_repository.dart';
 import '../repository/dose_log_repository.dart';
 import '../repository/expense_repository.dart';
+import '../repository/record_repository.dart';
 import '../repository/history_repository.dart';
 import '../repository/measurement_repository.dart';
 import '../repository/medication_repository.dart';
@@ -197,6 +203,7 @@ final todaysDosesProvider = FutureProvider<List<TodayDose>>((ref) async {
   final weekday = DateTime.now().weekday;
   final doses = <TodayDose>[];
   for (final person in people) {
+    if (person.isDeceased) continue; // reminders stop at death
     final courses = await ref.watch(medicationCoursesProvider(person.id).future);
     final names = {for (final c in courses) c.id: c.medicationName};
     final phases = await repository.activeNonConflictedPhasesForPerson(
@@ -275,5 +282,22 @@ final expenseRepositoryProvider = FutureProvider<ExpenseRepository>((ref) async 
 
 final expensesProvider = StreamProvider<List<Expense>>((ref) async* {
   final repository = await ref.watch(expenseRepositoryProvider.future);
+  yield* repository.watchAll();
+});
+
+/// Where filed documents live: a plain folder, readable without the app.
+final vaultDirectoryProvider = FutureProvider<Directory>((ref) async {
+  final docs = await getApplicationDocumentsDirectory();
+  return Directory(p.join(docs.path, 'vault'));
+});
+
+final recordRepositoryProvider = FutureProvider<RecordRepository>((ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  final vault = await ref.watch(vaultDirectoryProvider.future);
+  return RecordRepository(db, vault);
+});
+
+final recordsProvider = StreamProvider<List<HealthRecord>>((ref) async* {
+  final repository = await ref.watch(recordRepositoryProvider.future);
   yield* repository.watchAll();
 });

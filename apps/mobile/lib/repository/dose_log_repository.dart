@@ -46,8 +46,8 @@ class DoseLogRepository {
   DoseLog _fromRow(DoseLogRow row) => DoseLog(
     personId: PersonId(row.personId),
     courseId: MedicationCourseId(row.courseId),
-    scheduledAt: row.scheduledAt,
+    scheduledAt: row.scheduledAt.toLocal(),
     status: DoseStatus.values.byName(row.status),
-    loggedAt: row.loggedAt,
+    loggedAt: row.loggedAt.toLocal(),
   );
 }

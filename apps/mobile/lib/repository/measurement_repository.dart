@@ -65,7 +65,7 @@ class MeasurementRepository {
     kind: MeasurementKind.values.byName(row.kind),
     value: row.value,
     value2: row.value2,
-    measuredAt: row.measuredAt,
+    measuredAt: row.measuredAt.toLocal(),
     note: row.note,
   );
 }

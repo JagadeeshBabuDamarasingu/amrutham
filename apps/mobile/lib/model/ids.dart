@@ -19,3 +19,5 @@ extension type const HistoryEventId(String value) {}
 extension type const CareProviderId(String value) {}
 
 extension type const ExpenseId(String value) {}
+
+extension type const RecordId(String value) {}

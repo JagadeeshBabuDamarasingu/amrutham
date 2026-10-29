@@ -37,6 +37,10 @@ class ProfileDetailScreen extends ConsumerWidget {
         ref.watch(activeCoursesProvider(personId)).valueOrNull?.length ?? 0;
     final allergyCount = allergiesAsync.valueOrNull?.length ?? 0;
 
+    if (person != null && person.isDeceased) {
+      return _MemorialView(person: person);
+    }
+
     return Scaffold(
       appBar: AppBar(),
       body: ListView(
@@ -468,5 +472,102 @@ class _CourseCard extends ConsumerWidget {
     final parts = hhmm.split(':');
     final h = int.parse(parts[0]);
     return '${h % 12 == 0 ? 12 : h % 12}:${parts[1]} ${h < 12 ? 'am' : 'pm'}';
+  }
+}
+
+/// Read-only view of someone who has died: no add buttons, no reminders.
+class _MemorialView extends ConsumerWidget {
+  const _MemorialView({required this.person});
+
+  final PersonProfile person;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final courses = ref.watch(medicationCoursesProvider(person.id)).valueOrNull ?? [];
+    final allergies = ref.watch(allergiesProvider(person.id)).valueOrNull ?? [];
+    final events = ref.watch(historyEventsProvider(person.id)).valueOrNull ?? [];
+    final years = [
+      if (person.dateOfBirth != null) '${person.dateOfBirth!.year}',
+      if (person.dateOfDeath != null) '${person.dateOfDeath!.year}',
+    ].join(' – ');
+    Widget row(String label, String value, [VoidCallback? onTap]) => Card(
+      child: ListTile(
+        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+        trailing: Text(value, style: const TextStyle(color: onboardMuted)),
+        onTap: onTap,
+      ),
+    );
+    return Scaffold(
+      appBar: AppBar(),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(color: onboardInk, borderRadius: BorderRadius.circular(28)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PersonAvatar(name: person.displayName, colorIndex: 3, size: 64),
+                const SizedBox(height: 16),
+                Text(
+                  person.displayName,
+                  style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800),
+                ),
+                Text(
+                  [person.relationship.label, if (years.isNotEmpty) years].join(' · '),
+                  style: const TextStyle(color: Color(0xFFB8D0C5)),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0x33FFFFFF),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Text(
+                    'Remembered · read-only',
+                    style: TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (person.causeOfDeath != null) ...[
+            const SectionLabel('In your words'),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Cause', style: TextStyle(fontSize: 12, color: onboardMuted)),
+                    Text(person.causeOfDeath!, style: const TextStyle(fontSize: 16)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          const SectionLabel('On record'),
+          row('Past medications', courses.isEmpty ? 'None' : '${courses.length}'),
+          row('Allergies', allergies.isEmpty ? 'None recorded' : '${allergies.length}'),
+          row(
+            'History',
+            events.isEmpty ? 'None' : '${events.length} ›',
+            events.isEmpty
+                ? null
+                : () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => HistoryScreen(personId: person.id)),
+                  ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Reminders stopped on the date of death. Entries still appear in '
+            'family history for the people who recorded them, marked unverified.',
+            style: TextStyle(color: onboardMuted, height: 1.4),
+          ),
+        ],
+      ),
+    );
   }
 }

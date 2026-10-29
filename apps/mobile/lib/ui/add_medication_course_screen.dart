@@ -5,6 +5,7 @@ import '../model/ids.dart';
 import '../model/medication.dart';
 import '../providers/app_providers.dart';
 import 'add_schedule_phase_screen.dart';
+import 'app_style.dart';
 
 /// Step 1 of F2's "add a 3-phase taper in under 2 minutes" flow — the
 /// course itself. Saving hands straight off to AddSchedulePhaseScreen for
@@ -22,7 +23,6 @@ class AddMedicationCourseScreen extends ConsumerStatefulWidget {
 
 class _AddMedicationCourseScreenState
     extends ConsumerState<AddMedicationCourseScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _prescriberController = TextEditingController();
   final _reasonController = TextEditingController();
@@ -37,7 +37,6 @@ class _AddMedicationCourseScreenState
   }
 
   Future<void> _continue() async {
-    if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
 
     final repository = await ref.read(medicationRepositoryProvider.future);
@@ -69,44 +68,44 @@ class _AddMedicationCourseScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add medication')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Medication name'),
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Medication name is required'
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _prescriberController,
-              decoration: const InputDecoration(
-                labelText: 'Prescriber (optional)',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _reasonController,
-              decoration: const InputDecoration(labelText: 'Reason (optional)'),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _saving ? null : _continue,
-              child: _saving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Next: set the schedule'),
-            ),
-          ],
+      appBar: AppBar(
+        leading: TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
         ),
+        leadingWidth: 88,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        children: [
+          const Text(
+            'Add a medicine',
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.8),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Next you set when to take it. Current medicines can send reminders.',
+            style: TextStyle(color: onboardMuted),
+          ),
+          const SectionLabel('Name'),
+          TextField(
+            controller: _nameController,
+            onChanged: (_) => setState(() {}),
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(hintText: 'Amoxicillin 500 mg'),
+          ),
+          const SectionLabel('Prescribed by (optional)'),
+          TextField(controller: _prescriberController),
+          const SectionLabel('Reason (optional)'),
+          TextField(controller: _reasonController),
+          const SizedBox(height: 28),
+          _saving
+              ? const Center(child: CircularProgressIndicator())
+              : OnboardButton(
+                  label: 'Next: set the schedule',
+                  onPressed: _nameController.text.trim().isEmpty ? null : _continue,
+                ),
+        ],
       ),
     );
   }
