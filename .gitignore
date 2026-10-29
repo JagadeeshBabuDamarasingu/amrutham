@@ -1,0 +1,10 @@
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# JS tooling
+node_modules/
+.next/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+.env*.local

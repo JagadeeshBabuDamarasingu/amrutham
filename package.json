@@ -1,0 +1,31 @@
+{
+	"name": "amrutham",
+	"private": true,
+	"packageManager": "pnpm@11.22.0",
+	"engines": {
+		"node": "24.x"
+	},
+	"scripts": {
+		"dev": "turbo run dev",
+		"dev:web": "turbo run dev --filter=@amrutham/web",
+		"dev:mobile": "cd apps/mobile && flutter run",
+		"build": "turbo run build",
+		"build:web": "turbo run build --filter=@amrutham/web",
+		"build:apk": "cd apps/mobile && flutter build apk --release",
+		"build:aab": "cd apps/mobile && flutter build appbundle --release",
+		"lint": "turbo run lint",
+		"lint:fix": "turbo run lint:fix",
+		"typecheck": "turbo run typecheck",
+		"format:check": "turbo run format:check",
+		"format:write": "turbo run format:write",
+		"check": "turbo run typecheck lint format:check",
+		"fix": "turbo run lint:fix format:write",
+		"test:mobile": "cd apps/mobile && flutter test",
+		"analyze:mobile": "cd apps/mobile && flutter analyze",
+		"check:all": "pnpm check && pnpm test:mobile && pnpm analyze:mobile",
+		"clean": "turbo run clean && rm -rf .turbo node_modules"
+	},
+	"devDependencies": {
+		"turbo": "^2.10.11"
+	}
+}
