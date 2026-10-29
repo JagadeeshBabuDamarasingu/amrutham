@@ -10,6 +10,7 @@ import '../crypto/key_manager.dart';
 import '../crypto/onboarding_store.dart';
 import '../db/connection.dart';
 import '../model/allergy.dart';
+import '../backup/drive_backup.dart';
 import '../model/family_history.dart';
 import '../model/care_provider.dart';
 import '../model/dose_log.dart';
@@ -321,6 +322,13 @@ class LanguageNotifier extends StateNotifier<String> {
 final languageProvider = StateNotifierProvider<LanguageNotifier, String>(
   (ref) => LanguageNotifier(ref.watch(onboardingStoreProvider)),
 );
+
+/// (connected Google account email, last backup time) for the Drive screens.
+final driveStatusProvider = FutureProvider<(String?, DateTime?)>((ref) async {
+  final store = ref.watch(onboardingStoreProvider);
+  final last = await store.setting(driveLastBackupKey);
+  return (await store.setting(driveEmailKey), last == null ? null : DateTime.parse(last));
+});
 
 final backupFolderProvider = FutureProvider<String?>(
   (ref) => ref.watch(onboardingStoreProvider).backupFolder(),

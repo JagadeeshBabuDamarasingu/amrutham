@@ -15,3 +15,16 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Google Drive backup setup
+
+Drive backup needs an OAuth client that only you can create:
+
+1. In Google Cloud Console, create a project and enable the **Google Drive API**.
+2. Configure the OAuth consent screen and add the scope `.../auth/drive.appdata`.
+3. Create an **OAuth client ID** of type *Android* with the app's package name
+   and the SHA-1 of the signing key (debug: `cd android && ./gradlew signingReport`;
+   release: your upload and Play App Signing keys).
+4. Create a second **Web application** client and pass its ID to the app by
+   adding `serverClientId` in `DriveSession._init` (`lib/backup/drive_backup.dart`),
+   or in `android/app/src/main/res/values/strings.xml` as `default_web_client_id`.

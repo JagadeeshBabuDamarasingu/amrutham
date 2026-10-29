@@ -5,6 +5,7 @@
          app must degrade visibly, never silently, if it's denied.
          RECEIVE_BOOT_COMPLETED lets flutter_local_notifications' own boot
          receiver (below) re-register alarms after a device restart. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>

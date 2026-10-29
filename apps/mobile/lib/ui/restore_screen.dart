@@ -13,7 +13,11 @@ import 'app_style.dart';
 /// Restore an encrypted backup file with the recovery code. For a new phone or
 /// a reinstall. If this phone already has records, they are replaced.
 class RestoreVaultScreen extends ConsumerStatefulWidget {
-  const RestoreVaultScreen({super.key, this.replacing = false});
+  const RestoreVaultScreen({super.key, this.replacing = false, this.source, this.sourceLabel});
+
+  /// Where the bytes come from instead of a picked file (Google Drive).
+  final Future<List<int>?> Function()? source;
+  final String? sourceLabel;
 
   /// True when opened from Settings on a phone that already has records.
   final bool replacing;
@@ -45,14 +49,15 @@ class _RestoreState extends ConsumerState<RestoreVaultScreen> {
 
   Future<void> _go() async {
     final code = _parsed!;
-    final path = _file!.path;
-    if (path == null) return;
+    final path = _file?.path;
+    if (path == null && widget.source == null) return;
     setState(() {
       _error = null;
       _step = _Step.reading;
     });
     try {
-      final bytes = await File(path).readAsBytes();
+      final bytes = widget.source != null ? await widget.source!() : await File(path!).readAsBytes();
+      if (bytes == null) throw BackupException('No backup found there yet.');
       setState(() => _step = _Step.decrypting);
       final data = await VaultBackup.decrypt(bytes, code);
 
@@ -95,7 +100,7 @@ class _RestoreState extends ConsumerState<RestoreVaultScreen> {
     final step = _step;
     if (step != null) return _Progress(step: step);
 
-    final ready = _file != null && _parsed != null;
+    final ready = (_file != null || widget.source != null) && _parsed != null;
     return Scaffold(
       appBar: AppBar(),
       body: ListView(
@@ -125,9 +130,13 @@ class _RestoreState extends ConsumerState<RestoreVaultScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.folder_open),
-              title: Text(_file?.name ?? 'Choose the backup file'),
-              subtitle: const Text('A .amrutham file from Drive, Files or your computer'),
-              onTap: _pick,
+              title: Text(widget.source != null
+                  ? (widget.sourceLabel ?? 'Your backup')
+                  : _file?.name ?? 'Choose the backup file'),
+              subtitle: Text(widget.source != null
+                  ? 'Downloaded when you restore'
+                  : 'A .amrutham file from Drive, Files or your computer'),
+              onTap: widget.source != null ? null : _pick,
             ),
           ),
           const SectionLabel('Recovery code'),

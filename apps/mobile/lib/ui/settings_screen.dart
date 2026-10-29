@@ -1,17 +1,13 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
-import '../backup/vault_backup.dart';
+import '../backup/backup_flow.dart';
 import '../crypto/recovery_code.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
 import 'language_screen.dart';
 import 'restore_screen.dart';
+import 'storage_screens.dart';
 import 'strings.dart';
 
 /// Only what is real today: the privacy promise and the recovery code check.
@@ -90,20 +86,27 @@ class SettingsScreen extends ConsumerWidget {
                         : 'Make your recovery code first (it asks when you add your first person).',
                   ),
                   trailing: recoverySet ? const Icon(Icons.chevron_right) : null,
-                  onTap: recoverySet ? () => _backup(context, ref) : null,
+                  onTap: recoverySet ? () => runBackup(context, ref) : null,
                 ),
                 const Divider(height: 1),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-                  title: const Text('A folder on this phone', style: TextStyle(fontWeight: FontWeight.w800)),
+                  title: const Text('Where backups go', style: TextStyle(fontWeight: FontWeight.w800)),
                   subtitle: Text(
-                    folder == null
-                        ? 'Back up into a folder that Syncthing, Drive or any folder-sync app carries for you.'
-                        : '$folder\nTap to change. Hold to stop using it.',
+                    [
+                      if (ref.watch(driveStatusProvider).valueOrNull?.$1 != null) 'Google Drive',
+                      if (folder != null) 'A folder',
+                    ].join(' and ').isEmpty
+                        ? 'Google Drive, a folder, or the share sheet'
+                        : [
+                            if (ref.watch(driveStatusProvider).valueOrNull?.$1 != null) 'Google Drive',
+                            if (folder != null) 'A folder',
+                          ].join(' and '),
                   ),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _chooseFolder(ref),
-                  onLongPress: folder == null ? null : () => _setFolder(ref, null),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const StorageChoiceScreen()),
+                  ),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -148,107 +151,6 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _backup(BuildContext context, WidgetRef ref) async {
-    final record = await ref.read(onboardingStoreProvider).readRecovery();
-    if (record == null || !context.mounted) return;
-    final input = TextEditingController();
-    String? error;
-    bool working = false;
-    final code = await showDialog<RecoveryCode>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Back up your vault'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Type your recovery code. It locks the backup, so only the code opens it.'),
-              const SizedBox(height: 12),
-              TextField(
-                controller: input,
-                textCapitalization: TextCapitalization.characters,
-                style: const TextStyle(fontFamily: 'monospace'),
-                decoration: const InputDecoration(hintText: 'XXXX-XXXX-XXXX-XXXX-XXXX-XXXX'),
-              ),
-              if (error != null) ...[
-                const SizedBox(height: 12),
-                Text(error!, style: const TextStyle(fontWeight: FontWeight.w700)),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
-            TextButton(
-              onPressed: working
-                  ? null
-                  : () async {
-                      final parsed = RecoveryCode.parse(input.text);
-                      if (parsed == null) {
-                        setState(() => error = 'That is not 24 characters of a code.');
-                        return;
-                      }
-                      setState(() => working = true);
-                      final ok = await record.matches(parsed);
-                      if (!ok) {
-                        setState(() {
-                          working = false;
-                          error = 'That does not match your recovery code.';
-                        });
-                        return;
-                      }
-                      if (dialogContext.mounted) Navigator.pop(dialogContext, parsed);
-                    },
-              child: Text(working ? 'Checking…' : 'Back up'),
-            ),
-          ],
-        ),
-      ),
-    );
-    input.dispose();
-    if (code == null || !context.mounted) return;
-
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(const SnackBar(content: Text('Making your backup…')));
-    final realm = await ref.read(databaseProvider.future);
-    final vault = await ref.read(vaultDirectoryProvider.future);
-    final bytes = await VaultBackup.encrypt(await VaultBackup.snapshot(realm, vault), code);
-    final now = DateTime.now();
-    final name =
-        'amrutham-backup-${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}.amrutham';
-    final folder = await ref.read(onboardingStoreProvider).backupFolder();
-    if (folder != null) {
-      try {
-        // One fixed name, overwritten each time, so a sync app sees one file.
-        await File('$folder/amrutham-backup.amrutham').writeAsBytes(bytes, flush: true);
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(SnackBar(content: Text('Backed up to $folder')));
-        return;
-      } on FileSystemException {
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(
-          const SnackBar(content: Text("Couldn't write to that folder. Choose where to save instead.")),
-        );
-      }
-    }
-    final file = File('${(await getTemporaryDirectory()).path}/$name');
-    await file.writeAsBytes(bytes);
-    messenger.hideCurrentSnackBar();
-    // The share sheet lets you save it to Files or Drive, or send it to
-    // yourself. Keep it somewhere that is not only this phone.
-    await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], subject: name));
-  }
-
-  Future<void> _chooseFolder(WidgetRef ref) async {
-    final path = await FilePicker.getDirectoryPath();
-    if (path != null) await _setFolder(ref, path);
-  }
-
-  Future<void> _setFolder(WidgetRef ref, String? path) async {
-    await ref.read(onboardingStoreProvider).setBackupFolder(path);
-    ref.invalidate(backupFolderProvider);
   }
 
   Future<void> _check(BuildContext context, WidgetRef ref) async {

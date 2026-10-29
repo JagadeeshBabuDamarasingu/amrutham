@@ -43,4 +43,13 @@ class MemoryOnboardingStore implements OnboardingStore {
 
   @override
   Future<void> setLanguage(String code) async => _language = code;
+
+  final _settings = <String, String>{};
+
+  @override
+  Future<String?> setting(String key) async => _settings[key];
+
+  @override
+  Future<void> putSetting(String key, String? value) async =>
+      value == null ? _settings.remove(key) : _settings[key] = value;
 }

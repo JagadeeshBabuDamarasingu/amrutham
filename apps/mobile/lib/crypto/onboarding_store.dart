@@ -25,6 +25,10 @@ abstract class OnboardingStore {
   /// App language code, e.g. 'hi'; null means English.
   Future<String?> language();
   Future<void> setLanguage(String code);
+
+  /// Small named values (Google Drive account, last backup time).
+  Future<String?> setting(String key);
+  Future<void> putSetting(String key, String? value);
 }
 
 class SecureStorageOnboardingStore implements OnboardingStore {
@@ -81,4 +85,12 @@ class SecureStorageOnboardingStore implements OnboardingStore {
   @override
   Future<void> setLanguage(String code) =>
       _storage.write(key: _languageKey, value: code);
+
+  @override
+  Future<String?> setting(String key) => _storage.read(key: 'amrutham_$key');
+
+  @override
+  Future<void> putSetting(String key, String? value) => value == null
+      ? _storage.delete(key: 'amrutham_$key')
+      : _storage.write(key: 'amrutham_$key', value: value);
 }
