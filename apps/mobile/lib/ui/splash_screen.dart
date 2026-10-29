@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_providers.dart';
 
-const _bgTop = Color(0xFF0F3A2D);
-const _bgMid = Color(0xFF0D3226);
-const _bgBottom = Color(0xFF0A261D);
+const _bgTop = Color(0xFF021E17);
+const _bgMid = Color(0xFF011B13);
+const _bgBottom = Color(0xFF00170F);
 const _gold = Color(0xFFF0A91E);
 const _softText = Color(0xFFB8D0C5);
 const _dimText = Color(0xFF8FB0A2);
@@ -78,8 +78,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       debugPrint('Splash: database failed to open: ${db.error}');
     }
 
-    final artHeight = MediaQuery.sizeOf(context).height * 0.6;
-
     return Scaffold(
       backgroundColor: _bgBottom,
       body: DecoratedBox(
@@ -95,15 +93,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           top: false,
           child: Column(
             children: [
-              // Up to 60% of the screen, but it gives way to the text below on
-              // short screens (small phones, split-screen) instead of overflowing.
-              Flexible(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: artHeight),
-                  child: const SizedBox.expand(child: _Artwork()),
+              // Takes all the room the text block below leaves, so the artwork
+              // is cropped as little as possible; it shrinks on short screens.
+              const Expanded(child: SizedBox.expand(child: _Artwork())),
+              const Text(
+                'ధన్వంతరి · धन्वन्तरि',
+                style: TextStyle(
+                  color: _gold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 20),
               const Text(
                 'Amrutham',
                 style: TextStyle(
@@ -118,16 +119,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 "Your family's health, in files you own",
                 style: TextStyle(color: _softText, fontSize: 15),
               ),
-              const SizedBox(height: 22),
-              const Text(
-                'ధన్వంతరి · धन्वन्तरि',
-                style: TextStyle(
-                  color: _gold,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const Spacer(),
+              const SizedBox(height: 28),
               if (failed)
                 _OpenFailed(onRetry: () => ref.invalidate(databaseProvider))
               else
