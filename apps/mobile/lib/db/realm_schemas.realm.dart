@@ -1375,3 +1375,325 @@ class DoseLogRow extends _DoseLogRow
   @override
   SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
 }
+
+class CareProviderRow extends _CareProviderRow
+    with RealmEntity, RealmObjectBase, RealmObject {
+  CareProviderRow(
+    String id,
+    String kind,
+    String name,
+    bool isCurrent, {
+    String? specialty,
+    String? worksAt,
+    String? phone,
+    String? location,
+    Iterable<String> personIds = const [],
+  }) {
+    RealmObjectBase.set(this, 'id', id);
+    RealmObjectBase.set(this, 'kind', kind);
+    RealmObjectBase.set(this, 'name', name);
+    RealmObjectBase.set(this, 'specialty', specialty);
+    RealmObjectBase.set(this, 'worksAt', worksAt);
+    RealmObjectBase.set(this, 'phone', phone);
+    RealmObjectBase.set(this, 'location', location);
+    RealmObjectBase.set<RealmList<String>>(
+      this,
+      'personIds',
+      RealmList<String>(personIds),
+    );
+    RealmObjectBase.set(this, 'isCurrent', isCurrent);
+  }
+
+  CareProviderRow._();
+
+  @override
+  String get id => RealmObjectBase.get<String>(this, 'id') as String;
+  @override
+  set id(String value) => RealmObjectBase.set(this, 'id', value);
+
+  @override
+  String get kind => RealmObjectBase.get<String>(this, 'kind') as String;
+  @override
+  set kind(String value) => RealmObjectBase.set(this, 'kind', value);
+
+  @override
+  String get name => RealmObjectBase.get<String>(this, 'name') as String;
+  @override
+  set name(String value) => RealmObjectBase.set(this, 'name', value);
+
+  @override
+  String? get specialty =>
+      RealmObjectBase.get<String>(this, 'specialty') as String?;
+  @override
+  set specialty(String? value) => RealmObjectBase.set(this, 'specialty', value);
+
+  @override
+  String? get worksAt =>
+      RealmObjectBase.get<String>(this, 'worksAt') as String?;
+  @override
+  set worksAt(String? value) => RealmObjectBase.set(this, 'worksAt', value);
+
+  @override
+  String? get phone => RealmObjectBase.get<String>(this, 'phone') as String?;
+  @override
+  set phone(String? value) => RealmObjectBase.set(this, 'phone', value);
+
+  @override
+  String? get location =>
+      RealmObjectBase.get<String>(this, 'location') as String?;
+  @override
+  set location(String? value) => RealmObjectBase.set(this, 'location', value);
+
+  @override
+  RealmList<String> get personIds =>
+      RealmObjectBase.get<String>(this, 'personIds') as RealmList<String>;
+  @override
+  set personIds(covariant RealmList<String> value) =>
+      throw RealmUnsupportedSetError();
+
+  @override
+  bool get isCurrent => RealmObjectBase.get<bool>(this, 'isCurrent') as bool;
+  @override
+  set isCurrent(bool value) => RealmObjectBase.set(this, 'isCurrent', value);
+
+  @override
+  Stream<RealmObjectChanges<CareProviderRow>> get changes =>
+      RealmObjectBase.getChanges<CareProviderRow>(this);
+
+  @override
+  Stream<RealmObjectChanges<CareProviderRow>> changesFor([
+    List<String>? keyPaths,
+  ]) => RealmObjectBase.getChangesFor<CareProviderRow>(this, keyPaths);
+
+  @override
+  CareProviderRow freeze() =>
+      RealmObjectBase.freezeObject<CareProviderRow>(this);
+
+  EJsonValue toEJson() {
+    return <String, dynamic>{
+      'id': id.toEJson(),
+      'kind': kind.toEJson(),
+      'name': name.toEJson(),
+      'specialty': specialty.toEJson(),
+      'worksAt': worksAt.toEJson(),
+      'phone': phone.toEJson(),
+      'location': location.toEJson(),
+      'personIds': personIds.toEJson(),
+      'isCurrent': isCurrent.toEJson(),
+    };
+  }
+
+  static EJsonValue _toEJson(CareProviderRow value) => value.toEJson();
+  static CareProviderRow _fromEJson(EJsonValue ejson) {
+    if (ejson is! Map<String, dynamic>) return raiseInvalidEJson(ejson);
+    return switch (ejson) {
+      {
+        'id': EJsonValue id,
+        'kind': EJsonValue kind,
+        'name': EJsonValue name,
+        'isCurrent': EJsonValue isCurrent,
+      } =>
+        CareProviderRow(
+          fromEJson(id),
+          fromEJson(kind),
+          fromEJson(name),
+          fromEJson(isCurrent),
+          specialty: fromEJson(ejson['specialty']),
+          worksAt: fromEJson(ejson['worksAt']),
+          phone: fromEJson(ejson['phone']),
+          location: fromEJson(ejson['location']),
+          personIds: fromEJson(ejson['personIds']),
+        ),
+      _ => raiseInvalidEJson(ejson),
+    };
+  }
+
+  static final schema = () {
+    RealmObjectBase.registerFactory(CareProviderRow._);
+    register(_toEJson, _fromEJson);
+    return const SchemaObject(
+      ObjectType.realmObject,
+      CareProviderRow,
+      'CareProviderRow',
+      [
+        SchemaProperty('id', RealmPropertyType.string, primaryKey: true),
+        SchemaProperty('kind', RealmPropertyType.string),
+        SchemaProperty('name', RealmPropertyType.string),
+        SchemaProperty('specialty', RealmPropertyType.string, optional: true),
+        SchemaProperty('worksAt', RealmPropertyType.string, optional: true),
+        SchemaProperty('phone', RealmPropertyType.string, optional: true),
+        SchemaProperty('location', RealmPropertyType.string, optional: true),
+        SchemaProperty(
+          'personIds',
+          RealmPropertyType.string,
+          collectionType: RealmCollectionType.list,
+        ),
+        SchemaProperty('isCurrent', RealmPropertyType.bool),
+      ],
+    );
+  }();
+
+  @override
+  SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
+}
+
+class ExpenseRow extends _ExpenseRow
+    with RealmEntity, RealmObjectBase, RealmObject {
+  ExpenseRow(
+    String id,
+    String personId,
+    String title,
+    int amountPaise,
+    String category,
+    DateTime spentOn,
+    DateTime addedAt, {
+    String? payee,
+    String? paidBy,
+  }) {
+    RealmObjectBase.set(this, 'id', id);
+    RealmObjectBase.set(this, 'personId', personId);
+    RealmObjectBase.set(this, 'title', title);
+    RealmObjectBase.set(this, 'payee', payee);
+    RealmObjectBase.set(this, 'amountPaise', amountPaise);
+    RealmObjectBase.set(this, 'category', category);
+    RealmObjectBase.set(this, 'paidBy', paidBy);
+    RealmObjectBase.set(this, 'spentOn', spentOn);
+    RealmObjectBase.set(this, 'addedAt', addedAt);
+  }
+
+  ExpenseRow._();
+
+  @override
+  String get id => RealmObjectBase.get<String>(this, 'id') as String;
+  @override
+  set id(String value) => RealmObjectBase.set(this, 'id', value);
+
+  @override
+  String get personId =>
+      RealmObjectBase.get<String>(this, 'personId') as String;
+  @override
+  set personId(String value) => RealmObjectBase.set(this, 'personId', value);
+
+  @override
+  String get title => RealmObjectBase.get<String>(this, 'title') as String;
+  @override
+  set title(String value) => RealmObjectBase.set(this, 'title', value);
+
+  @override
+  String? get payee => RealmObjectBase.get<String>(this, 'payee') as String?;
+  @override
+  set payee(String? value) => RealmObjectBase.set(this, 'payee', value);
+
+  @override
+  int get amountPaise => RealmObjectBase.get<int>(this, 'amountPaise') as int;
+  @override
+  set amountPaise(int value) => RealmObjectBase.set(this, 'amountPaise', value);
+
+  @override
+  String get category =>
+      RealmObjectBase.get<String>(this, 'category') as String;
+  @override
+  set category(String value) => RealmObjectBase.set(this, 'category', value);
+
+  @override
+  String? get paidBy => RealmObjectBase.get<String>(this, 'paidBy') as String?;
+  @override
+  set paidBy(String? value) => RealmObjectBase.set(this, 'paidBy', value);
+
+  @override
+  DateTime get spentOn =>
+      RealmObjectBase.get<DateTime>(this, 'spentOn') as DateTime;
+  @override
+  set spentOn(DateTime value) => RealmObjectBase.set(this, 'spentOn', value);
+
+  @override
+  DateTime get addedAt =>
+      RealmObjectBase.get<DateTime>(this, 'addedAt') as DateTime;
+  @override
+  set addedAt(DateTime value) => RealmObjectBase.set(this, 'addedAt', value);
+
+  @override
+  Stream<RealmObjectChanges<ExpenseRow>> get changes =>
+      RealmObjectBase.getChanges<ExpenseRow>(this);
+
+  @override
+  Stream<RealmObjectChanges<ExpenseRow>> changesFor([List<String>? keyPaths]) =>
+      RealmObjectBase.getChangesFor<ExpenseRow>(this, keyPaths);
+
+  @override
+  ExpenseRow freeze() => RealmObjectBase.freezeObject<ExpenseRow>(this);
+
+  EJsonValue toEJson() {
+    return <String, dynamic>{
+      'id': id.toEJson(),
+      'personId': personId.toEJson(),
+      'title': title.toEJson(),
+      'payee': payee.toEJson(),
+      'amountPaise': amountPaise.toEJson(),
+      'category': category.toEJson(),
+      'paidBy': paidBy.toEJson(),
+      'spentOn': spentOn.toEJson(),
+      'addedAt': addedAt.toEJson(),
+    };
+  }
+
+  static EJsonValue _toEJson(ExpenseRow value) => value.toEJson();
+  static ExpenseRow _fromEJson(EJsonValue ejson) {
+    if (ejson is! Map<String, dynamic>) return raiseInvalidEJson(ejson);
+    return switch (ejson) {
+      {
+        'id': EJsonValue id,
+        'personId': EJsonValue personId,
+        'title': EJsonValue title,
+        'amountPaise': EJsonValue amountPaise,
+        'category': EJsonValue category,
+        'spentOn': EJsonValue spentOn,
+        'addedAt': EJsonValue addedAt,
+      } =>
+        ExpenseRow(
+          fromEJson(id),
+          fromEJson(personId),
+          fromEJson(title),
+          fromEJson(amountPaise),
+          fromEJson(category),
+          fromEJson(spentOn),
+          fromEJson(addedAt),
+          payee: fromEJson(ejson['payee']),
+          paidBy: fromEJson(ejson['paidBy']),
+        ),
+      _ => raiseInvalidEJson(ejson),
+    };
+  }
+
+  static final schema = () {
+    RealmObjectBase.registerFactory(ExpenseRow._);
+    register(_toEJson, _fromEJson);
+    return const SchemaObject(
+      ObjectType.realmObject,
+      ExpenseRow,
+      'ExpenseRow',
+      [
+        SchemaProperty('id', RealmPropertyType.string, primaryKey: true),
+        SchemaProperty(
+          'personId',
+          RealmPropertyType.string,
+          indexType: RealmIndexType.regular,
+        ),
+        SchemaProperty('title', RealmPropertyType.string),
+        SchemaProperty('payee', RealmPropertyType.string, optional: true),
+        SchemaProperty('amountPaise', RealmPropertyType.int),
+        SchemaProperty('category', RealmPropertyType.string),
+        SchemaProperty('paidBy', RealmPropertyType.string, optional: true),
+        SchemaProperty(
+          'spentOn',
+          RealmPropertyType.timestamp,
+          indexType: RealmIndexType.regular,
+        ),
+        SchemaProperty('addedAt', RealmPropertyType.timestamp),
+      ],
+    );
+  }();
+
+  @override
+  SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
+}

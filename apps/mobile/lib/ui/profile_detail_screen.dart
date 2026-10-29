@@ -10,6 +10,7 @@ import 'add_allergy_screen.dart';
 import 'add_family_history_screen.dart';
 import 'add_medication_course_screen.dart';
 import 'app_style.dart';
+import 'care_team_screen.dart';
 import 'course_detail_screen.dart';
 import 'emergency_card_screen.dart';
 import 'history_screen.dart';
@@ -147,6 +148,23 @@ class ProfileDetailScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _Tile(
+                  icon: Icons.person_outline,
+                  label: 'Care team',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CareTeamScreen(personId: personId),
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
             ],
           ),
           _SectionHeader(

@@ -15,3 +15,7 @@ extension type const SchedulePhaseId(String value) {}
 extension type const MeasurementId(String value) {}
 
 extension type const HistoryEventId(String value) {}
+
+extension type const CareProviderId(String value) {}
+
+extension type const ExpenseId(String value) {}

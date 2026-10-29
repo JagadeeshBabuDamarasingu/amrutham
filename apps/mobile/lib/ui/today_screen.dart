@@ -9,6 +9,7 @@ import 'app_style.dart';
 import 'create_profile_screen.dart';
 import 'log_measurement_screen.dart';
 import 'metrics_screen.dart';
+import 'settings_screen.dart';
 
 const _weekdays = [
   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
@@ -82,6 +83,14 @@ class TodayScreen extends ConsumerWidget {
                 onPressed: () => _quickAdd(context, selected),
                 icon: const Icon(Icons.add),
                 tooltip: 'Quick add',
+              ),
+              const SizedBox(width: 8),
+              IconButton.filledTonal(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                ),
+                icon: const Icon(Icons.settings_outlined),
+                tooltip: 'Settings',
               ),
             ],
           ),

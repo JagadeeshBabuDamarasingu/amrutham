@@ -6,6 +6,8 @@ import '../providers/app_providers.dart';
 import 'app_style.dart';
 import 'create_profile_screen.dart';
 import 'profile_detail_screen.dart';
+import 'expenses_screen.dart';
+import 'settings_screen.dart';
 
 class FamilyScreen extends ConsumerWidget {
   const FamilyScreen({super.key});
@@ -22,13 +24,34 @@ class FamilyScreen extends ConsumerWidget {
             data: (list) => ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               children: [
-                const Text(
-                  'Family',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.8,
-                  ),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Family',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.8,
+                        ),
+                      ),
+                    ),
+                    IconButton.filledTonal(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ExpensesScreen()),
+                      ),
+                      icon: const Icon(Icons.currency_rupee),
+                      tooltip: 'Expenses',
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                      ),
+                      icon: const Icon(Icons.settings_outlined),
+                      tooltip: 'Settings',
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(

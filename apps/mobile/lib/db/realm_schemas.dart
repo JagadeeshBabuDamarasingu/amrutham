@@ -149,3 +149,39 @@ class _DoseLogRow {
   late String status;
   late DateTime loggedAt;
 }
+
+/// A doctor or a hospital/clinic/lab the family consults. One entry can serve
+/// several people (`personIds`), so a shared family doctor is entered once.
+/// The phone number stays on this phone like everything else.
+@RealmModel()
+class _CareProviderRow {
+  @PrimaryKey()
+  late String id;
+  late String kind; // 'doctor' | 'facility'
+  late String name;
+  String? specialty;
+  String? worksAt;
+  String? phone;
+  String? location;
+  late List<String> personIds;
+  late bool isCurrent;
+}
+
+/// A medical expense. The amount is whole paise (an int), never a float, so
+/// totals always add up exactly. A personal record only: nothing here is
+/// submitted to an insurer.
+@RealmModel()
+class _ExpenseRow {
+  @PrimaryKey()
+  late String id;
+  @Indexed()
+  late String personId;
+  late String title;
+  String? payee;
+  late int amountPaise;
+  late String category;
+  String? paidBy;
+  @Indexed()
+  late DateTime spentOn;
+  late DateTime addedAt;
+}

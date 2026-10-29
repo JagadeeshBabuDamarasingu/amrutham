@@ -7,7 +7,9 @@ import '../crypto/onboarding_store.dart';
 import '../db/connection.dart';
 import '../model/allergy.dart';
 import '../model/family_history.dart';
+import '../model/care_provider.dart';
 import '../model/dose_log.dart';
+import '../model/expense.dart';
 import '../model/history_event.dart';
 import '../model/ids.dart';
 import '../model/measurement.dart';
@@ -15,7 +17,9 @@ import '../model/medication.dart';
 import '../model/person.dart';
 import '../model/schedule_phase.dart';
 import '../reminder/reminder_repository.dart';
+import '../repository/care_team_repository.dart';
 import '../repository/dose_log_repository.dart';
+import '../repository/expense_repository.dart';
 import '../repository/history_repository.dart';
 import '../repository/measurement_repository.dart';
 import '../repository/medication_repository.dart';
@@ -251,4 +255,25 @@ final doseLogRepositoryProvider = FutureProvider<DoseLogRepository>((ref) async 
 final todaysDoseLogsProvider = StreamProvider<List<DoseLog>>((ref) async* {
   final repository = await ref.watch(doseLogRepositoryProvider.future);
   yield* repository.watchDay(DateTime.now());
+});
+
+final careTeamRepositoryProvider = FutureProvider<CareTeamRepository>((ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  return CareTeamRepository(db);
+});
+
+final careTeamProvider =
+    StreamProvider.family<List<CareProvider>, PersonId>((ref, personId) async* {
+      final repository = await ref.watch(careTeamRepositoryProvider.future);
+      yield* repository.watchForPerson(personId);
+    });
+
+final expenseRepositoryProvider = FutureProvider<ExpenseRepository>((ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  return ExpenseRepository(db);
+});
+
+final expensesProvider = StreamProvider<List<Expense>>((ref) async* {
+  final repository = await ref.watch(expenseRepositoryProvider.future);
+  yield* repository.watchAll();
 });
