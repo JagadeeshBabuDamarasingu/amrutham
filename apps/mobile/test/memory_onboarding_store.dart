@@ -27,4 +27,12 @@ class MemoryOnboardingStore implements OnboardingStore {
 
   @override
   Future<void> setTipsHidden(bool hidden) async => _tipsHidden = hidden;
+
+  String? _backupFolder;
+
+  @override
+  Future<String?> backupFolder() async => _backupFolder;
+
+  @override
+  Future<void> setBackupFolder(String? path) async => _backupFolder = path;
 }

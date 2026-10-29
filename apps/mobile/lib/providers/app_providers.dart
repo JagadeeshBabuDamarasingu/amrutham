@@ -302,6 +302,10 @@ final recordsProvider = StreamProvider<List<HealthRecord>>((ref) async* {
   yield* repository.watchAll();
 });
 
+final backupFolderProvider = FutureProvider<String?>(
+  (ref) => ref.watch(onboardingStoreProvider).backupFolder(),
+);
+
 final tipsHiddenProvider = FutureProvider<bool>((ref) {
   return ref.watch(onboardingStoreProvider).tipsHidden();
 });

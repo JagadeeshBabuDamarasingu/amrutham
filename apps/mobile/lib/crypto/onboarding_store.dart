@@ -17,12 +17,17 @@ abstract class OnboardingStore {
   /// The daily tip above the tab bar; on unless the user hides it.
   Future<bool> tipsHidden();
   Future<void> setTipsHidden(bool hidden);
+
+  /// Folder that "Back up now" writes into, or null to use the share sheet.
+  Future<String?> backupFolder();
+  Future<void> setBackupFolder(String? path);
 }
 
 class SecureStorageOnboardingStore implements OnboardingStore {
   static const _welcomeKey = 'amrutham_welcome_seen';
   static const _recoveryKey = 'amrutham_recovery_record';
   static const _tipsHiddenKey = 'amrutham_tips_hidden';
+  static const _backupFolderKey = 'amrutham_backup_folder';
 
   final FlutterSecureStorage _storage;
 
@@ -56,4 +61,12 @@ class SecureStorageOnboardingStore implements OnboardingStore {
   Future<void> setTipsHidden(bool hidden) => hidden
       ? _storage.write(key: _tipsHiddenKey, value: '1')
       : _storage.delete(key: _tipsHiddenKey);
+
+  @override
+  Future<String?> backupFolder() => _storage.read(key: _backupFolderKey);
+
+  @override
+  Future<void> setBackupFolder(String? path) => path == null
+      ? _storage.delete(key: _backupFolderKey)
+      : _storage.write(key: _backupFolderKey, value: path);
 }

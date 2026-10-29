@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -20,6 +21,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recoverySet = ref.watch(recoverySetProvider).valueOrNull ?? false;
+    final folder = ref.watch(backupFolderProvider).valueOrNull;
     final tipsHidden = ref.watch(tipsHiddenProvider).valueOrNull ?? false;
     return Scaffold(
       appBar: AppBar(),
@@ -87,6 +89,19 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   trailing: recoverySet ? const Icon(Icons.chevron_right) : null,
                   onTap: recoverySet ? () => _backup(context, ref) : null,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                  title: const Text('A folder on this phone', style: TextStyle(fontWeight: FontWeight.w800)),
+                  subtitle: Text(
+                    folder == null
+                        ? 'Back up into a folder that Syncthing, Drive or any folder-sync app carries for you.'
+                        : '$folder\nTap to change. Hold to stop using it.',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _chooseFolder(ref),
+                  onLongPress: folder == null ? null : () => _setFolder(ref, null),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -189,12 +204,37 @@ class SettingsScreen extends ConsumerWidget {
     final now = DateTime.now();
     final name =
         'amrutham-backup-${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}.amrutham';
+    final folder = await ref.read(onboardingStoreProvider).backupFolder();
+    if (folder != null) {
+      try {
+        // One fixed name, overwritten each time, so a sync app sees one file.
+        await File('$folder/amrutham-backup.amrutham').writeAsBytes(bytes, flush: true);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(content: Text('Backed up to $folder')));
+        return;
+      } on FileSystemException {
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
+          const SnackBar(content: Text("Couldn't write to that folder. Choose where to save instead.")),
+        );
+      }
+    }
     final file = File('${(await getTemporaryDirectory()).path}/$name');
     await file.writeAsBytes(bytes);
     messenger.hideCurrentSnackBar();
     // The share sheet lets you save it to Files or Drive, or send it to
     // yourself. Keep it somewhere that is not only this phone.
     await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], subject: name));
+  }
+
+  Future<void> _chooseFolder(WidgetRef ref) async {
+    final path = await FilePicker.getDirectoryPath();
+    if (path != null) await _setFolder(ref, path);
+  }
+
+  Future<void> _setFolder(WidgetRef ref, String? path) async {
+    await ref.read(onboardingStoreProvider).setBackupFolder(path);
+    ref.invalidate(backupFolderProvider);
   }
 
   Future<void> _check(BuildContext context, WidgetRef ref) async {
