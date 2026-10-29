@@ -1244,3 +1244,134 @@ class HistoryEventRow extends _HistoryEventRow
   @override
   SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
 }
+
+class DoseLogRow extends _DoseLogRow
+    with RealmEntity, RealmObjectBase, RealmObject {
+  DoseLogRow(
+    String id,
+    String personId,
+    String courseId,
+    DateTime scheduledAt,
+    String status,
+    DateTime loggedAt,
+  ) {
+    RealmObjectBase.set(this, 'id', id);
+    RealmObjectBase.set(this, 'personId', personId);
+    RealmObjectBase.set(this, 'courseId', courseId);
+    RealmObjectBase.set(this, 'scheduledAt', scheduledAt);
+    RealmObjectBase.set(this, 'status', status);
+    RealmObjectBase.set(this, 'loggedAt', loggedAt);
+  }
+
+  DoseLogRow._();
+
+  @override
+  String get id => RealmObjectBase.get<String>(this, 'id') as String;
+  @override
+  set id(String value) => RealmObjectBase.set(this, 'id', value);
+
+  @override
+  String get personId =>
+      RealmObjectBase.get<String>(this, 'personId') as String;
+  @override
+  set personId(String value) => RealmObjectBase.set(this, 'personId', value);
+
+  @override
+  String get courseId =>
+      RealmObjectBase.get<String>(this, 'courseId') as String;
+  @override
+  set courseId(String value) => RealmObjectBase.set(this, 'courseId', value);
+
+  @override
+  DateTime get scheduledAt =>
+      RealmObjectBase.get<DateTime>(this, 'scheduledAt') as DateTime;
+  @override
+  set scheduledAt(DateTime value) =>
+      RealmObjectBase.set(this, 'scheduledAt', value);
+
+  @override
+  String get status => RealmObjectBase.get<String>(this, 'status') as String;
+  @override
+  set status(String value) => RealmObjectBase.set(this, 'status', value);
+
+  @override
+  DateTime get loggedAt =>
+      RealmObjectBase.get<DateTime>(this, 'loggedAt') as DateTime;
+  @override
+  set loggedAt(DateTime value) => RealmObjectBase.set(this, 'loggedAt', value);
+
+  @override
+  Stream<RealmObjectChanges<DoseLogRow>> get changes =>
+      RealmObjectBase.getChanges<DoseLogRow>(this);
+
+  @override
+  Stream<RealmObjectChanges<DoseLogRow>> changesFor([List<String>? keyPaths]) =>
+      RealmObjectBase.getChangesFor<DoseLogRow>(this, keyPaths);
+
+  @override
+  DoseLogRow freeze() => RealmObjectBase.freezeObject<DoseLogRow>(this);
+
+  EJsonValue toEJson() {
+    return <String, dynamic>{
+      'id': id.toEJson(),
+      'personId': personId.toEJson(),
+      'courseId': courseId.toEJson(),
+      'scheduledAt': scheduledAt.toEJson(),
+      'status': status.toEJson(),
+      'loggedAt': loggedAt.toEJson(),
+    };
+  }
+
+  static EJsonValue _toEJson(DoseLogRow value) => value.toEJson();
+  static DoseLogRow _fromEJson(EJsonValue ejson) {
+    if (ejson is! Map<String, dynamic>) return raiseInvalidEJson(ejson);
+    return switch (ejson) {
+      {
+        'id': EJsonValue id,
+        'personId': EJsonValue personId,
+        'courseId': EJsonValue courseId,
+        'scheduledAt': EJsonValue scheduledAt,
+        'status': EJsonValue status,
+        'loggedAt': EJsonValue loggedAt,
+      } =>
+        DoseLogRow(
+          fromEJson(id),
+          fromEJson(personId),
+          fromEJson(courseId),
+          fromEJson(scheduledAt),
+          fromEJson(status),
+          fromEJson(loggedAt),
+        ),
+      _ => raiseInvalidEJson(ejson),
+    };
+  }
+
+  static final schema = () {
+    RealmObjectBase.registerFactory(DoseLogRow._);
+    register(_toEJson, _fromEJson);
+    return const SchemaObject(
+      ObjectType.realmObject,
+      DoseLogRow,
+      'DoseLogRow',
+      [
+        SchemaProperty('id', RealmPropertyType.string, primaryKey: true),
+        SchemaProperty(
+          'personId',
+          RealmPropertyType.string,
+          indexType: RealmIndexType.regular,
+        ),
+        SchemaProperty('courseId', RealmPropertyType.string),
+        SchemaProperty(
+          'scheduledAt',
+          RealmPropertyType.timestamp,
+          indexType: RealmIndexType.regular,
+        ),
+        SchemaProperty('status', RealmPropertyType.string),
+        SchemaProperty('loggedAt', RealmPropertyType.timestamp),
+      ],
+    );
+  }();
+
+  @override
+  SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
+}

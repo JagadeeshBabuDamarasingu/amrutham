@@ -7,6 +7,7 @@ import '../crypto/onboarding_store.dart';
 import '../db/connection.dart';
 import '../model/allergy.dart';
 import '../model/family_history.dart';
+import '../model/dose_log.dart';
 import '../model/history_event.dart';
 import '../model/ids.dart';
 import '../model/measurement.dart';
@@ -14,6 +15,7 @@ import '../model/medication.dart';
 import '../model/person.dart';
 import '../model/schedule_phase.dart';
 import '../reminder/reminder_repository.dart';
+import '../repository/dose_log_repository.dart';
 import '../repository/history_repository.dart';
 import '../repository/measurement_repository.dart';
 import '../repository/medication_repository.dart';
@@ -151,12 +153,16 @@ final activeCoursesProvider =
 class TodayDose {
   const TodayDose({
     required this.person,
+    required this.courseId,
+    required this.scheduledAt,
     required this.medicationName,
     required this.doseAmount,
     required this.time,
   });
 
   final PersonProfile person;
+  final MedicationCourseId courseId;
+  final DateTime scheduledAt;
   final String medicationName;
   final String doseAmount;
   final TimeOfDayLite time;
@@ -197,12 +203,22 @@ final todaysDosesProvider = FutureProvider<List<TodayDose>>((ref) async {
       if (days != null && days.isNotEmpty && !days.contains(weekday)) continue;
       for (final t in phase.timesOfDay) {
         final parts = t.split(':');
+        final time = TimeOfDayLite(int.parse(parts[0]), int.parse(parts[1]));
+        final today = DateTime.now();
         doses.add(
           TodayDose(
             person: person,
+            courseId: phase.courseId,
+            scheduledAt: DateTime(
+              today.year,
+              today.month,
+              today.day,
+              time.hour,
+              time.minute,
+            ),
             medicationName: names[phase.courseId] ?? 'Medicine',
             doseAmount: phase.doseAmount,
-            time: TimeOfDayLite(int.parse(parts[0]), int.parse(parts[1])),
+            time: time,
           ),
         );
       }
@@ -225,3 +241,14 @@ final historyEventsProvider =
       final repository = await ref.watch(historyRepositoryProvider.future);
       yield* repository.watchEvents(personId);
     });
+
+final doseLogRepositoryProvider = FutureProvider<DoseLogRepository>((ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  return DoseLogRepository(db);
+});
+
+/// Answers already given for today's doses, newest first.
+final todaysDoseLogsProvider = StreamProvider<List<DoseLog>>((ref) async* {
+  final repository = await ref.watch(doseLogRepositoryProvider.future);
+  yield* repository.watchDay(DateTime.now());
+});

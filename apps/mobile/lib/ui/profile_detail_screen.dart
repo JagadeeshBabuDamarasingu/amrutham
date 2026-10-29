@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/family_history.dart';
 import '../model/ids.dart';
+import '../model/medication.dart';
 import '../model/person.dart';
 import '../providers/app_providers.dart';
 import 'add_allergy_screen.dart';
@@ -165,24 +166,20 @@ class ProfileDetailScreen extends ConsumerWidget {
                 );
               }
               return Column(
-                children: courses
-                    .map(
-                      (course) => Card(
-                        child: ListTile(
-                          title: Text(course.medicationName),
-                          subtitle: Text(course.status.name),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => CourseDetailScreen(
-                                personId: personId,
-                                courseId: course.id,
-                              ),
-                            ),
+                children: [
+                  for (final course in courses)
+                    _CourseCard(
+                      course: course,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => CourseDetailScreen(
+                            personId: personId,
+                            courseId: course.id,
                           ),
                         ),
                       ),
-                    )
-                    .toList(),
+                    ),
+                ],
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -351,5 +348,107 @@ class _Tile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Medicine card: name, a status pill (Ongoing / Ends 2 Nov / Stopped...) and
+/// the dose times as chips.
+class _CourseCard extends ConsumerWidget {
+  const _CourseCard({required this.course, required this.onTap});
+
+  final MedicationCourse course;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final phases = ref.watch(schedulePhasesProvider(course.id)).valueOrNull ?? [];
+    final times = {
+      for (final p in phases)
+        if (!p.isPrn) ...p.timesOfDay,
+    }.toList()..sort();
+    final first = phases.firstOrNull;
+    final end = course.endDate;
+    final pill = course.status != CourseStatus.active
+        ? course.status.name
+        : end == null
+        ? 'Ongoing'
+        : 'Ends ${end.day} ${monthNames[end.month - 1]}';
+
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      course.medicationName,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD5E4DC),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      pill,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (first != null)
+                Text(
+                  first.isPrn ? '${first.doseAmount} · as needed' : first.doseAmount,
+                  style: const TextStyle(color: onboardMuted, fontSize: 13),
+                ),
+              if (times.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    for (final t in times)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD5E4DC),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(_clock(t), style: const TextStyle(fontSize: 12)),
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static String _clock(String hhmm) {
+    final parts = hhmm.split(':');
+    final h = int.parse(parts[0]);
+    return '${h % 12 == 0 ? 12 : h % 12}:${parts[1]} ${h < 12 ? 'am' : 'pm'}';
   }
 }

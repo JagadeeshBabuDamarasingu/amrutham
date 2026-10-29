@@ -132,3 +132,20 @@ class _HistoryEventRow {
   String? provider;
   String? notes;
 }
+
+/// The answer to "did you take it?" for one scheduled dose. The primary key is
+/// courseId + scheduled time, so answering the same dose twice replaces the
+/// first answer instead of double-counting. Logging only ever records what the
+/// user said; nothing here is scored or turned into an adherence percentage.
+@RealmModel()
+class _DoseLogRow {
+  @PrimaryKey()
+  late String id;
+  @Indexed()
+  late String personId;
+  late String courseId;
+  @Indexed()
+  late DateTime scheduledAt;
+  late String status;
+  late DateTime loggedAt;
+}

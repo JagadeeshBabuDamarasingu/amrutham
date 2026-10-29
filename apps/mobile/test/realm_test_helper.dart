@@ -20,6 +20,7 @@ Realm openInMemoryRealm() {
       SchedulePhaseRow.schema,
       MeasurementRow.schema,
       HistoryEventRow.schema,
+      DoseLogRow.schema,
     ],
     // In the system temp dir: even in-memory Realms create .lock and
     // .management files beside this path, which littered the project root.

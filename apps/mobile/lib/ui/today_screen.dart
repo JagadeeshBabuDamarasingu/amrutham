@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../model/dose_log.dart';
 import '../model/measurement.dart';
 import '../model/person.dart';
 import '../providers/app_providers.dart';
@@ -29,13 +30,23 @@ class TodayScreen extends ConsumerWidget {
         people.where((p) => p.id == selectedId).firstOrNull ??
         people.firstOrNull;
 
-    final minutesNow = now.hour * 60 + now.minute;
-    final upcoming = [
+    final logs = ref.watch(todaysDoseLogsProvider).valueOrNull ?? const [];
+    final answered = {for (final l in logs) l.key};
+    final pending = [
       for (final d in doses)
-        if (d.time.hour * 60 + d.time.minute >= minutesNow) d,
+        if (!answered.contains(DoseLog.keyFor(d.courseId, d.scheduledAt))) d,
     ];
-    final next = upcoming.firstOrNull;
-    final later = upcoming.skip(1).toList();
+    final next = pending.firstOrNull;
+    final later = pending.skip(1).toList();
+    final lastAnswer = logs.firstOrNull;
+    final lastDose = lastAnswer == null
+        ? null
+        : doses
+              .where(
+                (d) =>
+                    DoseLog.keyFor(d.courseId, d.scheduledAt) == lastAnswer.key,
+              )
+              .firstOrNull;
 
     return SafeArea(
       child: ListView(
@@ -105,12 +116,30 @@ class TodayScreen extends ConsumerWidget {
           if (people.isEmpty)
             _EmptyToday(onAdd: () => _addPerson(context))
           else ...[
-            if (next != null) _NextDoseCard(dose: next),
+            if (next != null)
+              _NextDoseCard(
+                dose: next,
+                onAnswer: (status) async {
+                  final repository = await ref.read(
+                    doseLogRepositoryProvider.future,
+                  );
+                  await repository.logDose(
+                    personId: next.person.id,
+                    courseId: next.courseId,
+                    scheduledAt: next.scheduledAt,
+                    status: status,
+                  );
+                },
+              ),
             if (next == null)
-              const Card(
+              Card(
                 child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Text('No more doses scheduled today.'),
+                  padding: const EdgeInsets.all(20),
+                  child: Text(
+                    doses.isEmpty
+                        ? 'No doses scheduled today.'
+                        : 'All of today\'s doses are answered.',
+                  ),
                 ),
               ),
             if (later.isNotEmpty) ...[
@@ -141,6 +170,16 @@ class TodayScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               _NumbersCard(person: selected),
             ],
+            if (lastAnswer != null && lastDose != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12, left: 4),
+                child: Text(
+                  '${lastAnswer.status == DoseStatus.taken ? 'Taken' : 'Missed'}: '
+                  '${lastDose.medicationName} ${lastDose.doseAmount} · '
+                  '${TimeOfDayLite(lastAnswer.loggedAt.hour, lastAnswer.loggedAt.minute).label}',
+                  style: const TextStyle(color: onboardMuted, fontSize: 13),
+                ),
+              ),
           ],
         ],
       ),
@@ -225,9 +264,10 @@ class _EmptyToday extends StatelessWidget {
 }
 
 class _NextDoseCard extends StatelessWidget {
-  const _NextDoseCard({required this.dose});
+  const _NextDoseCard({required this.dose, required this.onAnswer});
 
   final TodayDose dose;
+  final ValueChanged<DoseStatus> onAnswer;
 
   @override
   Widget build(BuildContext context) {
@@ -241,7 +281,7 @@ class _NextDoseCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'NEXT DOSE · ${dose.time.label.toUpperCase()}',
+            '${dose.scheduledAt.isBefore(DateTime.now()) ? 'DUE' : 'NEXT DOSE'} · ${dose.time.label.toUpperCase()}',
             style: const TextStyle(
               color: Color(0xFFB8D0C5),
               fontSize: 12,
@@ -262,6 +302,27 @@ class _NextDoseCard extends StatelessWidget {
           Text(
             '${dose.doseAmount} · for ${dose.person.displayName}',
             style: const TextStyle(color: Color(0xFFB8D0C5), fontSize: 15),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              for (final (label, status) in [
+                ('Taken', DoseStatus.taken),
+                ('Missed', DoseStatus.missed),
+              ]) ...[
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => onAnswer(status),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B5A4D),
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    child: Text(label),
+                  ),
+                ),
+                if (status == DoseStatus.taken) const SizedBox(width: 10),
+              ],
+            ],
           ),
         ],
       ),
