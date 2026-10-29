@@ -277,7 +277,7 @@ final careTeamProvider =
 
 final expenseRepositoryProvider = FutureProvider<ExpenseRepository>((ref) async {
   final db = await ref.watch(databaseProvider.future);
-  return ExpenseRepository(db);
+  return ExpenseRepository(db, await ref.watch(vaultDirectoryProvider.future));
 });
 
 final expensesProvider = StreamProvider<List<Expense>>((ref) async* {

@@ -50,6 +50,18 @@ class VaultBackup {
         'files': files,
       });
     }
+    final receipts = <Map<String, String>>[];
+    final receiptDir = Directory(p.join(vault.path, 'receipts'));
+    if (await receiptDir.exists()) {
+      await for (final f in receiptDir.list()) {
+        if (f is File) {
+          receipts.add({
+            'path': p.join('receipts', p.basename(f.path)),
+            'data': base64Encode(await f.readAsBytes()),
+          });
+        }
+      }
+    }
     return {
       'version': _version,
       'createdAt': d(DateTime.now()),
@@ -141,6 +153,7 @@ class VaultBackup {
           },
       ],
       'records': records,
+      'receipts': receipts,
     };
   }
 
@@ -168,6 +181,12 @@ class VaultBackup {
         await file.parent.create(recursive: true);
         await file.writeAsBytes(base64Decode(f['data'] as String));
       }
+    }
+
+    for (final f in list('receipts')) {
+      final file = File(p.join(vault.path, f['path'] as String));
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(base64Decode(f['data'] as String));
     }
 
     realm.write(() {

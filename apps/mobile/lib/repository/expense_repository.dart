@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:path/path.dart' as p;
 import 'package:realm/realm.dart';
 import 'package:ulid/ulid.dart';
 
@@ -8,7 +11,24 @@ import '../model/ids.dart';
 class ExpenseRepository {
   final Realm _realm;
 
-  ExpenseRepository(this._realm);
+  /// Where receipt photos live (`<vault>/receipts/<expenseId>.<ext>`). Null in
+  /// tests that don't deal with photos.
+  final Directory? vaultDir;
+
+  ExpenseRepository(this._realm, [this.vaultDir]);
+
+  /// The receipt photo for an expense, or null if none was attached.
+  File? receiptFor(ExpenseId id) {
+    final dir = vaultDir == null ? null : Directory(p.join(vaultDir!.path, receiptsDir));
+    if (dir == null || !dir.existsSync()) return null;
+    return dir
+        .listSync()
+        .whereType<File>()
+        .where((f) => p.basenameWithoutExtension(f.path) == id.value)
+        .firstOrNull;
+  }
+
+  static const receiptsDir = 'receipts';
 
   /// Every expense for the whole family, newest first.
   Stream<List<Expense>> watchAll() {
@@ -26,6 +46,7 @@ class ExpenseRepository {
     required ExpenseCategory category,
     String? paidBy,
     required DateTime spentOn,
+    File? receipt,
   }) async {
     final id = ExpenseId(Ulid().toString());
     final addedAt = DateTime.now();
@@ -44,6 +65,11 @@ class ExpenseRepository {
         ),
       );
     });
+    if (receipt != null && vaultDir != null) {
+      final dir = Directory(p.join(vaultDir!.path, receiptsDir));
+      await dir.create(recursive: true);
+      await receipt.copy(p.join(dir.path, '${id.value}${p.extension(receipt.path).toLowerCase()}'));
+    }
     return Expense(
       id: id,
       personId: personId,
@@ -60,6 +86,7 @@ class ExpenseRepository {
   Future<void> delete(ExpenseId id) async {
     final row = _realm.find<ExpenseRow>(id.value);
     if (row != null) _realm.write(() => _realm.delete(row));
+    await receiptFor(id)?.delete();
   }
 
   Expense _fromRow(ExpenseRow row) => Expense(

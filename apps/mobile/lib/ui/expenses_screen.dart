@@ -224,6 +224,7 @@ class ExpenseDetailScreen extends ConsumerWidget {
         ?.where((p) => p.id == expense.personId)
         .firstOrNull;
     final e = expense;
+    final receipt = ref.watch(expenseRepositoryProvider).valueOrNull?.receiptFor(e.id);
     return Scaffold(
       appBar: AppBar(),
       body: ListView(
@@ -262,6 +263,26 @@ class ExpenseDetailScreen extends ConsumerWidget {
               ],
             ),
           ),
+          if (receipt != null) ...[
+            const SizedBox(height: 12),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => Dialog(child: InteractiveViewer(child: Image.file(receipt))),
+                ),
+                child: ListTile(
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(receipt, width: 48, height: 56, fit: BoxFit.cover),
+                  ),
+                  title: const Text('Receipt attached', style: TextStyle(fontWeight: FontWeight.w800)),
+                  subtitle: Text('${(receipt.lengthSync() / 1048576).toStringAsFixed(1)} MB · Stored in the vault'),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [

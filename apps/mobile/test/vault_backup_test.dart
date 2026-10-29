@@ -55,12 +55,14 @@ void main() {
       title: 'Cataract surgery',
       eventDate: DateTime(2022, 3, 1),
     );
-    await ExpenseRepository(realm).add(
+    final bill = File('${tmp.path}/bill.jpg')..writeAsBytesSync([1, 2, 3]);
+    final expense = await ExpenseRepository(realm, vault).add(
       personId: appa.id,
       title: 'Blood panel',
       amountPaise: 185050,
       category: ExpenseCategory.tests,
       spentOn: DateTime(2026, 10, 24),
+      receipt: bill,
     );
     await CareTeamRepository(realm).add(
       kind: CareKind.doctor,
@@ -112,7 +114,9 @@ void main() {
     final bp = (await MeasurementRepository(other).watchMeasurements(restoredAppa.id).first).single;
     expect((bp.value, bp.value2, bp.measuredAt), (128.0, 82.0, DateTime(2026, 10, 29, 7, 30)));
     expect((await HistoryRepository(other).watchEvents(restoredAppa.id).first).single.title, 'Cataract surgery');
-    expect((await ExpenseRepository(other).watchAll().first).single.amountPaise, 185050);
+    final restoredExpenses = ExpenseRepository(other, otherVault);
+    expect((await restoredExpenses.watchAll().first).single.amountPaise, 185050);
+    expect(restoredExpenses.receiptFor(expense.id)!.readAsBytesSync(), [1, 2, 3]);
     expect((await CareTeamRepository(other).watchForPerson(restoredAppa.id).first).single.name, 'Dr. S. Rao');
 
     final restoredRecords = RecordRepository(other, otherVault);

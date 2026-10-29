@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../model/expense.dart';
 import '../model/ids.dart';
@@ -29,6 +32,7 @@ class _State extends ConsumerState<AddExpenseScreen> {
   late PersonId? _person = widget.from?.personId ?? widget.personId;
   late ExpenseCategory _category = widget.from?.category ?? ExpenseCategory.consultation;
   late String? _paidBy = widget.from?.paidBy;
+  File? _receipt;
   DateTime _date = DateTime.now();
   bool _saving = false;
 
@@ -55,6 +59,32 @@ class _State extends ConsumerState<AddExpenseScreen> {
     if (picked != null) setState(() => _date = picked);
   }
 
+  Future<void> _addReceipt() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_outlined),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    final shot = await ImagePicker().pickImage(source: source, imageQuality: 85);
+    if (shot != null) setState(() => _receipt = File(shot.path));
+  }
+
   Future<void> _save() async {
     setState(() => _saving = true);
     final repository = await ref.read(expenseRepositoryProvider.future);
@@ -66,6 +96,7 @@ class _State extends ConsumerState<AddExpenseScreen> {
       category: _category,
       paidBy: _paidBy,
       spentOn: _date,
+      receipt: _receipt,
     );
     if (mounted) Navigator.of(context).pop();
   }
@@ -175,6 +206,13 @@ class _State extends ConsumerState<AddExpenseScreen> {
                   onSelected: (on) => setState(() => _paidBy = on ? m : null),
                 ),
             ],
+          ),
+          const SectionLabel('Receipt (optional)'),
+          OutlinedButton.icon(
+            onPressed: _addReceipt,
+            icon: Icon(_receipt == null ? Icons.photo_camera_outlined : Icons.check),
+            label: Text(_receipt == null ? 'Add a photo of the bill' : 'Photo added. Tap to change'),
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
           ),
           const SizedBox(height: 28),
           _saving
