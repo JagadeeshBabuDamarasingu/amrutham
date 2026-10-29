@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_providers.dart';
 
 import 'app_style.dart';
+import 'strings.dart';
 import 'family_screen.dart';
 import 'learn_screen.dart';
 import 'records_screen.dart';
@@ -110,7 +111,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            _tabs[i].$2,
+                            tr(context, _tabs[i].$2),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: i == _index

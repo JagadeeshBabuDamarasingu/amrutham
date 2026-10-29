@@ -35,4 +35,12 @@ class MemoryOnboardingStore implements OnboardingStore {
 
   @override
   Future<void> setBackupFolder(String? path) async => _backupFolder = path;
+
+  String? _language;
+
+  @override
+  Future<String?> language() async => _language;
+
+  @override
+  Future<void> setLanguage(String code) async => _language = code;
 }

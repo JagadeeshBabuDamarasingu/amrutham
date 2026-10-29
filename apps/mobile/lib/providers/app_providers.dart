@@ -302,6 +302,26 @@ final recordsProvider = StreamProvider<List<HealthRecord>>((ref) async* {
   yield* repository.watchAll();
 });
 
+/// The app language code. Starts as English, then takes the saved choice.
+class LanguageNotifier extends StateNotifier<String> {
+  LanguageNotifier(this._store) : super('en') {
+    _store.language().then((saved) {
+      if (saved != null && mounted) state = saved;
+    });
+  }
+
+  final OnboardingStore _store;
+
+  void choose(String code) {
+    state = code;
+    _store.setLanguage(code);
+  }
+}
+
+final languageProvider = StateNotifierProvider<LanguageNotifier, String>(
+  (ref) => LanguageNotifier(ref.watch(onboardingStoreProvider)),
+);
+
 final backupFolderProvider = FutureProvider<String?>(
   (ref) => ref.watch(onboardingStoreProvider).backupFolder(),
 );

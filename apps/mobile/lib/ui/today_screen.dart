@@ -6,6 +6,7 @@ import '../model/measurement.dart';
 import '../model/person.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
+import 'strings.dart';
 import 'add_expense_screen.dart';
 import 'add_history_event_screen.dart';
 import 'add_medication_course_screen.dart';
@@ -71,8 +72,8 @@ class TodayScreen extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       self == null
-                          ? _greeting(now)
-                          : '${_greeting(now)},\n${self.displayName.split(' ').first}',
+                          ? _greeting(context, now)
+                          : '${_greeting(context, now)},\n${self.displayName.split(' ').first}',
                       style: const TextStyle(
                         fontSize: 32,
                         height: 1.1,
@@ -94,7 +95,7 @@ class TodayScreen extends ConsumerWidget {
                   MaterialPageRoute(builder: (_) => const SettingsScreen()),
                 ),
                 icon: const Icon(Icons.settings_outlined),
-                tooltip: 'Settings',
+                tooltip: tr(context, 'Settings'),
               ),
             ],
           ),
@@ -156,7 +157,7 @@ class TodayScreen extends ConsumerWidget {
                 ),
               ),
             if (later.isNotEmpty) ...[
-              const SectionLabel('Later today'),
+              SectionLabel(tr(context, 'Later today')),
               for (final d in later)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -199,11 +200,14 @@ class TodayScreen extends ConsumerWidget {
     );
   }
 
-  static String _greeting(DateTime now) => now.hour < 12
-      ? 'Good morning'
-      : now.hour < 17
-      ? 'Good afternoon'
-      : 'Good evening';
+  static String _greeting(BuildContext context, DateTime now) => tr(
+    context,
+    now.hour < 12
+        ? 'Good morning'
+        : now.hour < 17
+        ? 'Good afternoon'
+        : 'Good evening',
+  );
 
   void _addPerson(BuildContext context) => Navigator.of(context).push(
     MaterialPageRoute(builder: (_) => const CreateProfileScreen()),
@@ -393,7 +397,7 @@ class _NextDoseCard extends StatelessWidget {
                       backgroundColor: const Color(0xFF3B5A4D),
                       minimumSize: const Size.fromHeight(48),
                     ),
-                    child: Text(label),
+                    child: Text(tr(context, label)),
                   ),
                 ),
                 if (status == DoseStatus.taken) const SizedBox(width: 10),

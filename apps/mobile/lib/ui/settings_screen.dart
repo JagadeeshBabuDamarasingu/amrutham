@@ -10,7 +10,9 @@ import '../backup/vault_backup.dart';
 import '../crypto/recovery_code.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
+import 'language_screen.dart';
 import 'restore_screen.dart';
+import 'strings.dart';
 
 /// Only what is real today: the privacy promise and the recovery code check.
 /// Sync, language and sharing settings from the designs come with those
@@ -28,8 +30,8 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
-          const Text(
-            'Settings',
+          Text(
+            tr(context, 'Settings'),
             style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -0.8),
           ),
           const SizedBox(height: 16),
@@ -114,6 +116,18 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SectionLabel('Language'),
+          Card(
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              title: Text(tr(context, 'Language'), style: const TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: const Text('Set on this phone only.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LanguageScreen()),
+              ),
             ),
           ),
           const SectionLabel('Home'),

@@ -21,12 +21,17 @@ abstract class OnboardingStore {
   /// Folder that "Back up now" writes into, or null to use the share sheet.
   Future<String?> backupFolder();
   Future<void> setBackupFolder(String? path);
+
+  /// App language code, e.g. 'hi'; null means English.
+  Future<String?> language();
+  Future<void> setLanguage(String code);
 }
 
 class SecureStorageOnboardingStore implements OnboardingStore {
   static const _welcomeKey = 'amrutham_welcome_seen';
   static const _recoveryKey = 'amrutham_recovery_record';
   static const _tipsHiddenKey = 'amrutham_tips_hidden';
+  static const _languageKey = 'amrutham_language';
   static const _backupFolderKey = 'amrutham_backup_folder';
 
   final FlutterSecureStorage _storage;
@@ -69,4 +74,11 @@ class SecureStorageOnboardingStore implements OnboardingStore {
   Future<void> setBackupFolder(String? path) => path == null
       ? _storage.delete(key: _backupFolderKey)
       : _storage.write(key: _backupFolderKey, value: path);
+
+  @override
+  Future<String?> language() => _storage.read(key: _languageKey);
+
+  @override
+  Future<void> setLanguage(String code) =>
+      _storage.write(key: _languageKey, value: code);
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -51,13 +52,16 @@ Future<void> _initNotifications() async {
   );
 }
 
-class AmruthamApp extends StatelessWidget {
+class AmruthamApp extends ConsumerWidget {
   const AmruthamApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'Amrutham',
+      locale: Locale(ref.watch(languageProvider)),
+      supportedLocales: const [Locale('en'), Locale('hi'), Locale('te')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: appTheme(),
       home: const SplashScreen(next: _AppGate()),
     );
