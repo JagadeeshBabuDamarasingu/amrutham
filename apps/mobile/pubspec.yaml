@@ -71,6 +71,7 @@ dependencies:
   url_launcher: ^6.3.3
   file_picker: ^13.3.0
   image_picker: ^1.2.4
+  printing: ^5.15.1
 
 dev_dependencies:
   flutter_test:

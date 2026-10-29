@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../model/allergy.dart';
@@ -143,6 +144,20 @@ class EmergencyCardScreen extends ConsumerWidget {
               ),
             ),
           ),
+          const SizedBox(height: 10),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+            onPressed: () => Printing.layoutPdf(
+              name: 'Emergency card ${person.displayName}',
+              // HTML, not drawn PDF text: the phone's own renderer has the
+              // fonts for Telugu, Hindi and Urdu names.
+              onLayout: (format) => Printing.convertHtml(
+                format: format,
+                html: cardHtml(person, allergies, courses),
+              ),
+            ),
+            child: const Text('Print or save as PDF'),
+          ),
           const SizedBox(height: 16),
           const Text(
             'Printed or shared, it works even if this phone is lost, locked '
@@ -162,6 +177,30 @@ class EmergencyCardScreen extends ConsumerWidget {
   static String _allergyLine(AllergyRecord a) =>
       '${a.substance} · ${a.reaction}'
       '${a.certainty == Certainty.confirmed ? '' : ' · as ${a.certainty.name}'}';
+
+  static String _esc(String s) => s
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;');
+
+  /// The printable page: the same facts as the plain text, large and plain.
+  @visibleForTesting
+  static String cardHtml(
+    PersonProfile p,
+    List<AllergyRecord> allergies,
+    List<MedicationCourse> courses,
+  ) {
+    String row(String label, String value) =>
+        '<p><b>${_esc(label)}</b><br>${_esc(value)}</p>';
+    return '<html><body style="font-family:sans-serif;font-size:20px">'
+        '<h1>Emergency card: ${_esc(p.displayName)}</h1>'
+        '${row('Blood group', p.bloodGroup ?? 'not recorded')}'
+        '${row('Allergies', allergies.isEmpty ? 'none recorded' : allergies.map(_allergyLine).join('; '))}'
+        '${row('Taking now', courses.isEmpty ? 'none' : courses.map((c) => c.medicationName).join(', '))}'
+        '${row('Call', p.emergencyContacts.isEmpty ? 'no contacts added' : p.emergencyContacts.map((c) => '${c.name} ${c.phone}').join('; '))}'
+        '<p style="font-size:14px">Entries marked "as reported" are not verified.</p>'
+        '</body></html>';
+  }
 
   static String _plainText(
     PersonProfile p,

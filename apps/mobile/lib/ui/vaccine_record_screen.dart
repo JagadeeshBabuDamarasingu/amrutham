@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../model/health_record.dart';
 import '../model/history_event.dart';
 import '../model/ids.dart';
 import '../providers/app_providers.dart';
+import 'add_record_screen.dart';
 import 'app_style.dart';
 import 'log_measurement_screen.dart' show dateLabel;
 
@@ -116,9 +118,31 @@ class VaccineRecordScreen extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 16),
-          OnboardButton(
-            label: '+ Add a vaccine',
-            onPressed: () => _add(context, ref),
+          Row(
+            children: [
+              Expanded(
+                child: OnboardButton(
+                  label: '+ Add a vaccine',
+                  onPressed: () => _add(context, ref),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => AddRecordScreen(
+                        personId: personId,
+                        type: RecordType.vaccineCard,
+                        title: 'Vaccination card',
+                      ),
+                    ),
+                  ),
+                  child: const Text('Photo of card'),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
           InkWell(

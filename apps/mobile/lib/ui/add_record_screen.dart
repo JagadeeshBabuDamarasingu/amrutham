@@ -13,9 +13,11 @@ import 'log_measurement_screen.dart' show monthNames;
 
 /// File a document: scan with the camera, pick photos, or pick files.
 class AddRecordScreen extends ConsumerStatefulWidget {
-  const AddRecordScreen({super.key, this.personId});
+  const AddRecordScreen({super.key, this.personId, this.type, this.title});
 
   final PersonId? personId;
+  final RecordType? type;
+  final String? title;
 
   @override
   ConsumerState<AddRecordScreen> createState() => _State();
@@ -34,6 +36,8 @@ class _State extends ConsumerState<AddRecordScreen> {
   void initState() {
     super.initState();
     _person = widget.personId;
+    if (widget.type != null) _type = widget.type!;
+    if (widget.title != null) _title.text = widget.title!;
   }
 
   @override

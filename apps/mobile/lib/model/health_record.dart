@@ -6,6 +6,7 @@ enum RecordType {
   scan('Scan'),
   bill('Bill'),
   discharge('Discharge'),
+  vaccineCard('Vaccine card'),
   other('Other');
 
   const RecordType(this.label);
