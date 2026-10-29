@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'app_style.dart';
 import 'family_screen.dart';
+import 'learn_screen.dart';
 import 'records_screen.dart';
 import 'today_screen.dart';
 
-/// The four tabs from the Doop frames. Records and Learn aren't built yet,
-/// so they say so rather than pretending.
+/// The four tabs from the Doop frames.
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
@@ -33,7 +33,7 @@ class _AppShellState extends State<AppShell> {
           TodayScreen(),
           FamilyScreen(),
           RecordsScreen(),
-          _ComingSoon('Learn'),
+          LearnScreen(),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -81,35 +81,6 @@ class _AppShellState extends State<AppShell> {
                 ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ComingSoon extends StatelessWidget {
-  const _ComingSoon(this.title);
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Not built yet. It's in the designs and coming soon.",
-              style: TextStyle(fontSize: 16, color: onboardMuted),
-            ),
-          ],
         ),
       ),
     );
