@@ -14,6 +14,7 @@ import 'care_team_screen.dart';
 import 'course_detail_screen.dart';
 import 'emergency_card_screen.dart';
 import 'history_screen.dart';
+import 'vaccine_record_screen.dart';
 import 'log_measurement_screen.dart';
 import 'metrics_screen.dart';
 
@@ -168,7 +169,18 @@ class ProfileDetailScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Tile(
+                  icon: Icons.vaccines_outlined,
+                  label: 'Vaccines',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => VaccineRecordScreen(personId: personId),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
           _SectionHeader(

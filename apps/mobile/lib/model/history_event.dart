@@ -4,6 +4,7 @@ enum HistoryKind {
   visit('Visit'),
   procedure('Procedure'),
   scan('Scan'),
+  vaccine('Vaccine'),
   other('Other');
 
   const HistoryKind(this.label);

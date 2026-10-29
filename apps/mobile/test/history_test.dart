@@ -72,4 +72,24 @@ void main() {
     expect(loaded.emergencyContacts.single.name, 'Anita');
     expect(loaded.emergencyContacts.single.relationship, 'daughter');
   });
+
+  test('vaccine entries round trip as their own kind', () async {
+    final realm = openInMemoryRealm();
+    addTearDown(realm.close);
+    final baby = await ProfileRepository(realm).createProfile(
+      displayName: 'Aarav',
+      relationship: RelationshipType.child,
+    );
+    final repo = HistoryRepository(realm);
+    await repo.addEvent(
+      personId: baby.id,
+      kind: HistoryKind.vaccine,
+      title: 'BCG',
+      eventDate: DateTime(2026, 7, 3),
+      provider: 'Government hospital',
+    );
+    final events = await repo.watchEvents(baby.id).first;
+    expect(events.single.kind, HistoryKind.vaccine);
+    expect(events.single.provider, 'Government hospital');
+  });
 }
