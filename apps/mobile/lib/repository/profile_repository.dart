@@ -93,6 +93,23 @@ class ProfileRepository {
     );
   }
 
+  Future<void> addEmergencyContact(
+    PersonId personId,
+    EmergencyContact contact,
+  ) async {
+    final row = _realm.find<PersonRow>(personId.value);
+    if (row == null) return;
+    _realm.write(() {
+      row.emergencyContacts.add(
+        EmergencyContactRow(
+          contact.name,
+          contact.phone,
+          relationship: contact.relationship,
+        ),
+      );
+    });
+  }
+
   // ---- FamilyHistoryEntry ----
 
   Stream<List<FamilyHistoryEntry>> watchFamilyHistory(PersonId personId) {

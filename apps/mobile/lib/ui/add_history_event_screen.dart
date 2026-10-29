@@ -1,0 +1,124 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../model/history_event.dart';
+import '../model/ids.dart';
+import '../providers/app_providers.dart';
+import 'app_style.dart';
+import 'log_measurement_screen.dart' show monthNames;
+
+/// A visit, procedure or scan. Pick a future date for something planned.
+class AddHistoryEventScreen extends ConsumerStatefulWidget {
+  const AddHistoryEventScreen({super.key, required this.personId});
+
+  final PersonId personId;
+
+  @override
+  ConsumerState<AddHistoryEventScreen> createState() => _State();
+}
+
+class _State extends ConsumerState<AddHistoryEventScreen> {
+  HistoryKind _kind = HistoryKind.visit;
+  final _title = TextEditingController();
+  final _provider = TextEditingController();
+  final _notes = TextEditingController();
+  DateTime _date = DateTime.now();
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _provider.dispose();
+    _notes.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  String? _nullIfEmpty(TextEditingController c) =>
+      c.text.trim().isEmpty ? null : c.text.trim();
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    final repository = await ref.read(historyRepositoryProvider.future);
+    await repository.addEvent(
+      personId: widget.personId,
+      kind: _kind,
+      title: _title.text.trim(),
+      eventDate: _date,
+      provider: _nullIfEmpty(_provider),
+      notes: _nullIfEmpty(_notes),
+    );
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final planned = _date.isAfter(DateTime.now());
+    return Scaffold(
+      appBar: AppBar(title: const Text('Add to history')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        children: [
+          const SectionLabel('What'),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final k in HistoryKind.values)
+                ChoiceChip(
+                  label: Text(k.label),
+                  selected: k == _kind,
+                  onSelected: (_) => setState(() => _kind = k),
+                ),
+            ],
+          ),
+          const SectionLabel('Title'),
+          TextField(
+            controller: _title,
+            onChanged: (_) => setState(() {}),
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(hintText: 'Knee consultation'),
+          ),
+          const SectionLabel('Date'),
+          OutlinedButton(
+            onPressed: _pickDate,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              alignment: Alignment.centerLeft,
+            ),
+            child: Text(
+              '${_date.day} ${monthNames[_date.month - 1]} ${_date.year}'
+              '${planned ? ' · planned' : ''}',
+            ),
+          ),
+          const SectionLabel('Doctor or hospital (optional)'),
+          TextField(
+            controller: _provider,
+            decoration: const InputDecoration(hintText: 'Dr. S. Rao'),
+          ),
+          const SectionLabel('Notes (optional)'),
+          TextField(
+            controller: _notes,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+          ),
+          const SizedBox(height: 28),
+          _saving
+              ? const Center(child: CircularProgressIndicator())
+              : OnboardButton(
+                  label: 'Save',
+                  onPressed: _title.text.trim().isEmpty ? null : _save,
+                ),
+        ],
+      ),
+    );
+  }
+}

@@ -126,7 +126,7 @@ class _MetricsScreenState extends ConsumerState<MetricsScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 1.7,
+                childAspectRatio: 1.45,
                 children: [
                   for (final kind in MeasurementKind.values)
                     if (kind != _kind)

@@ -10,6 +10,8 @@ import 'add_family_history_screen.dart';
 import 'add_medication_course_screen.dart';
 import 'app_style.dart';
 import 'course_detail_screen.dart';
+import 'emergency_card_screen.dart';
+import 'history_screen.dart';
 import 'log_measurement_screen.dart';
 import 'metrics_screen.dart';
 
@@ -110,6 +112,36 @@ class ProfileDetailScreen extends ConsumerWidget {
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => LogMeasurementScreen(personId: personId),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _Tile(
+                  icon: Icons.history,
+                  label: 'History',
+                  dark: true,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => HistoryScreen(personId: personId),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Tile(
+                  icon: Icons.badge_outlined,
+                  label: 'Emergency card',
+                  dark: true,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => EmergencyCardScreen(personId: personId),
                     ),
                   ),
                 ),

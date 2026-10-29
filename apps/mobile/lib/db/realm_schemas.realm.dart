@@ -1103,3 +1103,144 @@ class MeasurementRow extends _MeasurementRow
   @override
   SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
 }
+
+class HistoryEventRow extends _HistoryEventRow
+    with RealmEntity, RealmObjectBase, RealmObject {
+  HistoryEventRow(
+    String id,
+    String personId,
+    String kind,
+    String title,
+    DateTime eventDate, {
+    String? provider,
+    String? notes,
+  }) {
+    RealmObjectBase.set(this, 'id', id);
+    RealmObjectBase.set(this, 'personId', personId);
+    RealmObjectBase.set(this, 'kind', kind);
+    RealmObjectBase.set(this, 'title', title);
+    RealmObjectBase.set(this, 'eventDate', eventDate);
+    RealmObjectBase.set(this, 'provider', provider);
+    RealmObjectBase.set(this, 'notes', notes);
+  }
+
+  HistoryEventRow._();
+
+  @override
+  String get id => RealmObjectBase.get<String>(this, 'id') as String;
+  @override
+  set id(String value) => RealmObjectBase.set(this, 'id', value);
+
+  @override
+  String get personId =>
+      RealmObjectBase.get<String>(this, 'personId') as String;
+  @override
+  set personId(String value) => RealmObjectBase.set(this, 'personId', value);
+
+  @override
+  String get kind => RealmObjectBase.get<String>(this, 'kind') as String;
+  @override
+  set kind(String value) => RealmObjectBase.set(this, 'kind', value);
+
+  @override
+  String get title => RealmObjectBase.get<String>(this, 'title') as String;
+  @override
+  set title(String value) => RealmObjectBase.set(this, 'title', value);
+
+  @override
+  DateTime get eventDate =>
+      RealmObjectBase.get<DateTime>(this, 'eventDate') as DateTime;
+  @override
+  set eventDate(DateTime value) =>
+      RealmObjectBase.set(this, 'eventDate', value);
+
+  @override
+  String? get provider =>
+      RealmObjectBase.get<String>(this, 'provider') as String?;
+  @override
+  set provider(String? value) => RealmObjectBase.set(this, 'provider', value);
+
+  @override
+  String? get notes => RealmObjectBase.get<String>(this, 'notes') as String?;
+  @override
+  set notes(String? value) => RealmObjectBase.set(this, 'notes', value);
+
+  @override
+  Stream<RealmObjectChanges<HistoryEventRow>> get changes =>
+      RealmObjectBase.getChanges<HistoryEventRow>(this);
+
+  @override
+  Stream<RealmObjectChanges<HistoryEventRow>> changesFor([
+    List<String>? keyPaths,
+  ]) => RealmObjectBase.getChangesFor<HistoryEventRow>(this, keyPaths);
+
+  @override
+  HistoryEventRow freeze() =>
+      RealmObjectBase.freezeObject<HistoryEventRow>(this);
+
+  EJsonValue toEJson() {
+    return <String, dynamic>{
+      'id': id.toEJson(),
+      'personId': personId.toEJson(),
+      'kind': kind.toEJson(),
+      'title': title.toEJson(),
+      'eventDate': eventDate.toEJson(),
+      'provider': provider.toEJson(),
+      'notes': notes.toEJson(),
+    };
+  }
+
+  static EJsonValue _toEJson(HistoryEventRow value) => value.toEJson();
+  static HistoryEventRow _fromEJson(EJsonValue ejson) {
+    if (ejson is! Map<String, dynamic>) return raiseInvalidEJson(ejson);
+    return switch (ejson) {
+      {
+        'id': EJsonValue id,
+        'personId': EJsonValue personId,
+        'kind': EJsonValue kind,
+        'title': EJsonValue title,
+        'eventDate': EJsonValue eventDate,
+      } =>
+        HistoryEventRow(
+          fromEJson(id),
+          fromEJson(personId),
+          fromEJson(kind),
+          fromEJson(title),
+          fromEJson(eventDate),
+          provider: fromEJson(ejson['provider']),
+          notes: fromEJson(ejson['notes']),
+        ),
+      _ => raiseInvalidEJson(ejson),
+    };
+  }
+
+  static final schema = () {
+    RealmObjectBase.registerFactory(HistoryEventRow._);
+    register(_toEJson, _fromEJson);
+    return const SchemaObject(
+      ObjectType.realmObject,
+      HistoryEventRow,
+      'HistoryEventRow',
+      [
+        SchemaProperty('id', RealmPropertyType.string, primaryKey: true),
+        SchemaProperty(
+          'personId',
+          RealmPropertyType.string,
+          indexType: RealmIndexType.regular,
+        ),
+        SchemaProperty('kind', RealmPropertyType.string),
+        SchemaProperty('title', RealmPropertyType.string),
+        SchemaProperty(
+          'eventDate',
+          RealmPropertyType.timestamp,
+          indexType: RealmIndexType.regular,
+        ),
+        SchemaProperty('provider', RealmPropertyType.string, optional: true),
+        SchemaProperty('notes', RealmPropertyType.string, optional: true),
+      ],
+    );
+  }();
+
+  @override
+  SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
+}

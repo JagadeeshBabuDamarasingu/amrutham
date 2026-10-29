@@ -114,3 +114,21 @@ class _MeasurementRow {
   late DateTime measuredAt;
   String? note;
 }
+
+/// A dated event in someone's medical history: a visit, procedure or scan.
+/// Medicine courses are already dated in MedicationCourseRow, so the timeline
+/// merges those in rather than copying them here. A future `eventDate` means
+/// the event is planned.
+@RealmModel()
+class _HistoryEventRow {
+  @PrimaryKey()
+  late String id;
+  @Indexed()
+  late String personId;
+  late String kind;
+  late String title;
+  @Indexed()
+  late DateTime eventDate;
+  String? provider;
+  String? notes;
+}

@@ -13,3 +13,5 @@ extension type const MedicationCourseId(String value) {}
 extension type const SchedulePhaseId(String value) {}
 
 extension type const MeasurementId(String value) {}
+
+extension type const HistoryEventId(String value) {}

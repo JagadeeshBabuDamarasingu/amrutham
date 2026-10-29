@@ -7,12 +7,14 @@ import '../crypto/onboarding_store.dart';
 import '../db/connection.dart';
 import '../model/allergy.dart';
 import '../model/family_history.dart';
+import '../model/history_event.dart';
 import '../model/ids.dart';
 import '../model/measurement.dart';
 import '../model/medication.dart';
 import '../model/person.dart';
 import '../model/schedule_phase.dart';
 import '../reminder/reminder_repository.dart';
+import '../repository/history_repository.dart';
 import '../repository/measurement_repository.dart';
 import '../repository/medication_repository.dart';
 import '../repository/profile_repository.dart';
@@ -212,3 +214,14 @@ final todaysDosesProvider = FutureProvider<List<TodayDose>>((ref) async {
 
 /// Whose numbers the Today tab shows; null means the first person.
 final selectedPersonIdProvider = StateProvider<PersonId?>((ref) => null);
+
+final historyRepositoryProvider = FutureProvider<HistoryRepository>((ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  return HistoryRepository(db);
+});
+
+final historyEventsProvider =
+    StreamProvider.family<List<HistoryEvent>, PersonId>((ref, personId) async* {
+      final repository = await ref.watch(historyRepositoryProvider.future);
+      yield* repository.watchEvents(personId);
+    });
