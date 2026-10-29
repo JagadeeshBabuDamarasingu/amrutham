@@ -1,32 +1,30 @@
 // F2 acceptance: a course with a multi-phase taper round-trips through the
 // repository layer. See specs/phase-1-v1/01-features.md F2.
 
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:realm/realm.dart';
 
-// drift's auto-named `Table` subclasses collide with our own domain-model
-// classes of the same name — see medication_repository.dart's import comment.
-import 'package:amrutham/db/database.dart'
-    hide EmergencyContact, MedicationCourse, SchedulePhase;
 import 'package:amrutham/model/medication.dart';
 import 'package:amrutham/model/person.dart';
 import 'package:amrutham/model/schedule_phase.dart';
 import 'package:amrutham/repository/medication_repository.dart';
 import 'package:amrutham/repository/profile_repository.dart';
 
+import 'realm_test_helper.dart';
+
 void main() {
-  late AppDatabase db;
+  late Realm realm;
   late ProfileRepository profileRepository;
   late MedicationRepository medicationRepository;
 
   setUp(() {
-    db = AppDatabase(NativeDatabase.memory());
-    profileRepository = ProfileRepository(db);
-    medicationRepository = MedicationRepository(db);
+    realm = openInMemoryRealm();
+    profileRepository = ProfileRepository(realm);
+    medicationRepository = MedicationRepository(realm);
   });
 
-  tearDown(() async {
-    await db.close();
+  tearDown(() {
+    realm.close();
   });
 
   test('a course round-trips through the database', () async {

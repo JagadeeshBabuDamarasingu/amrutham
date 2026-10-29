@@ -12,7 +12,7 @@ amrutham/
 │       ├── lib/
 │       │   ├── main.dart
 │       │   ├── model/               # pure Dart data classes / sealed classes (§3)
-│       │   ├── db/                  # drift schema + generated code (§4)
+│       │   ├── db/                  # Realm schema + generated code (§4; originally drift)
 │       │   ├── vault/               # plain-file read/write engine (§5)
 │       │   ├── reminder/            # flutter_local_notifications-based scheduling (§6)
 │       │   ├── capture/             # document capture pipeline, tier 1 only this phase (§7)
@@ -36,7 +36,7 @@ Pin exact versions; never an unpinned `^` on anything touching native code, encr
 | Concern | Choice | Note |
 |---|---|---|
 | Framework | Flutter (Dart 3.x) | — |
-| Local DB | `drift` + `sqlite3` (v3.10+), using the build-hook `source: sqlcipher` mode | **Not** `source: sqlite3mc` — a real benchmark found the generic SQLite3MultipleCiphers path is 3.81× slower than true SQLCipher on iOS (no hardware crypto acceleration). Not `sqlcipher_flutter_libs` — formally end-of-life. |
+| Local DB | ~~`drift` + `sqlite3` (v3.10+), using the build-hook `source: sqlcipher` mode~~ **Superseded: `realm`** (path dependency on the vendored SDK under `packages/realm-dart`, not pub.dev). Encryption is Realm's built-in AES-256 store (a 64-byte key from `DbKeyProvider`), not SQLCipher — the 3.81×-slower-than-SQLCipher `sqlite3mc` benchmark below no longer applies to this app; it's kept as historical record of why drift was chosen originally. | Original reasoning, no longer in effect: **not** `source: sqlite3mc` — a real benchmark found the generic SQLite3MultipleCiphers path is 3.81× slower than true SQLCipher on iOS (no hardware crypto acceleration). Not `sqlcipher_flutter_libs` — formally end-of-life. |
 | Reminder scheduling | `flutter_local_notifications` | **Not** `workmanager`. Neither `WorkManager` nor `BGTaskScheduler` actually guarantees firing at an exact time — both are best-effort background-*work* APIs. The correct primitive on both platforms is an OS-level scheduled notification (`AlarmManager`+`NotificationCompat` on Android, `UNUserNotificationCenter` on iOS), which this package wraps correctly. No custom native code is needed for this. |
 | Secure key storage | `flutter_secure_storage` | **Strict version-pinning + mandatory migration-test discipline**: this package has a documented, recurring history of migration-triggered data-loss/lockout bugs (not steady-state bugs). Never bump its major version without first running a full backup-then-restore test against production-shaped data. |
 | Recovery/export key derivation | `package:cryptography` (or its fork `cryptography_plus`) — `Argon2id` class | Pure-Dart implementation, not natively accelerated for Argon2id specifically. Benchmark actual derivation time on a real low-end Android device before fixing memory/time cost parameters — do this before M1's onboarding flow locks them in. |
@@ -218,7 +218,9 @@ class EpisodeOfCare {
 
 Wrap IDs in `@JvmInline`-equivalent Dart extension types or simple value classes where practical (`PersonId`, `CourseId`, etc.) — prevents passing a `DocumentId` where a `PersonId` is expected, a real bug class in a schema this cross-referenced.
 
-## 4. Database schema (drift)
+## 4. Database schema (originally drift; superseded by Realm)
+
+**Update**: this app now uses `realm` instead of `drift`+`sqlite3`/SQLCipher — see §2's table. The SQL schema below is kept as the source-of-truth *shape* (field names/types/nullability); the actual implementation is `apps/mobile/lib/db/realm_schemas.dart`'s `@RealmModel` classes, one per table here, with the same rebuildable-cache invariant. Notable mapping differences: `emergency_contact` is a Realm *embedded* object list on `person` rather than a separate joined table; `days_of_week`/`times_of_day` are native `RealmList<int>`/`RealmList<String>` instead of comma-encoded strings; dates are native `DateTime` instead of ISO-8601 strings; there is no SQL join — `MedicationRepository`'s cross-table queries (`activeNonConflictedPhasesForPerson`, `allPhasesForPerson`) resolve in two RQL steps instead.
 
 The DB is a **rebuildable cache**, not the source of truth. Every table below must be derivable purely by re-reading the vault directory (§5) — if a rebuild-from-files procedure can't reconstruct a table, that table is modeling something that shouldn't exist yet, or the vault format is missing a field.
 
@@ -341,7 +343,9 @@ CREATE TABLE episode_of_care (
 );
 ```
 
-### Encryption setup (concrete, verified recipe)
+### Encryption setup (concrete, verified recipe) — superseded by Realm's native encryption
+
+This SQLCipher recipe no longer applies (see §2/§4's update note); kept for history. The current setup is `Configuration.local(schema, path: ..., encryptionKey: dbKey)` in `apps/mobile/lib/db/connection.dart`, with `dbKey` a 64-byte key from `DbKeyProvider` (§8) — no PRAGMA, no build hook.
 
 In `pubspec.yaml`:
 ```yaml
@@ -467,7 +471,7 @@ class CaptureRepository {
 
 Two independent keys, never conflated:
 
-1. **Device DB key** — generated on first run, `flutter_secure_storage`-backed (Android Keystore / iOS Keychain under the hood). See §2's pinning discipline.
+1. **Device DB key** — generated on first run, `flutter_secure_storage`-backed (Android Keystore / iOS Keychain under the hood). Now a 64-byte key (Realm's `Configuration.encryptionKey` requirement) rather than an arbitrary-length SQLCipher passphrase — see §2's pinning discipline and the DB update note in §4.
 2. **Export/recovery passphrase** — user-set (or app-generated + shown once) at vault creation. Derives an export-encryption key via `package:cryptography`'s `Argon2id` class. This is the key a "recovery code" printout represents.
 
 ```dart

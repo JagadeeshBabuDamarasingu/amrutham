@@ -1,0 +1,25 @@
+# Ingore build file
+.dart_tool/
+
+# Dart packages and Flutter plugins should not commit these files
+pubspec.lock
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+release/
+
+# melos
+.idea/
+pubspec_overrides.yaml
+melos**.iml
+
+# test
+test-results.json
+coverage/
+
+# docs
+doc/api/
+
+# custom lint
+custom_lint.log

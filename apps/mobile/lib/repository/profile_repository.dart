@@ -1,10 +1,7 @@
-import 'package:drift/drift.dart';
+import 'package:realm/realm.dart';
 import 'package:ulid/ulid.dart';
 
-// See medication_repository.dart's import comment: drift's auto-named
-// `Table` subclasses (not the `AS ...Row` data classes) collide with our
-// domain-model classes of the same name.
-import '../db/database.dart' hide AllergyRecord, FamilyHistoryEntry, EmergencyContact;
+import '../db/realm_schemas.dart';
 import '../model/allergy.dart';
 import '../model/certainty.dart';
 import '../model/family_history.dart';
@@ -17,43 +14,27 @@ import '../model/person.dart';
 /// must go through the repository layer consistently rather than writing to
 /// the database directly from UI code").
 class ProfileRepository {
-  final AppDatabase _db;
+  final Realm _realm;
 
-  ProfileRepository(this._db);
+  ProfileRepository(this._realm);
 
   // ---- PersonProfile ----
 
   Stream<List<PersonProfile>> watchProfiles() {
-    return _db.select(_db.person).watch().asyncMap((rows) async {
-      final profiles = <PersonProfile>[];
-      for (final row in rows) {
-        profiles.add(await _hydrateProfile(row));
-      }
-      return profiles;
-    });
+    return _realm.all<PersonRow>().changes.map(
+      (c) => c.results.map(_profileFromRow).toList(),
+    );
   }
 
-  Future<PersonProfile> _hydrateProfile(PersonRow row) async {
-    final contactRows = await (_db.select(
-      _db.emergencyContact,
-    )..where((t) => t.personId.equals(row.id))).get();
-    return _profileFromRow(row, contactRows);
-  }
-
-  PersonProfile _profileFromRow(
-    PersonRow row,
-    List<EmergencyContactRow> contactRows,
-  ) {
+  PersonProfile _profileFromRow(PersonRow row) {
     return PersonProfile(
       id: PersonId(row.id),
       displayName: row.displayName,
       relationship: RelationshipType.values.byName(row.relationship),
-      dateOfBirth: row.dateOfBirth == null
-          ? null
-          : DateTime.parse(row.dateOfBirth!),
+      dateOfBirth: row.dateOfBirth,
       sex: row.sex,
       bloodGroup: row.bloodGroup,
-      emergencyContacts: contactRows
+      emergencyContacts: row.emergencyContacts
           .map(
             (c) => EmergencyContact(
               name: c.name,
@@ -62,7 +43,7 @@ class ProfileRepository {
             ),
           )
           .toList(),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt),
+      createdAt: row.createdAt,
     );
   }
 
@@ -77,33 +58,28 @@ class ProfileRepository {
     final id = PersonId(Ulid().toString());
     final createdAt = DateTime.now();
 
-    await _db
-        .into(_db.person)
-        .insert(
-          PersonCompanion.insert(
-            id: id.value,
-            displayName: displayName,
-            relationship: relationship.name,
-            dateOfBirth: Value(dateOfBirth?.toIso8601String()),
-            sex: Value(sex),
-            bloodGroup: Value(bloodGroup),
-            createdAt: createdAt.millisecondsSinceEpoch,
-          ),
-        );
-
-    for (final contact in emergencyContacts) {
-      await _db
-          .into(_db.emergencyContact)
-          .insert(
-            EmergencyContactCompanion.insert(
-              id: Ulid().toString(),
-              personId: id.value,
-              name: contact.name,
-              phone: contact.phone,
-              relationship: Value(contact.relationship),
-            ),
-          );
-    }
+    _realm.write(() {
+      _realm.add(
+        PersonRow(
+          id.value,
+          displayName,
+          relationship.name,
+          createdAt,
+          dateOfBirth: dateOfBirth,
+          sex: sex,
+          bloodGroup: bloodGroup,
+          emergencyContacts: emergencyContacts
+              .map(
+                (c) => EmergencyContactRow(
+                  c.name,
+                  c.phone,
+                  relationship: c.relationship,
+                ),
+              )
+              .toList(),
+        ),
+      );
+    });
 
     return PersonProfile(
       id: id,
@@ -120,11 +96,10 @@ class ProfileRepository {
   // ---- FamilyHistoryEntry ----
 
   Stream<List<FamilyHistoryEntry>> watchFamilyHistory(PersonId personId) {
-    return (_db.select(
-      _db.familyHistoryEntry,
-    )..where((t) => t.personId.equals(personId.value))).watch().map(
-      (rows) => rows.map(_familyHistoryFromRow).toList(),
-    );
+    return _realm
+        .query<FamilyHistoryEntryRow>(r'personId == $0', [personId.value])
+        .changes
+        .map((c) => c.results.map(_familyHistoryFromRow).toList());
   }
 
   FamilyHistoryEntry _familyHistoryFromRow(FamilyHistoryEntryRow row) {
@@ -152,21 +127,21 @@ class ProfileRepository {
     String? notes,
   }) async {
     final id = FamilyHistoryEntryId(Ulid().toString());
-    await _db
-        .into(_db.familyHistoryEntry)
-        .insert(
-          FamilyHistoryEntryCompanion.insert(
-            id: id.value,
-            personId: personId.value,
-            relationship: relationship,
-            conditionText: conditionText,
-            conditionCode: Value(conditionCode),
-            onsetAgeApprox: Value(onsetAgeApprox),
-            outcome: Value(outcome),
-            certainty: certainty.name,
-            notes: Value(notes),
-          ),
-        );
+    _realm.write(() {
+      _realm.add(
+        FamilyHistoryEntryRow(
+          id.value,
+          personId.value,
+          relationship,
+          conditionText,
+          certainty.name,
+          conditionCode: conditionCode,
+          onsetAgeApprox: onsetAgeApprox,
+          outcome: outcome,
+          notes: notes,
+        ),
+      );
+    });
     return FamilyHistoryEntry(
       id: id,
       personId: personId,
@@ -183,11 +158,10 @@ class ProfileRepository {
   // ---- AllergyRecord ----
 
   Stream<List<AllergyRecord>> watchAllergies(PersonId personId) {
-    return (_db.select(
-      _db.allergyRecord,
-    )..where((t) => t.personId.equals(personId.value))).watch().map(
-      (rows) => rows.map(_allergyFromRow).toList(),
-    );
+    return _realm
+        .query<AllergyRecordRow>(r'personId == $0', [personId.value])
+        .changes
+        .map((c) => c.results.map(_allergyFromRow).toList());
   }
 
   AllergyRecord _allergyFromRow(AllergyRecordRow row) {
@@ -211,19 +185,19 @@ class ProfileRepository {
     String? notes,
   }) async {
     final id = AllergyRecordId(Ulid().toString());
-    await _db
-        .into(_db.allergyRecord)
-        .insert(
-          AllergyRecordCompanion.insert(
-            id: id.value,
-            personId: personId.value,
-            substance: substance,
-            reaction: reaction,
-            severity: Value(severity),
-            certainty: certainty.name,
-            notes: Value(notes),
-          ),
-        );
+    _realm.write(() {
+      _realm.add(
+        AllergyRecordRow(
+          id.value,
+          personId.value,
+          substance,
+          reaction,
+          certainty.name,
+          severity: severity,
+          notes: notes,
+        ),
+      );
+    });
     return AllergyRecord(
       id: id,
       personId: personId,

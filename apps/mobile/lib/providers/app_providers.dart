@@ -1,13 +1,9 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:realm/realm.dart';
 
 import '../crypto/key_manager.dart';
 import '../db/connection.dart';
-// See medication_repository.dart's import comment: drift's auto-named
-// `Table` subclasses (not the `AS ...Row` data classes) collide with our
-// domain-model classes of the same name.
-import '../db/database.dart'
-    hide AllergyRecord, FamilyHistoryEntry, MedicationCourse, SchedulePhase;
 import '../model/allergy.dart';
 import '../model/family_history.dart';
 import '../model/ids.dart';
@@ -24,15 +20,15 @@ final dbKeyProviderProvider = Provider<DbKeyProvider>((ref) {
 
 /// The device DB key must be resolved (async, secure-storage-backed) before
 /// the database can be opened — see crypto/key_manager.dart.
-final dbKeyProvider = FutureProvider<String>((ref) {
+final dbKeyProvider = FutureProvider<List<int>>((ref) {
   return ref.watch(dbKeyProviderProvider).getOrCreateDbKey();
 });
 
-final databaseProvider = FutureProvider<AppDatabase>((ref) async {
+final databaseProvider = FutureProvider<Realm>((ref) async {
   final dbKey = await ref.watch(dbKeyProvider.future);
-  final db = AppDatabase(openConnection(dbKey));
-  ref.onDispose(db.close);
-  return db;
+  final realm = await openRealm(dbKey);
+  ref.onDispose(realm.close);
+  return realm;
 });
 
 final profileRepositoryProvider = FutureProvider<ProfileRepository>((

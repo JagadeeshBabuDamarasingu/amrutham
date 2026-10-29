@@ -1,0 +1,416 @@
+name: Realm Dart CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  REALM_CI: true
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    name: Build Windows
+    uses: ./.github/workflows/build-native.yml
+    with:
+      runner: windows-latest
+      binary: windows
+      build: '["windows"]'
+
+  build-macos:
+    name: Build MacOS
+    uses: ./.github/workflows/build-native.yml
+    with:
+      runner: macos-latest
+      binary: macos
+      build: '["macos"]'
+
+  build-linux:
+    name: Build Linux
+    uses: ./.github/workflows/build-native.yml
+    with:
+      runner: ubuntu-22.04 # Building on the lowest possible Linux (Ubuntu) version for compatibility
+      binary: linux
+      build: '["linux"]'
+
+  build-android:
+    name: Build Android
+    uses: ./.github/workflows/build-native.yml
+    with:
+      runner: ubuntu-22.04
+      binary: android
+      build: '["android-x86_64", "android-armeabi-v7a", "android-arm64-v8a"]'
+
+  build-ios:
+    name: Build IOS
+    uses: ./.github/workflows/build-native.yml
+    with:
+      runner: macos-latest
+      binary: ios
+      build: '["ios-device", "ios-simulator"]'
+
+  build-android-combined:
+    name: Build combine Android
+    needs: build-android
+    uses: ./.github/workflows/binary-combine-android.yml
+
+  build-ios-xcframework:
+    name: Build combine iOS
+    needs: build-ios
+    uses: ./.github/workflows/binary-combine-ios.yml
+
+  # Dart jobs
+
+  dart-tests-windows:
+    name: Dart Tests Windows
+    uses: ./.github/workflows/dart-desktop-tests.yml
+    needs:
+      - build-windows
+    secrets: inherit
+    with:
+      runner: windows-latest
+
+  dart-tests-macos:
+    name: Dart Tests MacOS
+    uses: ./.github/workflows/dart-desktop-tests.yml
+    needs:
+      - build-macos
+    secrets: inherit
+    with:
+      runner: macos-13
+
+  dart-tests-macos-arm:
+    name: Dart Tests MacOS Arm
+    uses: ./.github/workflows/dart-desktop-tests.yml
+    needs:
+      - build-macos
+    secrets: inherit
+    with:
+      runner: macos-14
+      arch: arm64
+
+  dart-tests-linux:
+    name: Dart Tests Linux
+    uses: ./.github/workflows/dart-desktop-tests.yml
+    needs:
+      - build-linux
+    secrets: inherit
+    with:
+      runner: ubuntu-latest
+
+  # Flutter jobs
+  flutter-tests-windows:
+    name: Flutter Tests Windows
+    uses: ./.github/workflows/flutter-desktop-tests.yml
+    needs:
+      - build-windows
+    secrets: inherit
+    with:
+      runner: windows-latest
+
+  flutter-tests-macos:
+    name: Flutter Tests MacOS
+    uses: ./.github/workflows/flutter-desktop-tests.yml
+    needs:
+      - build-macos
+    secrets: inherit
+    with:
+      runner: macos-13
+
+  flutter-tests-macos-arm:
+    name: Flutter Tests MacOS Arm
+    uses: ./.github/workflows/flutter-desktop-tests.yml
+    needs:
+      - build-macos
+    secrets: inherit
+    with:
+      runner: macos-14
+      arch: arm64
+
+  flutter-tests-linux:
+    name: Flutter Tests Linux
+    uses: ./.github/workflows/flutter-desktop-tests.yml
+    needs:
+      - build-linux
+    secrets: inherit
+    with:
+      runner: ubuntu-latest
+
+  flutter-tests-ios:
+    runs-on: macos-14
+    name: Flutter Tests iOS
+    timeout-minutes: 45
+    needs:
+      - build-ios-xcframework
+    defaults:
+      run:
+        working-directory: packages/realm/tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Setup runner
+        uses: ./.github/actions/setup-runner
+
+      - name: Bump ulimit
+        run: |
+          ulimit -n
+          ulimit -n 10240
+
+      - name: Enable ccache
+        run: echo "/usr/lib/ccache:/usr/local/opt/ccache/libexec" >> $GITHUB_PATH
+
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: librealm-ios
+          path: packages/realm_dart/binary/ios
+
+      - name: Launch Simulator
+        uses: futureware-tech/simulator-action@v3
+        with:
+          model: "iPhone SE (3rd generation)"
+          os: "iOS"
+          os_version: ">= 14.0"
+
+      - name: Run tests on iOS Simulator
+        run: |
+          flutter test integration_test/all_tests.dart \
+            --file-reporter=json:test-results.json \
+            --suppress-analytics
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1.8.0
+        if: success() || failure()
+        with:
+          name: Test Results Flutter iOS
+          path: test-results.json
+          reporter: dart-json
+          only-summary: true
+          working-directory: packages/realm/tests
+
+  flutter-tests-android:
+    runs-on: ubuntu-latest
+    name: Flutter Tests Android
+    timeout-minutes: 45
+    needs:
+      - build-android-combined
+    defaults:
+      run:
+        working-directory: packages/realm/tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: librealm-android
+          path: packages/realm_dart/binary/android
+
+      - name: Setup Runner
+        uses: ./.github/actions/setup-runner
+
+      # Hack to free up space on the runner to ensure we have enough diskspace to run the emulator
+      - name: Remove unnecessary files (dotnet, etc.)
+        run: |
+          sudo rm -rf /usr/share/dotnet
+
+      # TODO: Move CI run tests on Android Emulator into device farm https://github.com/realm/realm-dart/issues/691
+      - name: Setup Android Emulator cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-31-x86_64_2
+
+      - name: Create Android Emulator and generate snapshot for caching
+        if: ${{ steps.avd-cache.outputs.cache-hit != 'true' }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          force-avd-creation: false
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          api-level: 31
+          arch: x86_64
+          script: echo "Generated Emulator snapshot for caching."
+          ndk: 27.0.12077973
+
+      - name: Run tests on Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          force-avd-creation: false
+          disable-animations: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          api-level: 31
+          arch: x86_64
+          script: cd packages/realm/tests && flutter test integration_test/all_tests.dart --file-reporter=json:test-results.json --suppress-analytics
+          ndk: 27.0.12077973
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1.8.0
+        if: success() || failure()
+        with:
+          name: Test Results Flutter Android
+          path: test-results.json
+          reporter: dart-json
+          only-summary: true
+          working-directory: packages/realm/tests
+
+  # Generator jobs
+
+  generator:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macos, windows]
+    defaults:
+      run:
+        shell: bash
+        working-directory: packages/realm_generator
+
+    runs-on: ${{ matrix.os }}-latest
+    name: Generator Tests
+
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Setup Runner
+        uses: ./.github/actions/setup-runner
+
+      - name: Delete generated files in realm_dart
+        run: |
+          find . -name "*.g.dart" -delete
+          find . -name "*.realm.dart" -delete
+        working-directory: packages/realm_dart
+
+      - name: Run generator in realm_dart
+        run: |
+          dart pub get
+          dart run build_runner build --delete-conflicting-outputs
+        working-directory: packages/realm_dart
+
+      - name: Run generator in realm_dart/example
+        run: |
+          dart pub get
+          dart run build_runner build --delete-conflicting-outputs
+        working-directory: packages/realm_dart/example
+
+      - name: Run generator in realm/example
+        run: |
+          dart pub get
+          dart run build_runner build --delete-conflicting-outputs
+        working-directory: packages/realm/example
+
+      - name: Install LLVM
+        run: sudo apt update && sudo apt-get install -y libclang-dev
+        if: ${{ matrix.os == 'ubuntu' }}
+
+      - name: Run ffigen
+        run: >-
+          dart pub global activate ffigen "<14.0.0" &&
+          dart pub global run ffigen --config ffigen.yaml
+        working-directory: packages/realm_dart/
+
+      - name: Validate there are no uncommitted changes
+        run: |
+          changedFiles=$(git --no-pager diff -w)
+          if [ "$changedFiles" ]; then
+            git --no-pager diff -w
+            exit 1
+          fi
+
+  coverage-finished:
+    needs:
+      - dart-tests-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finished
+        id: publish-coverage
+        uses: coverallsapp/github-action@f350da2c033043742f89e8c0b7b5145a1616da6d
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
+
+  slack-on-failure:
+    name: Report failure in main branch
+    needs:
+      - dart-tests-linux
+      - dart-tests-macos
+      - dart-tests-macos-arm
+      - dart-tests-windows
+      - flutter-tests-linux
+      - flutter-tests-macos
+      - flutter-tests-windows
+      - flutter-tests-ios
+      - flutter-tests-android
+    runs-on: ubuntu-latest
+    if: always() && github.ref == 'refs/heads/main'
+    steps:
+      # Run this action to set env.WORKFLOW_CONCLUSION
+      - uses: technote-space/workflow-conclusion-action@45ce8e0eb155657ab8ccf346ade734257fd196a5
+
+      - uses: act10ns/slack@ed1309ab9862e57e9e583e51c7889486b9a00b0f
+        if: ${{ github.ref == 'refs/heads/main' && env.WORKFLOW_CONCLUSION == 'FAILURE' }}
+        # Statuses: neutral, success, skipped, cancelled, timed_out, action_required, failure
+        with:
+          status: ${{ env.WORKFLOW_CONCLUSION }}
+          webhook-url: ${{ secrets.SLACK_DART_WEBHOOK }}
+          channel: "#realm-github-dart"
+          message: |
+            *<https://github.com/realm/realm-dart/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}|_{{workflow}}_ run id: ${{ github.run_id }} has status _{{jobStatus}}_ >*
+            <{{refUrl}}|`{{ref}}` - {{description}}>
+            {{#if description}}<{{diffUrl}}|branch: `{{diffRef}}`>{{/if}}
+
+  web-compile:
+    name: Compile for web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Setup Runner
+        uses: ./.github/actions/setup-runner
+
+      - name: Compile to wasm
+        run: flutter build web --wasm -t integration_test/all_tests.dart
+        working-directory: packages/realm/tests/
+
+      - name: Compile to js
+        run: flutter build web -t integration_test/all_tests.dart
+        working-directory: packages/realm/tests/

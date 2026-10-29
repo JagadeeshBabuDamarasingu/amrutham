@@ -1,27 +1,26 @@
 // F1 acceptance: a full profile plus 3 family-history entries round-trips
 // through the repository layer. See specs/phase-1-v1/01-features.md F1.
 
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:realm/realm.dart';
 
-// drift's auto-named `Table` subclass collides with model/person.dart's
-// EmergencyContact — see medication_repository.dart's import comment.
-import 'package:amrutham/db/database.dart' hide EmergencyContact;
 import 'package:amrutham/model/certainty.dart';
 import 'package:amrutham/model/person.dart';
 import 'package:amrutham/repository/profile_repository.dart';
 
+import 'realm_test_helper.dart';
+
 void main() {
-  late AppDatabase db;
+  late Realm realm;
   late ProfileRepository repository;
 
   setUp(() {
-    db = AppDatabase(NativeDatabase.memory());
-    repository = ProfileRepository(db);
+    realm = openInMemoryRealm();
+    repository = ProfileRepository(realm);
   });
 
-  tearDown(() async {
-    await db.close();
+  tearDown(() {
+    realm.close();
   });
 
   test('a created profile round-trips through the database', () async {

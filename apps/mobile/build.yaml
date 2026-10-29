@@ -1,0 +1,17 @@
+# `realm`, `realm_dart`, and `realm_generator` each declare their own copy of
+# the identical `realm_generator` builder (same import, same
+# build_extensions: {".dart": [".realm.dart"]}, `auto_apply: dependents`) in
+# their own build.yaml files under packages/realm-dart. With all three in our
+# dependency graph (see pubspec.yaml's dependency_overrides), build_runner
+# sees 3 builders all claiming to produce the same `<file>.realm.dart`
+# outputs for this app's sources and refuses to proceed ("Conflicting
+# outputs"). Keep only the one declared by realm_generator itself — the
+# package whose actual job this is — and disable the other two redundant
+# auto-applications.
+targets:
+  $default:
+    builders:
+      realm|realm_generator:
+        enabled: false
+      realm_dart|realm_generator:
+        enabled: false

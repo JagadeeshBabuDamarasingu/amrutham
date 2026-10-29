@@ -1,0 +1,15 @@
+dartdoc:
+  categories:
+    "Configuration":
+    "Annotations":
+    "Realm":
+  categoryOrder: ["Realm", "Configuration", "Annotations"]
+  examplePathPrefix: 'example'
+  # nodoc: ['generator/flutter/ffigen/scripts/src/test/*.g.dart']
+  showUndocumentedCategories: true
+  # ignore:
+  #   - ambiguous-doc-reference
+  # errors:
+  #   - unresolved-doc-reference
+  # warnings:
+  #   - tool-error

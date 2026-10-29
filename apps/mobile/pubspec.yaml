@@ -7,16 +7,6 @@ version: 1.0.0+1
 environment:
   sdk: ^3.10.0
 
-# Build-hook config (Dart native-assets hooks, stable since Dart 3.10 — no
-# experiment flag needed). Fetches true SQLCipher, NOT sqlite3mc: a benchmark
-# in the phase-1 architecture spec found the generic SQLite3MultipleCiphers
-# path is 3.81x slower than SQLCipher on iOS (no hardware crypto acceleration).
-# See specs/phase-1-v1/02-architecture.md §2.
-hooks:
-  user_defines:
-    sqlite3:
-      source: sqlcipher
-
 dependencies:
   flutter:
     sdk: flutter
@@ -28,7 +18,7 @@ dependencies:
   # into the main (non-dev) `riverpod` package, which drags a real
   # dependency on `test` — and therefore `analyzer`/`test_api`/`matcher` —
   # into the app's own dependency graph. That collides with both
-  # flutter_test's SDK-pinned test_api/matcher versions and drift_dev's
+  # flutter_test's SDK-pinned test_api/matcher versions and realm_generator's
   # analyzer requirement, an unresolvable three-way conflict on this SDK
   # (pub's own solver suggested this exact downgrade). The Provider/
   # StreamProvider/FutureProvider/.family/ConsumerWidget/ConsumerStatefulWidget
@@ -36,11 +26,16 @@ dependencies:
   flutter_riverpod: ^2.6.1
 
   # Local DB — rebuildable cache, never the source of truth (that's the
-  # plain-files vault, built in M5). SQLCipher encryption via the build hook
-  # above, not the sqlcipher_flutter_libs package (formally end-of-life,
-  # superseded as of drift 2.32.0+).
-  drift: ^2.34.3
-  sqlite3: ^3.5.0
+  # plain-files vault, built in M5). Path dependency into the vendored SDK
+  # source (packages/realm-dart), not pub.dev — `dart run realm_dart install`
+  # still fetches the prebuilt native binaries for this pinned version over
+  # the network; the realm-core git submodule under that vendored tree is
+  # unrelated (only needed to build realm-core itself from source, which we
+  # don't do here). Encryption is Realm's built-in AES-256 store, keyed by a
+  # 64-byte key from DbKeyProvider (crypto/key_manager.dart) — replaces the
+  # SQLCipher setup this app used under drift.
+  realm:
+    path: ../../packages/realm-dart/packages/realm
 
   # Device DB key storage — Android Keystore / iOS Keychain-backed.
   # Pin strictly; this package has a documented history of
@@ -51,7 +46,7 @@ dependencies:
   # ID generation — lexicographically sortable, embeds a timestamp.
   ulid: ^2.0.1
 
-  # Locate the per-platform app-data directory for the drift DB file, and
+  # Locate the per-platform app-data directory for the Realm file, and
   # join paths portably.
   path_provider: ^2.1.6
   path: ^1.9.1
@@ -78,14 +73,20 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
 
-  # drift's code generator — produces typed Dart query classes from the
-  # .drift schema files in lib/db/.
-  drift_dev: ^2.34.5
-  build_runner: ^2.15.3
+  # Realm's code generator — produces RealmObject classes from the
+  # @RealmModel-annotated classes in lib/db/realm_schemas.dart.
+  realm_generator:
+    path: ../../packages/realm-dart/packages/realm_generator
+  # Pinned down from the latest 2.15.x line: the vendored realm_generator
+  # depends on `build: '2.4.2'` exactly (not a caret range), which is
+  # incompatible with build_runner >=2.5's `build ^4.0.9` requirement.
+  # 2.4.14 is what the realm-dart monorepo itself pairs with that build
+  # pin (see packages/realm-dart/packages/realm_dart's own pubspec.yaml).
+  build_runner: ^2.4.14
 
 # Dev-tooling-only version pin, not a runtime dependency. This Flutter SDK's
 # flutter_test pins `meta` at exactly 1.18.0, which trails what the
-# analyzer/build_runner/drift_dev code-gen chain currently requires
+# analyzer/build_runner/realm_generator code-gen chain currently requires
 # (analyzer >=13.3.0 needs meta ^1.18.3) — a recurring lag between the
 # Flutter-SDK-vendored meta version and pub.dev's independently-versioned
 # analyzer-tooling ecosystem, not anything specific to this project. `meta`
@@ -96,6 +97,53 @@ dev_dependencies:
 # `flutter pub get`.
 dependency_overrides:
   meta: ^1.19.0
+
+  # realm_generator (vendored, pinned to analyzer ^7.3.0 / dart_style ^3.0.1)
+  # crashes running against the installed Flutter pre-release SDK
+  # (3.47.0-1.0.pre-240 at last check): that SDK's own bundled sources use
+  # "dot shorthand" syntax analyzer 7.7.1 can parse but can't resolution-write
+  # ("Missing implementation of visitDotShorthandPropertyAccess" deep in
+  # analyzer's own linker — see github.com/flutter/flutter/issues/175083 for
+  # the same failure class). Forcing the latest analyzer/dart_style here
+  # trades that crash for the risk that realm_generator's own source (built
+  # against the older 7.x analyzer API) fails to compile against a much
+  # newer major version instead — if that happens next, the fix has to come
+  # from patching realm_generator's source itself or downgrading the Flutter
+  # channel, not another version bump here.
+  analyzer: ^14.1.0
+  dart_style: ^3.1.12
+
+  # Tried and reverted: overriding `build` to 4.0.10 (which does support
+  # analyzer >=13.3.0 <15.0.0) does NOT fix this. It pulls in
+  # build_runner_core-8.0.0, from a different API generation than build-4.0.10
+  # (AssetWriterSpy/MultiPackageAssetReader/StageTracker don't exist in
+  # build-4.0.10 anymore) — a second break on top of the first. And
+  # build_resolvers still resolves to 2.4.4 and still crashes against
+  # analyzer 14.1.0 the same way, because **no published version of
+  # build_resolvers has ever supported analyzer >=9.0.0** (confirmed against
+  # pub.dev's full version history, latest is 3.0.4, still analyzer
+  # `<9.0.0`) — and realm_generator depends on build_resolvers directly for
+  # its AnalyzerResolver implementation. This is a real dead end via version
+  # overrides: don't retry bumping build/build_runner/build_runner_core
+  # further. The actual fix is patching realm_generator's vendored source
+  # (packages/realm-dart) to stop depending on build_resolvers, or dropping
+  # this Flutter SDK back to the stable channel so analyzer never needs to
+  # move past what realm_generator's own pubspec (analyzer ^7.3.0) already
+  # declares.
+
+  # `realm` (path, above) depends on `realm_dart` via an ordinary hosted
+  # (pub.dev) version constraint, which in turn depends on `realm_generator`
+  # the same way — neither has any idea the monorepo containing its own
+  # source is sitting right next to it. A plain `dev_dependencies: path:`
+  # entry for realm_generator (above) isn't enough: pub still sees a
+  # path-vs-hosted clash against that transitive hosted request and rejects
+  # it. Overriding all three pins the whole SDK to one consistent source.
+  realm_dart:
+    path: ../../packages/realm-dart/packages/realm_dart
+  realm_common:
+    path: ../../packages/realm-dart/packages/realm_common
+  realm_generator:
+    path: ../../packages/realm-dart/packages/realm_generator
 
 flutter:
   uses-material-design: true

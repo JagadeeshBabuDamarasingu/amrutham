@@ -1,13 +1,7 @@
-import 'package:drift/drift.dart';
+import 'package:realm/realm.dart';
 import 'package:ulid/ulid.dart';
 
-// drift generates a `Table` subclass named after each SQL table (e.g.
-// `medication_course` -> `MedicationCourse`), separate from and in addition
-// to the `AS ...Row` data class — that Table class isn't renameable from
-// .drift files and collides with our own domain-model classes of the same
-// name. We never reference it directly (only via `_db.medicationCourse`
-// etc.), so hiding it is safe.
-import '../db/database.dart' hide MedicationCourse, SchedulePhase;
+import '../db/realm_schemas.dart';
 import '../model/ids.dart';
 import '../model/medication.dart';
 import '../model/schedule_phase.dart';
@@ -15,21 +9,20 @@ import '../model/schedule_phase.dart';
 /// The only way UI code touches medication data — UI must never write to
 /// db/ directly. See specs/phase-1-v1/02-architecture.md §1.
 class MedicationRepository {
-  final AppDatabase _db;
+  final Realm _realm;
 
-  MedicationRepository(this._db);
+  MedicationRepository(this._realm);
 
   // ---- MedicationCourse ----
 
   Stream<List<MedicationCourse>> watchCoursesForPerson(PersonId personId) {
-    return (_db.select(
-      _db.medicationCourse,
-    )..where((t) => t.personId.equals(personId.value))).watch().map(
-      (rows) => rows.map(_courseFromRow).toList(),
-    );
+    return _realm
+        .query<MedicationCourseRow>(r'personId == $0', [personId.value])
+        .changes
+        .map((c) => c.results.map(_courseFromRow).toList());
   }
 
-  /// `medicationCoding` has no backing table this phase (not in
+  /// `medicationCoding` has no backing field this phase (not in
   /// specs/phase-1-v1/02-architecture.md §4's schema) — it's always empty
   /// when hydrated from the DB. The domain-model field exists for forward
   /// compatibility per the spec's DrugCode shape.
@@ -39,8 +32,8 @@ class MedicationRepository {
       personId: PersonId(row.personId),
       medicationName: row.medicationName,
       status: CourseStatus.values.byName(row.status),
-      startDate: DateTime.parse(row.startDate),
-      endDate: row.endDate == null ? null : DateTime.parse(row.endDate!),
+      startDate: row.startDate,
+      endDate: row.endDate,
       prescriberName: row.prescriberName,
       reason: row.reason,
     );
@@ -56,20 +49,20 @@ class MedicationRepository {
     String? reason,
   }) async {
     final id = MedicationCourseId(Ulid().toString());
-    await _db
-        .into(_db.medicationCourse)
-        .insert(
-          MedicationCourseCompanion.insert(
-            id: id.value,
-            personId: personId.value,
-            medicationName: medicationName,
-            status: status.name,
-            startDate: startDate.toIso8601String(),
-            endDate: Value(endDate?.toIso8601String()),
-            prescriberName: Value(prescriberName),
-            reason: Value(reason),
-          ),
-        );
+    _realm.write(() {
+      _realm.add(
+        MedicationCourseRow(
+          id.value,
+          personId.value,
+          medicationName,
+          status.name,
+          startDate,
+          endDate: endDate,
+          prescriberName: prescriberName,
+          reason: reason,
+        ),
+      );
+    });
     return MedicationCourse(
       id: id,
       personId: personId,
@@ -83,10 +76,7 @@ class MedicationRepository {
   }
 
   Future<MedicationCourse?> courseById(MedicationCourseId courseId) async {
-    final row =
-        await (_db.select(
-          _db.medicationCourse,
-        )..where((t) => t.id.equals(courseId.value))).getSingleOrNull();
+    final row = _realm.find<MedicationCourseRow>(courseId.value);
     return row == null ? null : _courseFromRow(row);
   }
 
@@ -98,11 +88,11 @@ class MedicationRepository {
     MedicationCourseId courseId,
     CourseStatus status,
   ) async {
-    await (_db.update(
-      _db.medicationCourse,
-    )..where((t) => t.id.equals(courseId.value))).write(
-      MedicationCourseCompanion(status: Value(status.name)),
-    );
+    final row = _realm.find<MedicationCourseRow>(courseId.value);
+    if (row == null) return;
+    _realm.write(() {
+      row.status = status.name;
+    });
   }
 
   // ---- SchedulePhase ----
@@ -110,11 +100,13 @@ class MedicationRepository {
   Stream<List<SchedulePhase>> watchPhasesForCourse(
     MedicationCourseId courseId,
   ) {
-    return (_db.select(_db.schedulePhase)
-          ..where((t) => t.courseId.equals(courseId.value))
-          ..orderBy([(t) => OrderingTerm.asc(t.phaseStart)]))
-        .watch()
-        .map((rows) => rows.map(_phaseFromRow).toList());
+    return _realm
+        .query<SchedulePhaseRow>(
+          r'courseId == $0 SORT(phaseStart ASC)',
+          [courseId.value],
+        )
+        .changes
+        .map((c) => c.results.map(_phaseFromRow).toList());
   }
 
   SchedulePhase _phaseFromRow(SchedulePhaseRow row) {
@@ -125,13 +117,13 @@ class MedicationRepository {
       frequency: row.frequency,
       period: row.period,
       periodUnit: PeriodUnit.values.byName(row.periodUnit),
-      daysOfWeek: _decodeDaysOfWeek(row.daysOfWeek),
-      timesOfDay: _decodeTimesOfDay(row.timesOfDay),
-      isPrn: row.isPrn != 0,
+      daysOfWeek: row.daysOfWeek.isEmpty ? null : row.daysOfWeek.toSet(),
+      timesOfDay: row.timesOfDay.toList(),
+      isPrn: row.isPrn,
       prnReason: row.prnReason,
       prnMaxFrequency: row.prnMaxFrequency,
-      phaseStart: DateTime.parse(row.phaseStart),
-      phaseEnd: row.phaseEnd == null ? null : DateTime.parse(row.phaseEnd!),
+      phaseStart: row.phaseStart,
+      phaseEnd: row.phaseEnd,
     );
   }
 
@@ -150,25 +142,25 @@ class MedicationRepository {
     DateTime? phaseEnd,
   }) async {
     final id = SchedulePhaseId(Ulid().toString());
-    await _db
-        .into(_db.schedulePhase)
-        .insert(
-          SchedulePhaseCompanion.insert(
-            id: id.value,
-            courseId: courseId.value,
-            doseAmount: doseAmount,
-            frequency: frequency,
-            period: period,
-            periodUnit: periodUnit.name,
-            daysOfWeek: Value(_encodeDaysOfWeek(daysOfWeek)),
-            timesOfDay: _encodeTimesOfDay(timesOfDay),
-            isPrn: Value(isPrn ? 1 : 0),
-            prnReason: Value(prnReason),
-            prnMaxFrequency: Value(prnMaxFrequency),
-            phaseStart: phaseStart.toIso8601String(),
-            phaseEnd: Value(phaseEnd?.toIso8601String()),
-          ),
-        );
+    _realm.write(() {
+      _realm.add(
+        SchedulePhaseRow(
+          id.value,
+          courseId.value,
+          doseAmount,
+          frequency,
+          period,
+          periodUnit.name,
+          phaseStart,
+          daysOfWeek: daysOfWeek == null ? const [] : (daysOfWeek.toList()..sort()),
+          timesOfDay: timesOfDay,
+          isPrn: isPrn,
+          prnReason: prnReason,
+          prnMaxFrequency: prnMaxFrequency,
+          phaseEnd: phaseEnd,
+        ),
+      );
+    });
     return SchedulePhase(
       id: id,
       courseId: courseId,
@@ -192,27 +184,32 @@ class MedicationRepository {
   ///   cadence — see specs/phase-1-v1/01-features.md F2)
   /// - phases outside their own start/end range (a taper's earlier/later
   ///   phases must not both fire)
-  /// - conflicted phases (`conflict_group_id IS NOT NULL`) — always NULL in
+  /// - conflicted phases (`conflictGroupId != null`) — always null in
   ///   phase 1, but the query must already respect it per
   ///   specs/phase-1-v1/02-architecture.md §6's conflict rule.
+  ///
+  /// Realm has no cross-table join, so this is a two-step query: active
+  /// course ids for the person, then phases whose courseId is in that set.
   Future<List<SchedulePhase>> activeNonConflictedPhasesForPerson(
     PersonId personId,
   ) async {
-    final query = _db.select(_db.schedulePhase).join([
-      innerJoin(
-        _db.medicationCourse,
-        _db.medicationCourse.id.equalsExp(_db.schedulePhase.courseId),
-      ),
-    ])
-      ..where(_db.medicationCourse.personId.equals(personId.value))
-      ..where(_db.medicationCourse.status.equals(CourseStatus.active.name))
-      ..where(_db.schedulePhase.isPrn.equals(0))
-      ..where(_db.schedulePhase.conflictGroupId.isNull());
+    final activeCourseIds = _realm
+        .query<MedicationCourseRow>(
+          r'personId == $0 AND status == $1',
+          [personId.value, CourseStatus.active.name],
+        )
+        .map((c) => c.id)
+        .toList();
+    if (activeCourseIds.isEmpty) return [];
 
-    final rows = await query.get();
+    final rows = _realm.query<SchedulePhaseRow>(
+      r'courseId IN $0 AND isPrn == false AND conflictGroupId == nil',
+      [activeCourseIds],
+    );
+
     final now = DateTime.now();
     return rows
-        .map((row) => _phaseFromRow(row.readTable(_db.schedulePhase)))
+        .map(_phaseFromRow)
         .where(
           (phase) =>
               !phase.phaseStart.isAfter(now) &&
@@ -226,33 +223,16 @@ class MedicationRepository {
   /// before a re-arm. Never used to decide what to schedule; see
   /// activeNonConflictedPhasesForPerson for that.
   Future<List<SchedulePhase>> allPhasesForPerson(PersonId personId) async {
-    final query = _db.select(_db.schedulePhase).join([
-      innerJoin(
-        _db.medicationCourse,
-        _db.medicationCourse.id.equalsExp(_db.schedulePhase.courseId),
-      ),
-    ])..where(_db.medicationCourse.personId.equals(personId.value));
-
-    final rows = await query.get();
-    return rows
-        .map((row) => _phaseFromRow(row.readTable(_db.schedulePhase)))
+    final courseIds = _realm
+        .query<MedicationCourseRow>(r'personId == $0', [personId.value])
+        .map((c) => c.id)
         .toList();
-  }
+    if (courseIds.isEmpty) return [];
 
-  static Set<int>? _decodeDaysOfWeek(String? raw) {
-    if (raw == null || raw.isEmpty) return null;
-    return raw.split(',').map(int.parse).toSet();
+    final rows = _realm.query<SchedulePhaseRow>(
+      r'courseId IN $0',
+      [courseIds],
+    );
+    return rows.map(_phaseFromRow).toList();
   }
-
-  static String? _encodeDaysOfWeek(Set<int>? days) {
-    if (days == null || days.isEmpty) return null;
-    return (days.toList()..sort()).join(',');
-  }
-
-  static List<String> _decodeTimesOfDay(String raw) {
-    if (raw.isEmpty) return const [];
-    return raw.split(',');
-  }
-
-  static String _encodeTimesOfDay(List<String> times) => times.join(',');
 }
