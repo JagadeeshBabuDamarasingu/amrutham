@@ -6,8 +6,10 @@ import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'providers/app_providers.dart';
-import 'ui/home_screen.dart';
+import 'ui/app_shell.dart';
+import 'ui/app_style.dart';
 import 'ui/splash_screen.dart';
+import 'ui/welcome_screen.dart';
 
 final FlutterLocalNotificationsPlugin _notificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -56,10 +58,23 @@ class AmruthamApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Amrutham',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-      ),
-      home: const SplashScreen(next: HomeScreen()),
+      theme: appTheme(),
+      home: const SplashScreen(next: _AppGate()),
+    );
+  }
+}
+
+/// First launch shows the welcome screen; after that, straight to Home.
+class _AppGate extends ConsumerWidget {
+  const _AppGate();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref.watch(welcomeSeenProvider).when(
+      data: (seen) => seen ? const AppShell() : const WelcomeScreen(),
+      loading: () => const Scaffold(),
+      // If the flag can't be read, don't trap the user on the welcome screen.
+      error: (_, _) => const AppShell(),
     );
   }
 }

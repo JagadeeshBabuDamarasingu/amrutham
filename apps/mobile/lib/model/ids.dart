@@ -11,3 +11,5 @@ extension type const AllergyRecordId(String value) {}
 extension type const MedicationCourseId(String value) {}
 
 extension type const SchedulePhaseId(String value) {}
+
+extension type const MeasurementId(String value) {}

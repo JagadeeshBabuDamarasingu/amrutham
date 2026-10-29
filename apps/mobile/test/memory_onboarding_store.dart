@@ -1,0 +1,23 @@
+import 'package:amrutham/crypto/onboarding_store.dart';
+import 'package:amrutham/crypto/recovery_code.dart';
+
+/// In-memory stand-in: flutter_secure_storage needs real platform channels.
+class MemoryOnboardingStore implements OnboardingStore {
+  MemoryOnboardingStore({bool welcomeSeen = true, this.recovery})
+    : _welcomeSeen = welcomeSeen;
+
+  bool _welcomeSeen;
+  RecoveryRecord? recovery;
+
+  @override
+  Future<bool> welcomeSeen() async => _welcomeSeen;
+
+  @override
+  Future<void> markWelcomeSeen() async => _welcomeSeen = true;
+
+  @override
+  Future<RecoveryRecord?> readRecovery() async => recovery;
+
+  @override
+  Future<void> saveRecovery(RecoveryRecord record) async => recovery = record;
+}

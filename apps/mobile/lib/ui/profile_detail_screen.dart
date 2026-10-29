@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/family_history.dart';
 import '../model/ids.dart';
+import '../model/person.dart';
 import '../providers/app_providers.dart';
 import 'add_allergy_screen.dart';
 import 'add_family_history_screen.dart';
 import 'add_medication_course_screen.dart';
+import 'app_style.dart';
 import 'course_detail_screen.dart';
+import 'log_measurement_screen.dart';
+import 'metrics_screen.dart';
 
 class ProfileDetailScreen extends ConsumerWidget {
   const ProfileDetailScreen({super.key, required this.personId});
@@ -16,28 +20,104 @@ class ProfileDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profilesAsync = ref.watch(profilesProvider);
     final familyHistoryAsync = ref.watch(familyHistoryProvider(personId));
     final allergiesAsync = ref.watch(allergiesProvider(personId));
     final coursesAsync = ref.watch(medicationCoursesProvider(personId));
 
-    final displayName = profilesAsync.maybeWhen(
-      data: (profiles) {
-        for (final profile in profiles) {
-          if (profile.id == personId) return profile.displayName;
-        }
-        return null;
-      },
-      orElse: () => null,
-    );
+    final person = ref
+        .watch(profilesProvider)
+        .valueOrNull
+        ?.where((p) => p.id == personId)
+        .firstOrNull;
+    final activeCount =
+        ref.watch(activeCoursesProvider(personId)).valueOrNull?.length ?? 0;
+    final allergyCount = allergiesAsync.valueOrNull?.length ?? 0;
 
     return Scaffold(
-      appBar: AppBar(title: Text(displayName ?? 'Profile')),
+      appBar: AppBar(),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
+          if (person != null)
+            Row(
+              children: [
+                PersonAvatar(name: person.displayName, size: 64),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        person.displayName,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        [
+                          person.relationship.label,
+                          if (person.dateOfBirth != null)
+                            'b. ${person.dateOfBirth!.year}',
+                          ?person.bloodGroup,
+                        ].join(' · '),
+                        style: const TextStyle(color: onboardMuted),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _Stat(
+                  label: 'Medicines',
+                  value: activeCount == 0 ? 'None' : '$activeCount active',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Stat(
+                  label: 'Allergies',
+                  value: allergyCount == 0 ? 'None' : '$allergyCount',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _Tile(
+                  icon: Icons.show_chart,
+                  label: 'Metrics',
+                  dark: true,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => MetricsScreen(personId: personId),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Tile(
+                  icon: Icons.add_chart,
+                  label: 'Log a reading',
+                  dark: true,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LogMeasurementScreen(personId: personId),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
           _SectionHeader(
-            title: 'Medications',
+            title: 'Active medicines',
             onAdd: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => AddMedicationCourseScreen(personId: personId),
@@ -77,7 +157,6 @@ class ProfileDetailScreen extends ConsumerWidget {
             error: (error, stackTrace) =>
                 Text('Something went wrong: $error'),
           ),
-          const SizedBox(height: 24),
           _SectionHeader(
             title: 'Family history',
             onAdd: () => Navigator.of(context).push(
@@ -113,7 +192,6 @@ class ProfileDetailScreen extends ConsumerWidget {
             error: (error, stackTrace) =>
                 Text('Something went wrong: $error'),
           ),
-          const SizedBox(height: 24),
           _SectionHeader(
             title: 'Allergies',
             onAdd: () => Navigator.of(context).push(
@@ -170,16 +248,76 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        TextButton.icon(
-          onPressed: onAdd,
-          icon: const Icon(Icons.add),
-          label: const Text('Add'),
+    return SectionLabel(
+      title,
+      trailing: TextButton(onPressed: onAdd, child: const Text('+ Add')),
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 12, color: onboardMuted)),
+            const SizedBox(height: 4),
+            Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class _Tile extends StatelessWidget {
+  const _Tile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.dark = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Ink(
+        height: 88,
+        decoration: BoxDecoration(
+          color: dark ? onboardInk : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: dark ? onboardAmber : onboardInk),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: dark ? Colors.white : onboardInk,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

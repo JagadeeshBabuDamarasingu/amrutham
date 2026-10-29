@@ -97,3 +97,20 @@ class _SchedulePhaseRow {
   DateTime? phaseEnd;
   String? conflictGroupId;
 }
+
+/// A single reading (weight, blood pressure, sugar, ...). `value2` is only set
+/// for kinds with a second number (blood pressure's diastolic). Stored exactly
+/// as entered — nothing here interprets a value as normal or abnormal.
+@RealmModel()
+class _MeasurementRow {
+  @PrimaryKey()
+  late String id;
+  @Indexed()
+  late String personId;
+  late String kind;
+  late double value;
+  double? value2;
+  @Indexed()
+  late DateTime measuredAt;
+  String? note;
+}

@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/person.dart';
 import '../providers/app_providers.dart';
+import 'app_style.dart';
+import 'log_measurement_screen.dart' show monthNames;
 import 'profile_detail_screen.dart';
+import 'recovery_flow_screen.dart';
 
 /// F1 acceptance: a full profile can be created in under 5 minutes on a
 /// phone, with no field mandatory except display name. See
@@ -17,37 +20,38 @@ class CreateProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _displayNameController = TextEditingController();
-  final _sexController = TextEditingController();
-  final _bloodGroupController = TextEditingController();
-  RelationshipType _relationship = RelationshipType.self;
+  static const _sexes = ['Female', 'Male', 'Other', 'Not stated'];
+  static const _bloodGroups = [
+    'A positive', 'A negative', 'B positive', 'B negative',
+    'AB positive', 'AB negative', 'O positive', 'O negative',
+  ];
+
+  final _name = TextEditingController();
+  RelationshipType? _relationship;
+  String? _sex;
+  String? _bloodGroup;
   DateTime? _dateOfBirth;
   bool _saving = false;
 
   @override
   void dispose() {
-    _displayNameController.dispose();
-    _sexController.dispose();
-    _bloodGroupController.dispose();
+    _name.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    // The first record can't be saved until a recovery code is confirmed.
+    if (!await ensureRecoverySetUp(context, ref)) return;
+    if (!mounted) return;
     setState(() => _saving = true);
 
     final repository = await ref.read(profileRepositoryProvider.future);
     final profile = await repository.createProfile(
-      displayName: _displayNameController.text.trim(),
-      relationship: _relationship,
+      displayName: _name.text.trim(),
+      relationship: _relationship ?? RelationshipType.otherDependent,
       dateOfBirth: _dateOfBirth,
-      sex: _sexController.text.trim().isEmpty
-          ? null
-          : _sexController.text.trim(),
-      bloodGroup: _bloodGroupController.text.trim().isEmpty
-          ? null
-          : _bloodGroupController.text.trim(),
+      sex: _sex == 'Not stated' ? null : _sex,
+      bloodGroup: _bloodGroup,
     );
 
     if (!mounted) return;
@@ -70,86 +74,101 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dob = _dateOfBirth;
     return Scaffold(
-      appBar: AppBar(title: const Text('New profile')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: _displayNameController,
-              decoration: const InputDecoration(labelText: 'Name'),
-              textInputAction: TextInputAction.next,
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Name is required'
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<RelationshipType>(
-              initialValue: _relationship,
-              decoration: const InputDecoration(labelText: 'Relationship'),
-              items: RelationshipType.values
-                  .map(
-                    (r) => DropdownMenuItem(
-                      value: r,
-                      child: Text(_relationshipLabel(r)),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) =>
-                  setState(() => _relationship = value ?? _relationship),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                _dateOfBirth == null
-                    ? 'Date of birth (optional)'
-                    : 'Date of birth: ${_dateOfBirth!.toIso8601String().split('T').first}',
-              ),
-              trailing: const Icon(Icons.calendar_today),
-              onTap: _pickDateOfBirth,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _sexController,
-              decoration: const InputDecoration(labelText: 'Sex (optional)'),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _bloodGroupController,
-              decoration: const InputDecoration(
-                labelText: 'Blood group (optional)',
-              ),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Save profile'),
-            ),
-          ],
+      appBar: AppBar(
+        leading: TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
         ),
+        leadingWidth: 88,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        children: [
+          const Text(
+            'Add a family member',
+            style: TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.8,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Only a name is required. Add the rest when you know it.',
+            style: TextStyle(color: onboardMuted),
+          ),
+          const SectionLabel('Name'),
+          TextField(
+            controller: _name,
+            onChanged: (_) => setState(() {}),
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(hintText: 'Rohan Reddy'),
+          ),
+          const SectionLabel('Relationship to you'),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final r in RelationshipType.values)
+                ChoiceChip(
+                  label: Text(r.label),
+                  selected: _relationship == r,
+                  onSelected: (_) => setState(() => _relationship = r),
+                ),
+            ],
+          ),
+          const SectionLabel('Sex'),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final s in _sexes)
+                ChoiceChip(
+                  label: Text(s),
+                  selected: _sex == s,
+                  onSelected: (_) => setState(() => _sex = s),
+                ),
+            ],
+          ),
+          const SectionLabel('Date of birth'),
+          OutlinedButton(
+            onPressed: _pickDateOfBirth,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              alignment: Alignment.centerLeft,
+            ),
+            child: Text(
+              dob == null
+                  ? 'Choose a date (optional)'
+                  : '${dob.day} ${monthNames[dob.month - 1]} ${dob.year}',
+            ),
+          ),
+          const SectionLabel('Blood group'),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final g in _bloodGroups)
+                ChoiceChip(
+                  label: Text(g),
+                  selected: _bloodGroup == g,
+                  onSelected: (_) => setState(
+                    () => _bloodGroup = _bloodGroup == g ? null : g,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 28),
+          _saving
+              ? const Center(child: CircularProgressIndicator())
+              : OnboardButton(
+                  label: 'Save',
+                  onPressed: _name.text.trim().isEmpty ? null : _save,
+                ),
+        ],
       ),
     );
-  }
-
-  String _relationshipLabel(RelationshipType type) {
-    switch (type) {
-      case RelationshipType.self:
-        return 'Myself';
-      case RelationshipType.child:
-        return 'Child';
-      case RelationshipType.parent:
-        return 'Parent';
-      case RelationshipType.otherDependent:
-        return 'Other dependent';
-    }
   }
 }

@@ -11,6 +11,7 @@ final List<SchemaObject> _schema = [
   AllergyRecordRow.schema,
   MedicationCourseRow.schema,
   SchedulePhaseRow.schema,
+  MeasurementRow.schema,
 ];
 
 /// Opens the encrypted local Realm. `dbKey` is the 64-byte device DB key from
@@ -26,6 +27,8 @@ Future<Realm> openRealm(List<int> dbKey) async {
     _schema,
     path: path,
     encryptionKey: dbKey,
+    // 1: added MeasurementRow. Purely additive, so no migration callback.
+    schemaVersion: 1,
   );
   return Realm(config);
 }

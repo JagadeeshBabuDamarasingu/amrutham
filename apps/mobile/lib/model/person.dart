@@ -1,6 +1,17 @@
 import 'ids.dart';
 
-enum RelationshipType { self, child, parent, otherDependent }
+enum RelationshipType { self, spouse, child, parent, sibling, otherDependent }
+
+extension RelationshipLabel on RelationshipType {
+  String get label => switch (this) {
+    RelationshipType.self => 'Self',
+    RelationshipType.spouse => 'Spouse',
+    RelationshipType.child => 'Child',
+    RelationshipType.parent => 'Parent',
+    RelationshipType.sibling => 'Sibling',
+    RelationshipType.otherDependent => 'Other',
+  };
+}
 
 class EmergencyContact {
   final String name;
@@ -55,5 +66,19 @@ class PersonProfile {
       emergencyContacts: emergencyContacts ?? this.emergencyContacts,
       createdAt: createdAt,
     );
+  }
+}
+
+extension PersonAge on PersonProfile {
+  /// Whole years, or null when the date of birth isn't known.
+  int? get ageYears {
+    final dob = dateOfBirth;
+    if (dob == null) return null;
+    final now = DateTime.now();
+    var age = now.year - dob.year;
+    if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+      age--;
+    }
+    return age;
   }
 }

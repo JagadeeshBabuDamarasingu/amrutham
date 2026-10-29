@@ -964,3 +964,142 @@ class SchedulePhaseRow extends _SchedulePhaseRow
   @override
   SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
 }
+
+class MeasurementRow extends _MeasurementRow
+    with RealmEntity, RealmObjectBase, RealmObject {
+  MeasurementRow(
+    String id,
+    String personId,
+    String kind,
+    double value,
+    DateTime measuredAt, {
+    double? value2,
+    String? note,
+  }) {
+    RealmObjectBase.set(this, 'id', id);
+    RealmObjectBase.set(this, 'personId', personId);
+    RealmObjectBase.set(this, 'kind', kind);
+    RealmObjectBase.set(this, 'value', value);
+    RealmObjectBase.set(this, 'value2', value2);
+    RealmObjectBase.set(this, 'measuredAt', measuredAt);
+    RealmObjectBase.set(this, 'note', note);
+  }
+
+  MeasurementRow._();
+
+  @override
+  String get id => RealmObjectBase.get<String>(this, 'id') as String;
+  @override
+  set id(String value) => RealmObjectBase.set(this, 'id', value);
+
+  @override
+  String get personId =>
+      RealmObjectBase.get<String>(this, 'personId') as String;
+  @override
+  set personId(String value) => RealmObjectBase.set(this, 'personId', value);
+
+  @override
+  String get kind => RealmObjectBase.get<String>(this, 'kind') as String;
+  @override
+  set kind(String value) => RealmObjectBase.set(this, 'kind', value);
+
+  @override
+  double get value => RealmObjectBase.get<double>(this, 'value') as double;
+  @override
+  set value(double value) => RealmObjectBase.set(this, 'value', value);
+
+  @override
+  double? get value2 => RealmObjectBase.get<double>(this, 'value2') as double?;
+  @override
+  set value2(double? value) => RealmObjectBase.set(this, 'value2', value);
+
+  @override
+  DateTime get measuredAt =>
+      RealmObjectBase.get<DateTime>(this, 'measuredAt') as DateTime;
+  @override
+  set measuredAt(DateTime value) =>
+      RealmObjectBase.set(this, 'measuredAt', value);
+
+  @override
+  String? get note => RealmObjectBase.get<String>(this, 'note') as String?;
+  @override
+  set note(String? value) => RealmObjectBase.set(this, 'note', value);
+
+  @override
+  Stream<RealmObjectChanges<MeasurementRow>> get changes =>
+      RealmObjectBase.getChanges<MeasurementRow>(this);
+
+  @override
+  Stream<RealmObjectChanges<MeasurementRow>> changesFor([
+    List<String>? keyPaths,
+  ]) => RealmObjectBase.getChangesFor<MeasurementRow>(this, keyPaths);
+
+  @override
+  MeasurementRow freeze() => RealmObjectBase.freezeObject<MeasurementRow>(this);
+
+  EJsonValue toEJson() {
+    return <String, dynamic>{
+      'id': id.toEJson(),
+      'personId': personId.toEJson(),
+      'kind': kind.toEJson(),
+      'value': value.toEJson(),
+      'value2': value2.toEJson(),
+      'measuredAt': measuredAt.toEJson(),
+      'note': note.toEJson(),
+    };
+  }
+
+  static EJsonValue _toEJson(MeasurementRow value) => value.toEJson();
+  static MeasurementRow _fromEJson(EJsonValue ejson) {
+    if (ejson is! Map<String, dynamic>) return raiseInvalidEJson(ejson);
+    return switch (ejson) {
+      {
+        'id': EJsonValue id,
+        'personId': EJsonValue personId,
+        'kind': EJsonValue kind,
+        'value': EJsonValue value,
+        'measuredAt': EJsonValue measuredAt,
+      } =>
+        MeasurementRow(
+          fromEJson(id),
+          fromEJson(personId),
+          fromEJson(kind),
+          fromEJson(value),
+          fromEJson(measuredAt),
+          value2: fromEJson(ejson['value2']),
+          note: fromEJson(ejson['note']),
+        ),
+      _ => raiseInvalidEJson(ejson),
+    };
+  }
+
+  static final schema = () {
+    RealmObjectBase.registerFactory(MeasurementRow._);
+    register(_toEJson, _fromEJson);
+    return const SchemaObject(
+      ObjectType.realmObject,
+      MeasurementRow,
+      'MeasurementRow',
+      [
+        SchemaProperty('id', RealmPropertyType.string, primaryKey: true),
+        SchemaProperty(
+          'personId',
+          RealmPropertyType.string,
+          indexType: RealmIndexType.regular,
+        ),
+        SchemaProperty('kind', RealmPropertyType.string),
+        SchemaProperty('value', RealmPropertyType.double),
+        SchemaProperty('value2', RealmPropertyType.double, optional: true),
+        SchemaProperty(
+          'measuredAt',
+          RealmPropertyType.timestamp,
+          indexType: RealmIndexType.regular,
+        ),
+        SchemaProperty('note', RealmPropertyType.string, optional: true),
+      ],
+    );
+  }();
+
+  @override
+  SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
+}
