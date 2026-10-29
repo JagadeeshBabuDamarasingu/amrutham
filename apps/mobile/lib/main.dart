@@ -7,6 +7,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'providers/app_providers.dart';
 import 'ui/home_screen.dart';
+import 'ui/splash_screen.dart';
 
 final FlutterLocalNotificationsPlugin _notificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -58,7 +59,7 @@ class AmruthamApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
       ),
-      home: const HomeScreen(),
+      home: const SplashScreen(next: HomeScreen()),
     );
   }
 }

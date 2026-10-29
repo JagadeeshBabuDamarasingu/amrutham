@@ -99,3 +99,9 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+
+  # Splash artwork (Dhanvantari). WebP q80 of /assets/dhanvantari.png
+  # (1085x1447, ~100 KB vs 2.1 MB). The PNG at the repo root stays as the
+  # lossless source and is not bundled.
+  assets:
+    - assets/images/dhanvantari.webp
