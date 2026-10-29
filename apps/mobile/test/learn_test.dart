@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:amrutham/learn/learn_content.dart';
+import 'package:amrutham/ui/app_shell.dart';
 
 void main() {
   test('guides have unique ids, and none claims a review nobody did', () {
@@ -40,6 +41,18 @@ void main() {
         };
         expect(numbers.hasMatch(text), isFalse, reason: '${g.id}: "$text"');
       }
+    }
+  });
+
+  test('the daily tip rotates over the year and never repeats back to back', () {
+    final tips = {
+      for (var d = 0; d < dailyTips.length; d++) tipForDay(DateTime(2026, 1, 1 + d)),
+    };
+    expect(tips, hasLength(dailyTips.length));
+    for (final tip in dailyTips) {
+      // F12 rules: no scare wording, no named disease.
+      expect(tip.toLowerCase(), isNot(contains('cancer')));
+      expect(tip.toLowerCase(), isNot(contains('die')));
     }
   });
 }

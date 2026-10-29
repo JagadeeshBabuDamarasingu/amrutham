@@ -6,6 +6,10 @@ import '../model/measurement.dart';
 import '../model/person.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
+import 'add_expense_screen.dart';
+import 'add_history_event_screen.dart';
+import 'add_medication_course_screen.dart';
+import 'add_record_screen.dart';
 import 'create_profile_screen.dart';
 import 'log_measurement_screen.dart';
 import 'metrics_screen.dart';
@@ -206,37 +210,100 @@ class TodayScreen extends ConsumerWidget {
   );
 
   void _quickAdd(BuildContext context, PersonProfile? person) {
+    void go(BuildContext sheet, Widget screen) {
+      Navigator.pop(sheet);
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+    }
+
+    final id = person?.id;
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (person != null)
-              ListTile(
-                leading: const Icon(Icons.monitor_heart_outlined),
-                title: Text('Log a measurement for ${person.displayName}'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => LogMeasurementScreen(personId: person.id),
-                    ),
-                  );
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.person_add_alt),
-              title: const Text('Add a family member'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _addPerson(context);
-              },
+      isScrollControlled: true,
+      builder: (sheet) {
+        final tiles = <(IconData, String, String, Widget?)>[
+          (Icons.monitor_heart_outlined, 'Log a measurement', 'Weight, BP, sugar',
+              id == null ? null : LogMeasurementScreen(personId: id)),
+          (Icons.medication_outlined, 'Add a medicine', 'Sets reminders',
+              id == null ? null : AddMedicationCourseScreen(personId: id)),
+          (Icons.photo_camera_outlined, 'Scan a document', 'Report, bill, prescription',
+              id == null ? null : AddRecordScreen(personId: id)),
+          (Icons.schedule, 'Add a visit or event', 'Doctor visit, surgery',
+              id == null ? null : AddHistoryEventScreen(personId: id)),
+          (Icons.currency_rupee, 'Add an expense', 'Bill or payment',
+              id == null ? null : AddExpenseScreen(personId: id)),
+          (Icons.person_add_alt, 'Add a family member', 'Name is enough', const CreateProfileScreen()),
+        ];
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Add', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+                Text(
+                  person == null
+                      ? 'Add a family member first.'
+                      : 'For ${person.displayName}. Pick what you want to record.',
+                  style: const TextStyle(color: onboardMuted),
+                ),
+                const SizedBox(height: 16),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 1.35,
+                  children: [
+                    for (var i = 0; i < tiles.length; i++)
+                      InkWell(
+                        onTap: tiles[i].$4 == null ? null : () => go(sheet, tiles[i].$4!),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Ink(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: i == 0 ? onboardInk : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Opacity(
+                            opacity: tiles[i].$4 == null ? 0.4 : 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: i == 0 ? const Color(0xFF3B5A4D) : const Color(0xFFD5E4DC),
+                                  child: Icon(tiles[i].$1, size: 18, color: i == 0 ? onboardAmber : onboardInk),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  tiles[i].$2,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    color: i == 0 ? Colors.white : onboardInk,
+                                  ),
+                                ),
+                                Text(
+                                  tiles[i].$3,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: i == 0 ? const Color(0xFFB8D0C5) : onboardMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

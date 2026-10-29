@@ -7,6 +7,7 @@ class MemoryOnboardingStore implements OnboardingStore {
     : _welcomeSeen = welcomeSeen;
 
   bool _welcomeSeen;
+  bool _tipsHidden = false;
   RecoveryRecord? recovery;
 
   @override
@@ -20,4 +21,10 @@ class MemoryOnboardingStore implements OnboardingStore {
 
   @override
   Future<void> saveRecovery(RecoveryRecord record) async => recovery = record;
+
+  @override
+  Future<bool> tipsHidden() async => _tipsHidden;
+
+  @override
+  Future<void> setTipsHidden(bool hidden) async => _tipsHidden = hidden;
 }

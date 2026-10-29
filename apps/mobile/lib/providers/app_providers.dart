@@ -301,3 +301,7 @@ final recordsProvider = StreamProvider<List<HealthRecord>>((ref) async* {
   final repository = await ref.watch(recordRepositoryProvider.future);
   yield* repository.watchAll();
 });
+
+final tipsHiddenProvider = FutureProvider<bool>((ref) {
+  return ref.watch(onboardingStoreProvider).tipsHidden();
+});

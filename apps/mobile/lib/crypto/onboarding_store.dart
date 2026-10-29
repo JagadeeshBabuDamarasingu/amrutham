@@ -13,11 +13,16 @@ abstract class OnboardingStore {
   /// Null until the user has saved and confirmed a recovery code.
   Future<RecoveryRecord?> readRecovery();
   Future<void> saveRecovery(RecoveryRecord record);
+
+  /// The daily tip above the tab bar; on unless the user hides it.
+  Future<bool> tipsHidden();
+  Future<void> setTipsHidden(bool hidden);
 }
 
 class SecureStorageOnboardingStore implements OnboardingStore {
   static const _welcomeKey = 'amrutham_welcome_seen';
   static const _recoveryKey = 'amrutham_recovery_record';
+  static const _tipsHiddenKey = 'amrutham_tips_hidden';
 
   final FlutterSecureStorage _storage;
 
@@ -42,4 +47,13 @@ class SecureStorageOnboardingStore implements OnboardingStore {
   @override
   Future<void> saveRecovery(RecoveryRecord record) =>
       _storage.write(key: _recoveryKey, value: jsonEncode(record.toJson()));
+
+  @override
+  Future<bool> tipsHidden() async =>
+      await _storage.read(key: _tipsHiddenKey) != null;
+
+  @override
+  Future<void> setTipsHidden(bool hidden) => hidden
+      ? _storage.write(key: _tipsHiddenKey, value: '1')
+      : _storage.delete(key: _tipsHiddenKey);
 }

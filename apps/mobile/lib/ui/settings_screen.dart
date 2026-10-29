@@ -14,6 +14,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recoverySet = ref.watch(recoverySetProvider).valueOrNull ?? false;
+    final tipsHidden = ref.watch(tipsHiddenProvider).valueOrNull ?? false;
     return Scaffold(
       appBar: AppBar(),
       body: ListView(
@@ -64,6 +65,21 @@ class SettingsScreen extends ConsumerWidget {
               ),
               trailing: recoverySet ? const Icon(Icons.chevron_right) : null,
               onTap: recoverySet ? () => _check(context, ref) : null,
+            ),
+          ),
+          const SectionLabel('Home'),
+          Card(
+            child: SwitchListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+              title: const Text('Daily tip', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: const Text(
+                'One short line above the tab bar. Same for everyone, never a notification.',
+              ),
+              value: !tipsHidden,
+              onChanged: (show) async {
+                await ref.read(onboardingStoreProvider).setTipsHidden(!show);
+                ref.invalidate(tipsHiddenProvider);
+              },
             ),
           ),
         ],
