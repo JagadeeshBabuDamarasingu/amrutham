@@ -6,6 +6,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'crash/crash_log.dart';
 import 'providers/app_providers.dart';
 import 'ui/app_shell.dart';
 import 'ui/app_style.dart';
@@ -17,6 +18,7 @@ final FlutterLocalNotificationsPlugin _notificationsPlugin =
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await (await CrashLog.open()).install();
   await _initTimeZone();
   await _initNotifications();
 

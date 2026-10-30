@@ -6,6 +6,7 @@ import '../crypto/recovery_code.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
 import 'language_screen.dart';
+import 'problem_report.dart';
 import 'restore_screen.dart';
 import 'storage_screens.dart';
 import 'strings.dart';
@@ -131,6 +132,16 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const LanguageScreen()),
               ),
+            ),
+          ),
+          const SectionLabel('Help'),
+          Card(
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              title: const Text('Send a problem report', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: const Text('See what crashed, then choose whether to send it.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => showProblemReport(context),
             ),
           ),
           const SectionLabel('Home'),
