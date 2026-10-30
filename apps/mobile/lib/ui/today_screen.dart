@@ -180,7 +180,9 @@ class TodayScreen extends ConsumerWidget {
                   ),
                 ),
             ],
-            if (selected != null) ...[
+            // Today is for what is happening now; a deceased member's past
+            // readings stay in their profile.
+            if (selected != null && !selected.isDeceased) ...[
               const SizedBox(height: 8),
               _NumbersCard(person: selected),
             ],
