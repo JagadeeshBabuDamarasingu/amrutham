@@ -148,6 +148,11 @@ a {
 	color: var(--amber-ink);
 }
 
+.btn-ink {
+	background: var(--ink);
+	color: #fff;
+}
+
 .btn-ghost {
 	border: 2px solid #3b5a4d;
 	color: #fff;
@@ -336,4 +341,14 @@ a {
 	.two-col {
 		grid-template-columns: 1fr 1fr;
 	}
+}
+
+.nav-links,
+.footer-links {
+	display: flex;
+	gap: 20px;
+}
+
+.open-cta {
+	margin: 32px 0 0;
 }

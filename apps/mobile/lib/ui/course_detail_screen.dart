@@ -51,6 +51,7 @@ class CourseDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(course?.medicationName ?? 'Medication')),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => AddSchedulePhaseScreen(

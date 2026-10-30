@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../backup/backup_flow.dart';
-import '../crypto/recovery_code.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
 import 'language_screen.dart';
 import 'problem_report.dart';
+import 'recovery_code_dialog.dart';
 import 'restore_screen.dart';
 import 'storage_screens.dart';
 import 'strings.dart';
@@ -167,65 +167,17 @@ class SettingsScreen extends ConsumerWidget {
   Future<void> _check(BuildContext context, WidgetRef ref) async {
     final record = await ref.read(onboardingStoreProvider).readRecovery();
     if (record == null || !context.mounted) return;
-    final input = TextEditingController();
-    String? result;
-    bool checking = false;
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Check your recovery code'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Type the code from your copy. It is checked on this phone '
-                'and never stored or sent.',
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: input,
-                textCapitalization: TextCapitalization.characters,
-                style: const TextStyle(fontFamily: 'monospace'),
-                decoration: const InputDecoration(hintText: 'XXXX-XXXX-XXXX-XXXX-XXXX-XXXX'),
-              ),
-              if (result != null) ...[
-                const SizedBox(height: 12),
-                Text(result!, style: const TextStyle(fontWeight: FontWeight.w700)),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Close'),
-            ),
-            TextButton(
-              onPressed: checking
-                  ? null
-                  : () async {
-                      final code = RecoveryCode.parse(input.text);
-                      if (code == null) {
-                        setState(() => result = 'That is not 24 characters of a code.');
-                        return;
-                      }
-                      setState(() => checking = true);
-                      final ok = await record.matches(code);
-                      setState(() {
-                        checking = false;
-                        result = ok
-                            ? 'That matches your recovery code.'
-                            : 'That does not match.';
-                      });
-                    },
-              child: Text(checking ? 'Checking…' : 'Check'),
-            ),
-          ],
-        ),
+      builder: (_) => RecoveryCodeDialog(
+        verify: record.matches,
+        title: 'Check your recovery code',
+        intro: 'Type the code from your copy. It is checked on this phone and never stored or sent.',
+        actionLabel: 'Check',
+        cancelLabel: 'Close',
+        closeOnMatch: false,
       ),
     );
-    input.dispose();
   }
 }
 

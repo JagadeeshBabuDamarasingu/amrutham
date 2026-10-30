@@ -69,6 +69,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => AddExpenseScreen(personId: _only ?? people.firstOrNull?.id)),
         ),

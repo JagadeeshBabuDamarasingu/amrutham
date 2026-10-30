@@ -10,5 +10,9 @@ export const site = {
 	playStoreUrl:
 		process.env.NEXT_PUBLIC_PLAY_STORE_URL ??
 		"https://play.google.com/store/apps/details?id=app.amrutham",
+	// The public source. Override only if the repository moves.
+	repoUrl:
+		process.env.NEXT_PUBLIC_REPO_URL ??
+		"https://github.com/JagadeeshBabuDamarasingu/amrutham",
 	contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || null,
 } as const;

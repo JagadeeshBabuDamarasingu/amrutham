@@ -30,6 +30,21 @@ const features = [
 	},
 ] as const;
 
+const openPrinciples = [
+	{
+		title: "Check our claims, don't trust them",
+		body: "No account, no analytics, no server of ours: you can confirm each of those in the code instead of taking our word for it.",
+	},
+	{
+		title: "No lock-in",
+		body: "Records are ordinary files. Backups use standard encryption (Argon2id and AES-256-GCM), locked by a code only you hold.",
+	},
+	{
+		title: "Mistakes get fixed in public",
+		body: "Found something wrong in a health guide, or something that could be clearer? Open an issue or send a change.",
+	},
+] as const;
+
 const screens = [
 	{ src: "/screens/today.png", label: "Today" },
 	{ src: "/screens/profile.png", label: "A family profile" },
@@ -67,9 +82,14 @@ export default function Home() {
 			<header className="hero">
 				<nav className="container nav" aria-label="Main">
 					<span className="brand">{site.name}</span>
-					<Link href="/privacy" className="nav-link">
-						Privacy
-					</Link>
+					<div className="nav-links">
+						<a href="#open-source" className="nav-link">
+							Open source
+						</a>
+						<Link href="/privacy" className="nav-link">
+							Privacy
+						</Link>
+					</div>
 				</nav>
 				<div className="container hero-grid">
 					<div>
@@ -139,6 +159,29 @@ export default function Home() {
 					</div>
 				</section>
 
+				<section className="section" id="open-source">
+					<div className="container">
+						<h2>Built in the open, so you can check it.</h2>
+						<p className="section-lede">
+							A health app asks for a lot of trust. The source is public, so what we say
+							about your privacy is something you can read for yourself.
+						</p>
+						<ul className="feature-grid">
+							{openPrinciples.map((p) => (
+								<li key={p.title} className="card">
+									<h3>{p.title}</h3>
+									<p>{p.body}</p>
+								</li>
+							))}
+						</ul>
+						<p className="open-cta">
+							<a className="btn btn-ink" href={site.repoUrl} rel="noopener">
+								View the source on GitHub
+							</a>
+						</p>
+					</div>
+				</section>
+
 				<section className="section" id="screens">
 					<div className="container">
 						<h2>A look inside</h2>
@@ -189,7 +232,12 @@ export default function Home() {
 						{site.name} is a working name. Not medical advice; ask a doctor about your
 						health.
 					</span>
-					<Link href="/privacy">Privacy</Link>
+					<span className="footer-links">
+						<a href={site.repoUrl} rel="noopener">
+							Source
+						</a>
+						<Link href="/privacy">Privacy</Link>
+					</span>
 				</div>
 			</footer>
 		</>

@@ -149,6 +149,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     return Scaffold(
       appBar: AppBar(),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => AddHistoryEventScreen(personId: widget.personId),

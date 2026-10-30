@@ -133,6 +133,7 @@ class _CareTeamScreenState extends ConsumerState<CareTeamScreen> {
     return Scaffold(
       appBar: AppBar(),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () {
           // Offer the doctors already saved for the family before a blank form.
           final saved = ref.read(careProvidersAllProvider).valueOrNull ?? [];

@@ -75,6 +75,7 @@ class _MetricsScreenState extends ConsumerState<MetricsScreen> {
         title: Text(name == null ? 'Daily metrics' : '$name · metrics'),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: _log,
         backgroundColor: onboardInk,
         foregroundColor: Colors.white,

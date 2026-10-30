@@ -164,6 +164,7 @@ class _RecordsScreenState extends ConsumerState<RecordsScreen> {
             right: 16,
             bottom: 16,
             child: FloatingActionButton.extended(
+        heroTag: null,
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const AddRecordScreen()),
               ),

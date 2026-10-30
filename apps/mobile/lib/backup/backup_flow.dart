@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../crypto/recovery_code.dart';
 import '../providers/app_providers.dart';
+import '../ui/recovery_code_dialog.dart';
 import 'vault_backup.dart';
 import 'drive_backup.dart';
 
@@ -15,61 +16,15 @@ import 'drive_backup.dart';
 Future<void> runBackup(BuildContext context, WidgetRef ref) async {
   final record = await ref.read(onboardingStoreProvider).readRecovery();
   if (record == null || !context.mounted) return;
-  final input = TextEditingController();
-  String? error;
-  bool working = false;
   final code = await showDialog<RecoveryCode>(
     context: context,
-    builder: (dialogContext) => StatefulBuilder(
-      builder: (context, setState) => AlertDialog(
-        title: const Text('Back up your vault'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Type your recovery code. It locks the backup, so only the code opens it.'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: input,
-              textCapitalization: TextCapitalization.characters,
-              style: const TextStyle(fontFamily: 'monospace'),
-              decoration: const InputDecoration(hintText: 'XXXX-XXXX-XXXX-XXXX-XXXX-XXXX'),
-            ),
-            if (error != null) ...[
-              const SizedBox(height: 12),
-              Text(error!, style: const TextStyle(fontWeight: FontWeight.w700)),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
-          TextButton(
-            onPressed: working
-                ? null
-                : () async {
-                    final parsed = RecoveryCode.parse(input.text);
-                    if (parsed == null) {
-                      setState(() => error = 'That is not 24 characters of a code.');
-                      return;
-                    }
-                    setState(() => working = true);
-                    final ok = await record.matches(parsed);
-                    if (!ok) {
-                      setState(() {
-                        working = false;
-                        error = 'That does not match your recovery code.';
-                      });
-                      return;
-                    }
-                    if (dialogContext.mounted) Navigator.pop(dialogContext, parsed);
-                  },
-            child: Text(working ? 'Checking…' : 'Back up'),
-          ),
-        ],
-      ),
+    builder: (_) => RecoveryCodeDialog(
+      verify: record.matches,
+      title: 'Back up your vault',
+      intro: 'Type your recovery code. It locks the backup, so only the code opens it.',
+      actionLabel: 'Back up',
     ),
   );
-  input.dispose();
   if (code == null || !context.mounted) return;
 
   final messenger = ScaffoldMessenger.of(context);
