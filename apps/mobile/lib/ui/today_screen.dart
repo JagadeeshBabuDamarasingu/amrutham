@@ -25,7 +25,9 @@ class TodayScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final people = ref.watch(profilesProvider).valueOrNull ?? const [];
+    final allPeople = ref.watch(profilesProvider).valueOrNull ?? const [];
+    // Today is for the living; deceased members stay in Family.
+    final people = allPeople.where((p) => !p.isDeceased).toList();
     final doses = ref.watch(todaysDosesProvider).valueOrNull ?? const [];
     final now = DateTime.now();
     final self = people
@@ -180,9 +182,7 @@ class TodayScreen extends ConsumerWidget {
                   ),
                 ),
             ],
-            // Today is for what is happening now; a deceased member's past
-            // readings stay in their profile.
-            if (selected != null && !selected.isDeceased) ...[
+            if (selected != null) ...[
               const SizedBox(height: 8),
               _NumbersCard(person: selected),
             ],
