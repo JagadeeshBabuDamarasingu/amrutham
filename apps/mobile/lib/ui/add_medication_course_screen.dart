@@ -92,7 +92,7 @@ class _AddMedicationCourseScreenState
             controller: _nameController,
             onChanged: (_) => setState(() {}),
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(hintText: 'Amoxicillin 500 mg'),
+            decoration: const InputDecoration(hintText: 'Medicine name and strength'),
           ),
           const SectionLabel('Prescribed by (optional)'),
           TextField(controller: _prescriberController),

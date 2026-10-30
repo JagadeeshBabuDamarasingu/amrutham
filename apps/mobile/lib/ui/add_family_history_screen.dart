@@ -89,7 +89,7 @@ class _AddFamilyHistoryScreenState
             controller: _relationshipController,
             onChanged: (_) => setState(() {}),
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(hintText: 'Mother, paternal uncle…'),
+            decoration: const InputDecoration(hintText: 'Which relative'),
           ),
           const SectionLabel('Condition'),
           TextField(

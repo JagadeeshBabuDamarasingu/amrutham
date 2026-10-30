@@ -176,7 +176,7 @@ class _State extends ConsumerState<AddRecordScreen> {
             controller: _title,
             onChanged: (_) => setState(() {}),
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(hintText: 'Blood panel report'),
+            decoration: const InputDecoration(hintText: 'Title'),
           ),
           const SizedBox(height: 10),
           OutlinedButton(
@@ -188,7 +188,7 @@ class _State extends ConsumerState<AddRecordScreen> {
           TextField(
             controller: _source,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(hintText: 'Vijaya Diagnostics'),
+            decoration: const InputDecoration(hintText: 'Where it was done'),
           ),
           const SizedBox(height: 28),
           _saving

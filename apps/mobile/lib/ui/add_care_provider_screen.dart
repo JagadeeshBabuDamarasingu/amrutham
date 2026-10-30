@@ -89,7 +89,7 @@ class _State extends ConsumerState<AddCareProviderScreen> {
             onChanged: (_) => setState(() {}),
             textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
-              hintText: isDoctor ? 'Dr. Lakshmi Iyer' : 'Apollo Hospitals',
+              hintText: isDoctor ? 'Name of the doctor' : 'Name of the hospital',
             ),
           ),
           if (isDoctor) ...[
@@ -97,20 +97,20 @@ class _State extends ConsumerState<AddCareProviderScreen> {
             TextField(
               controller: _specialty,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(hintText: 'General physician'),
+              decoration: const InputDecoration(hintText: 'Specialty'),
             ),
             const SectionLabel('Works at (optional)'),
             TextField(
               controller: _worksAt,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(hintText: 'Iyer Clinic, Kondapur'),
+              decoration: const InputDecoration(hintText: 'Clinic or address'),
             ),
           ],
           const SectionLabel('Phone (stays on this phone)'),
           TextField(
             controller: _phone,
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(hintText: '+91 98480 55012'),
+            decoration: const InputDecoration(hintText: 'Phone number'),
           ),
           const SectionLabel('Location (optional)'),
           TextField(

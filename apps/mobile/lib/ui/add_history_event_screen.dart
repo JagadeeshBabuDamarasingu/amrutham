@@ -85,7 +85,7 @@ class _State extends ConsumerState<AddHistoryEventScreen> {
             controller: _title,
             onChanged: (_) => setState(() {}),
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(hintText: 'Knee consultation'),
+            decoration: const InputDecoration(hintText: 'Short title'),
           ),
           const SectionLabel('Date'),
           OutlinedButton(
@@ -102,7 +102,7 @@ class _State extends ConsumerState<AddHistoryEventScreen> {
           const SectionLabel('Doctor or hospital (optional)'),
           TextField(
             controller: _provider,
-            decoration: const InputDecoration(hintText: 'Dr. S. Rao'),
+            decoration: const InputDecoration(hintText: 'Doctor or hospital'),
           ),
           const SectionLabel('Notes (optional)'),
           TextField(

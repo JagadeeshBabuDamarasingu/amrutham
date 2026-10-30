@@ -79,14 +79,14 @@ class _AddAllergyScreenState extends ConsumerState<AddAllergyScreen> {
             controller: _substanceController,
             onChanged: (_) => setState(() {}),
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(hintText: 'Penicillin, peanuts…'),
+            decoration: const InputDecoration(hintText: 'What you are allergic to'),
           ),
           const SectionLabel('Reaction'),
           TextField(
             controller: _reactionController,
             onChanged: (_) => setState(() {}),
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(hintText: 'Rash'),
+            decoration: const InputDecoration(hintText: 'What happens'),
           ),
           const SectionLabel('How sure are you'),
           Wrap(

@@ -151,13 +151,13 @@ class _State extends ConsumerState<AddExpenseScreen> {
             controller: _title,
             onChanged: (_) => setState(() {}),
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(hintText: 'Blood panel'),
+            decoration: const InputDecoration(hintText: 'What it was for'),
           ),
           const SectionLabel('Paid to (optional)'),
           TextField(
             controller: _payee,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(hintText: 'Vijaya Diagnostics'),
+            decoration: const InputDecoration(hintText: 'Who was paid'),
           ),
           const SectionLabel('For'),
           Wrap(

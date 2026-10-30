@@ -123,7 +123,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
             controller: _name,
             onChanged: (_) => setState(() {}),
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(hintText: 'Rohan Reddy'),
+            decoration: const InputDecoration(hintText: 'Full name'),
           ),
           const SectionLabel('Relationship to you'),
           Wrap(
@@ -208,7 +208,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               controller: _cause,
               maxLines: 2,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(hintText: 'Heart problem, sudden. Age about 71.'),
+              decoration: const InputDecoration(hintText: 'What happened, if you know'),
             ),
             const SizedBox(height: 6),
             const Text(

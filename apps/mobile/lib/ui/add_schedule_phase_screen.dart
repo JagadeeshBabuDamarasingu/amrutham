@@ -184,7 +184,7 @@ class _AddSchedulePhaseScreenState
             TextFormField(
               controller: _doseAmountController,
               decoration: const InputDecoration(
-                labelText: 'Dose (e.g. 1 tablet, 5ml)',
+                labelText: 'Dose each time',
               ),
               validator: (value) => (value == null || value.trim().isEmpty)
                   ? 'Dose is required'
@@ -212,7 +212,7 @@ class _AddSchedulePhaseScreenState
               TextFormField(
                 controller: _prnMaxFrequencyController,
                 decoration: const InputDecoration(
-                  labelText: 'Maximum frequency (e.g. up to 3 times a day)',
+                  labelText: 'Most times in a day',
                 ),
               ),
             ] else ...[
