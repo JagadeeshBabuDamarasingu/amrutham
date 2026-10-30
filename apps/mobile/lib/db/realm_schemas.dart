@@ -23,6 +23,10 @@ class _PersonRow {
   @PrimaryKey()
   late String id;
   late String displayName;
+  // Optional parts of displayName ("Given Surname"), kept so the app can greet
+  // by given name. Null on profiles made before they were asked for.
+  String? givenName;
+  String? surname;
   late String relationship;
   DateTime? dateOfBirth;
   String? sex;

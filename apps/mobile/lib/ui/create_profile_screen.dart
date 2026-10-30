@@ -26,7 +26,8 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     'AB positive', 'AB negative', 'O positive', 'O negative',
   ];
 
-  final _name = TextEditingController();
+  final _given = TextEditingController();
+  final _surname = TextEditingController();
   RelationshipType? _relationship;
   String? _sex;
   String? _bloodGroup;
@@ -38,7 +39,8 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
 
   @override
   void dispose() {
-    _name.dispose();
+    _given.dispose();
+    _surname.dispose();
     _cause.dispose();
     super.dispose();
   }
@@ -51,7 +53,11 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
 
     final repository = await ref.read(profileRepositoryProvider.future);
     final profile = await repository.createProfile(
-      displayName: _name.text.trim(),
+      displayName: [_given.text.trim(), _surname.text.trim()]
+          .where((part) => part.isNotEmpty)
+          .join(' '),
+      givenName: _given.text.trim(),
+      surname: _surname.text.trim().isEmpty ? null : _surname.text.trim(),
       relationship: _relationship ?? RelationshipType.otherDependent,
       dateOfBirth: _dateOfBirth,
       sex: _sex == 'Not stated' ? null : _sex,
@@ -120,10 +126,17 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
           ),
           const SectionLabel('Name'),
           TextField(
-            controller: _name,
+            controller: _given,
             onChanged: (_) => setState(() {}),
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(hintText: 'Full name'),
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(hintText: 'Given name'),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _surname,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(hintText: 'Surname (optional)'),
           ),
           const SectionLabel('Relationship to you'),
           Wrap(
@@ -221,7 +234,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               ? const Center(child: CircularProgressIndicator())
               : OnboardButton(
                   label: 'Save',
-                  onPressed: _name.text.trim().isEmpty ? null : _save,
+                  onPressed: _given.text.trim().isEmpty ? null : _save,
                 ),
         ],
       ),

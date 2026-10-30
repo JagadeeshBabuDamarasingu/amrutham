@@ -41,8 +41,7 @@ class TodayScreen extends ConsumerWidget {
         .firstOrNull;
     final selectedId = ref.watch(selectedPersonIdProvider);
     final selected =
-        people.where((p) => p.id == selectedId).firstOrNull ??
-        people.firstOrNull;
+        people.where((p) => p.id == selectedId).firstOrNull ?? self ?? people.firstOrNull;
 
     final logs = ref.watch(todaysDoseLogsProvider).valueOrNull ?? const [];
     final answered = {for (final l in logs) l.key};
@@ -81,9 +80,9 @@ class TodayScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        self == null
+                        selected == null
                             ? _greeting(context, now)
-                            : '${_greeting(context, now)},\n${self.displayName.split(' ').first}',
+                            : '${_greeting(context, now)},\n${selected.firstName}',
                         style: const TextStyle(
                           fontFamily: headingFont,
                           fontSize: 34,
@@ -279,71 +278,95 @@ class TodayScreen extends ConsumerWidget {
               id == null ? null : AddExpenseScreen(personId: id)),
           (Icons.person_add_alt, 'Add a family member', 'Name is enough', const CreateProfileScreen()),
         ];
+        Widget tile(int i) => InkWell(
+          onTap: tiles[i].$4 == null ? null : () => go(sheet, tiles[i].$4!),
+          borderRadius: BorderRadius.circular(20),
+          child: Ink(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: i == 0 ? const Color(0xFF244338) : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Opacity(
+              opacity: tiles[i].$4 == null ? 0.4 : 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: i == 0 ? const Color(0xFF3B5A4D) : const Color(0xFFD5E5DD),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Icon(tiles[i].$1, size: 20, color: i == 0 ? onboardAmber : onboardInk),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    tiles[i].$2,
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.25,
+                      fontWeight: FontWeight.w600,
+                      color: i == 0 ? Colors.white : onboardInk,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    tiles[i].$3,
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.25,
+                      color: i == 0 ? const Color(0xFFB8D0C5) : onboardMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
         return SafeArea(
-          child: Padding(
+          // Scrolls instead of overflowing when the phone's text size is large.
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Add', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+                const Text(
+                  'Add',
+                  style: TextStyle(
+                    fontFamily: headingFont,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w600,
+                    fontVariations: [FontVariation('wght', 600), FontVariation('opsz', 28)],
+                  ),
+                ),
+                const SizedBox(height: 4),
                 Text(
                   person == null
                       ? 'Add a family member first.'
-                      : 'For ${person.displayName}. Pick what you want to record.',
-                  style: const TextStyle(color: onboardMuted),
+                      : 'For ${person.firstName}. Pick what you want to record.',
+                  style: const TextStyle(color: onboardMuted, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1.35,
-                  children: [
-                    for (var i = 0; i < tiles.length; i++)
-                      InkWell(
-                        onTap: tiles[i].$4 == null ? null : () => go(sheet, tiles[i].$4!),
-                        borderRadius: BorderRadius.circular(20),
-                        child: Ink(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: i == 0 ? onboardInk : Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Opacity(
-                            opacity: tiles[i].$4 == null ? 0.4 : 1,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                CircleAvatar(
-                                  radius: 16,
-                                  backgroundColor: i == 0 ? const Color(0xFF3B5A4D) : const Color(0xFFD5E4DC),
-                                  child: Icon(tiles[i].$1, size: 18, color: i == 0 ? onboardAmber : onboardInk),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  tiles[i].$2,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    color: i == 0 ? Colors.white : onboardInk,
-                                  ),
-                                ),
-                                Text(
-                                  tiles[i].$3,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: i == 0 ? const Color(0xFFB8D0C5) : onboardMuted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                // Tiles grow to fit their text; a fixed aspect ratio overflowed.
+                for (var row = 0; row < tiles.length; row += 2)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: tile(row)),
+                          const SizedBox(width: 10),
+                          Expanded(child: tile(row + 1)),
+                        ],
                       ),
-                  ],
-                ),
+                    ),
+                  ),
               ],
             ),
           ),

@@ -68,7 +68,8 @@ class VaultBackup {
       'people': [
         for (final x in realm.all<PersonRow>())
           {
-            'id': x.id, 'displayName': x.displayName, 'relationship': x.relationship,
+            'id': x.id, 'displayName': x.displayName,
+            'givenName': x.givenName, 'surname': x.surname, 'relationship': x.relationship,
             'dateOfBirth': d(x.dateOfBirth), 'sex': x.sex, 'bloodGroup': x.bloodGroup,
             'createdAt': d(x.createdAt), 'isDeceased': x.isDeceased,
             'dateOfDeath': d(x.dateOfDeath), 'causeOfDeath': x.causeOfDeath,
@@ -207,6 +208,7 @@ class VaultBackup {
         realm.add(PersonRow(
           x['id'] as String, x['displayName'] as String, x['relationship'] as String,
           t(x['createdAt']),
+          givenName: x['givenName'] as String?, surname: x['surname'] as String?,
           dateOfBirth: to(x['dateOfBirth']), sex: x['sex'] as String?,
           bloodGroup: x['bloodGroup'] as String?,
           isDeceased: x['isDeceased'] as bool? ?? false,

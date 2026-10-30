@@ -30,6 +30,11 @@ class EmergencyContact {
 class PersonProfile {
   final PersonId id;
   final String displayName;
+
+  /// The parts of [displayName] ("Given Surname"), when they were entered
+  /// separately. Null for profiles made before the app asked for them.
+  final String? givenName;
+  final String? surname;
   final RelationshipType relationship;
   final DateTime? dateOfBirth;
   final String? sex;
@@ -43,6 +48,8 @@ class PersonProfile {
   const PersonProfile({
     required this.id,
     required this.displayName,
+    this.givenName,
+    this.surname,
     required this.relationship,
     this.dateOfBirth,
     this.sex,
@@ -65,6 +72,8 @@ class PersonProfile {
     return PersonProfile(
       id: id,
       displayName: displayName ?? this.displayName,
+      givenName: givenName,
+      surname: surname,
       relationship: relationship ?? this.relationship,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       sex: sex ?? this.sex,
@@ -75,6 +84,17 @@ class PersonProfile {
       dateOfDeath: dateOfDeath,
       causeOfDeath: causeOfDeath,
     );
+  }
+}
+
+extension PersonFirstName on PersonProfile {
+  /// What to call them in a greeting: the given name, or for older profiles
+  /// the first word of the full name.
+  String get firstName {
+    final given = givenName?.trim();
+    if (given != null && given.isNotEmpty) return given;
+    final first = displayName.trim().split(RegExp(r'\s+')).first;
+    return first.isEmpty ? displayName : first;
   }
 }
 

@@ -30,6 +30,8 @@ class ProfileRepository {
     return PersonProfile(
       id: PersonId(row.id),
       displayName: row.displayName,
+      givenName: row.givenName,
+      surname: row.surname,
       relationship: RelationshipType.values.byName(row.relationship),
       dateOfBirth: row.dateOfBirth?.toLocal(),
       sex: row.sex,
@@ -52,6 +54,8 @@ class ProfileRepository {
 
   Future<PersonProfile> createProfile({
     required String displayName,
+    String? givenName,
+    String? surname,
     required RelationshipType relationship,
     DateTime? dateOfBirth,
     String? sex,
@@ -71,6 +75,8 @@ class ProfileRepository {
           displayName,
           relationship.name,
           createdAt,
+          givenName: givenName,
+          surname: surname,
           dateOfBirth: dateOfBirth,
           sex: sex,
           bloodGroup: bloodGroup,
@@ -93,6 +99,8 @@ class ProfileRepository {
     return PersonProfile(
       id: id,
       displayName: displayName,
+      givenName: givenName,
+      surname: surname,
       relationship: relationship,
       dateOfBirth: dateOfBirth,
       sex: sex,

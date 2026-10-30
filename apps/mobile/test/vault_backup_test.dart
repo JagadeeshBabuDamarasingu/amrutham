@@ -37,6 +37,8 @@ void main() {
     );
     await profiles.createProfile(
       displayName: 'Venkata',
+      givenName: 'Venkata',
+      surname: 'Reddy',
       relationship: RelationshipType.parent,
       isDeceased: true,
       dateOfDeath: DateTime(2019),
@@ -110,6 +112,9 @@ void main() {
     expect(restoredAppa.dateOfBirth, DateTime(1954, 3, 14));
     expect(restoredAppa.emergencyContacts.single.phone, '+91 98765 43210');
     expect(people.firstWhere((p) => p.displayName == 'Venkata').isDeceased, isTrue);
+    final restoredVenkata = people.firstWhere((p) => p.displayName == 'Venkata');
+    expect((restoredVenkata.givenName, restoredVenkata.surname), ('Venkata', 'Reddy'));
+    expect(restoredAppa.givenName, isNull); // older profiles stay without parts
 
     final bp = (await MeasurementRepository(other).watchMeasurements(restoredAppa.id).first).single;
     expect((bp.value, bp.value2, bp.measuredAt), (128.0, 82.0, DateTime(2026, 10, 29, 7, 30)));

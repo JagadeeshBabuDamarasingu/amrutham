@@ -103,6 +103,8 @@ class PersonRow extends _PersonRow
     String displayName,
     String relationship,
     DateTime createdAt, {
+    String? givenName,
+    String? surname,
     DateTime? dateOfBirth,
     String? sex,
     String? bloodGroup,
@@ -118,6 +120,8 @@ class PersonRow extends _PersonRow
     }
     RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'displayName', displayName);
+    RealmObjectBase.set(this, 'givenName', givenName);
+    RealmObjectBase.set(this, 'surname', surname);
     RealmObjectBase.set(this, 'relationship', relationship);
     RealmObjectBase.set(this, 'dateOfBirth', dateOfBirth);
     RealmObjectBase.set(this, 'sex', sex);
@@ -146,6 +150,18 @@ class PersonRow extends _PersonRow
   @override
   set displayName(String value) =>
       RealmObjectBase.set(this, 'displayName', value);
+
+  @override
+  String? get givenName =>
+      RealmObjectBase.get<String>(this, 'givenName') as String?;
+  @override
+  set givenName(String? value) => RealmObjectBase.set(this, 'givenName', value);
+
+  @override
+  String? get surname =>
+      RealmObjectBase.get<String>(this, 'surname') as String?;
+  @override
+  set surname(String? value) => RealmObjectBase.set(this, 'surname', value);
 
   @override
   String get relationship =>
@@ -222,6 +238,8 @@ class PersonRow extends _PersonRow
     return <String, dynamic>{
       'id': id.toEJson(),
       'displayName': displayName.toEJson(),
+      'givenName': givenName.toEJson(),
+      'surname': surname.toEJson(),
       'relationship': relationship.toEJson(),
       'dateOfBirth': dateOfBirth.toEJson(),
       'sex': sex.toEJson(),
@@ -249,6 +267,8 @@ class PersonRow extends _PersonRow
           fromEJson(displayName),
           fromEJson(relationship),
           fromEJson(createdAt),
+          givenName: fromEJson(ejson['givenName']),
+          surname: fromEJson(ejson['surname']),
           dateOfBirth: fromEJson(ejson['dateOfBirth']),
           sex: fromEJson(ejson['sex']),
           bloodGroup: fromEJson(ejson['bloodGroup']),
@@ -267,6 +287,8 @@ class PersonRow extends _PersonRow
     return const SchemaObject(ObjectType.realmObject, PersonRow, 'PersonRow', [
       SchemaProperty('id', RealmPropertyType.string, primaryKey: true),
       SchemaProperty('displayName', RealmPropertyType.string),
+      SchemaProperty('givenName', RealmPropertyType.string, optional: true),
+      SchemaProperty('surname', RealmPropertyType.string, optional: true),
       SchemaProperty('relationship', RealmPropertyType.string),
       SchemaProperty(
         'dateOfBirth',
