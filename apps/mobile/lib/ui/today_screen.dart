@@ -89,6 +89,9 @@ class TodayScreen extends ConsumerWidget {
                           fontSize: 34,
                           height: 1.05,
                           fontWeight: FontWeight.w700,
+                          // The variable font needs its axes set explicitly;
+                          // opsz follows the size, as the design's CSS does.
+                          fontVariations: [FontVariation('wght', 700), FontVariation('opsz', 34)],
                           letterSpacing: -0.68,
                         ),
                       ),
@@ -414,6 +417,7 @@ class _NextDoseCard extends StatelessWidget {
               color: Colors.white,
               fontSize: 26,
               fontWeight: FontWeight.w500,
+              fontVariations: [FontVariation('wght', 500), FontVariation('opsz', 26)],
             ),
           ),
           const SizedBox(height: 1),
@@ -634,7 +638,9 @@ class _AvatarStack extends StatelessWidget {
       height: 38,
       child: Stack(
         children: [
-          for (final (i, p) in visible.indexed)
+          // Selected last, so its ring is never covered by a neighbour.
+          for (final (i, p) in [...visible.indexed]
+            ..sort((a, b) => (a.$2.id == selectedId ? 1 : 0) - (b.$2.id == selectedId ? 1 : 0)))
             Positioned(
               left: 28.0 * i,
               child: () {
