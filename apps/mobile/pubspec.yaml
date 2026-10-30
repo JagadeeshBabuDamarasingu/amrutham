@@ -163,3 +163,13 @@ flutter:
   # lossless source and is not bundled.
   assets:
     - assets/images/dhanvantari.webp
+
+  # Doop design fonts, bundled so the app never fetches them (offline-first).
+  # Both are variable fonts under the SIL OFL (licences beside the files).
+  fonts:
+    - family: Figtree
+      fonts:
+        - asset: assets/fonts/Figtree.ttf
+    - family: Bricolage
+      fonts:
+        - asset: assets/fonts/BricolageGrotesque.ttf

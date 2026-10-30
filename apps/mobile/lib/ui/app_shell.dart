@@ -62,11 +62,12 @@ class _AppShellState extends ConsumerState<AppShell> {
               GestureDetector(
                 onTap: () => setState(() => _index = 3),
                 child: Container(
-                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  margin: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  constraints: const BoxConstraints(minHeight: 50),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFAEFD0),
-                    borderRadius: BorderRadius.circular(18),
+                    color: const Color(0xFFFBEFD2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
@@ -75,22 +76,22 @@ class _AppShellState extends ConsumerState<AppShell> {
                       Expanded(
                         child: Text(
                           tipForDay(DateTime.now()),
-                          style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF3D2E00)),
+                          style: const TextStyle(fontSize: 13, height: 1.3, fontWeight: FontWeight.w600, color: Color(0xFF4A3300)),
                         ),
                       ),
-                      const Text('Learn ›', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF5A4300))),
+                      const Text('Learn ›', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF6B4A00))),
                     ],
                   ),
                 ),
               ),
             Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+          height: 68,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(34),
             boxShadow: const [
-              BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 4)),
+              BoxShadow(color: Color(0x1420201C), blurRadius: 30, offset: Offset(0, 8)),
             ],
           ),
           child: Row(
@@ -107,6 +108,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                         children: [
                           Icon(
                             _tabs[i].$1,
+                            size: 24,
                             color: i == _index ? onboardInk : onboardMuted,
                           ),
                           const SizedBox(height: 2),
@@ -114,9 +116,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                             tr(context, _tabs[i].$2),
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: i == _index
-                                  ? FontWeight.w800
-                                  : FontWeight.w500,
+                              fontWeight: FontWeight.w600,
                               color: i == _index ? onboardInk : onboardMuted,
                             ),
                           ),

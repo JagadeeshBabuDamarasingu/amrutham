@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/dose_log.dart';
+import '../model/ids.dart';
 import '../model/measurement.dart';
 import '../model/person.dart';
 import '../providers/app_providers.dart';
@@ -15,6 +16,11 @@ import 'create_profile_screen.dart';
 import 'log_measurement_screen.dart';
 import 'metrics_screen.dart';
 import 'settings_screen.dart';
+
+const _months = [
+  'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+  'September', 'October', 'November', 'December',
+];
 
 const _weekdays = [
   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
@@ -58,76 +64,73 @@ class TodayScreen extends ConsumerWidget {
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${_weekdays[now.weekday - 1]}, ${now.day} ${monthNames[now.month - 1]}',
-                      style: const TextStyle(color: onboardMuted),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      self == null
-                          ? _greeting(context, now)
-                          : '${_greeting(context, now)},\n${self.displayName.split(' ').first}',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        height: 1.1,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.8,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${_weekdays[now.weekday - 1]}, ${now.day} ${_months[now.month - 1]}',
+                        style: const TextStyle(color: onboardMuted, fontSize: 14),
                       ),
+                      const SizedBox(height: 6),
+                      Text(
+                        self == null
+                            ? _greeting(context, now)
+                            : '${_greeting(context, now)},\n${self.displayName.split(' ').first}',
+                        style: const TextStyle(
+                          fontFamily: headingFont,
+                          fontSize: 34,
+                          height: 1.05,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.68,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (people.length > 1) ...[
+                      _AvatarStack(
+                        people: people,
+                        selectedId: selected?.id,
+                        onSelect: (id) =>
+                            ref.read(selectedPersonIdProvider.notifier).state = id,
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _RoundButton(
+                          icon: Icons.add,
+                          tooltip: 'Quick add',
+                          dark: true,
+                          onTap: () => _quickAdd(context, selected),
+                        ),
+                        const SizedBox(width: 8),
+                        _RoundButton(
+                          icon: Icons.settings_outlined,
+                          tooltip: tr(context, 'Settings'),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-              IconButton.filled(
-                onPressed: () => _quickAdd(context, selected),
-                icon: const Icon(Icons.add),
-                tooltip: 'Quick add',
-              ),
-              const SizedBox(width: 8),
-              IconButton.filledTonal(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                ),
-                icon: const Icon(Icons.settings_outlined),
-                tooltip: tr(context, 'Settings'),
-              ),
-            ],
-          ),
-          if (people.length > 1) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 44,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  for (var i = 0; i < people.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () => ref
-                            .read(selectedPersonIdProvider.notifier)
-                            .state = people[i].id,
-                        child: Opacity(
-                          opacity: people[i].id == selected?.id ? 1 : 0.55,
-                          child: PersonAvatar(
-                            name: people[i].displayName,
-                            colorIndex: i,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              ],
             ),
-          ],
+          ),
           const SizedBox(height: 16),
           if (people.isEmpty)
             _EmptyToday(onAdd: () => _addPerson(context))
@@ -161,24 +164,45 @@ class TodayScreen extends ConsumerWidget {
             if (later.isNotEmpty) ...[
               SectionLabel(tr(context, 'Later today')),
               for (final d in later)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Card(
-                    child: ListTile(
-                      leading: const CircleAvatar(
-                        backgroundColor: Color(0xFFD5E4DC),
-                        child: Icon(Icons.medication_outlined, color: onboardInk),
+                Container(
+                  margin: const EdgeInsets.only(bottom: 7),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD5E5DD),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        child: const Icon(Icons.medication_outlined, size: 20, color: onboardInk),
                       ),
-                      title: Text(
-                        '${d.medicationName} ${d.doseAmount}'.trim(),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      const SizedBox(width: 13),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${d.medicationName} ${d.doseAmount}'.trim(),
+                              style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              d.person.displayName,
+                              style: const TextStyle(fontSize: 12.5, color: onboardMuted),
+                            ),
+                          ],
+                        ),
                       ),
-                      subtitle: Text(d.person.displayName),
-                      trailing: Text(
+                      Text(
                         d.time.label,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                       ),
-                    ),
+                    ],
                   ),
                 ),
             ],
@@ -188,12 +212,24 @@ class TodayScreen extends ConsumerWidget {
             ],
             if (lastAnswer != null && lastDose != null)
               Padding(
-                padding: const EdgeInsets.only(top: 12, left: 4),
-                child: Text(
-                  '${lastAnswer.status == DoseStatus.taken ? 'Taken' : 'Missed'}: '
-                  '${lastDose.medicationName} ${lastDose.doseAmount} · '
-                  '${TimeOfDayLite(lastAnswer.loggedAt.hour, lastAnswer.loggedAt.minute).label}',
-                  style: const TextStyle(color: onboardMuted, fontSize: 13),
+                padding: const EdgeInsets.only(top: 8, left: 4),
+                child: Row(
+                  children: [
+                    Icon(
+                      lastAnswer.status == DoseStatus.taken ? Icons.check : Icons.close,
+                      size: 16,
+                      color: onboardMuted,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${lastAnswer.status == DoseStatus.taken ? 'Taken' : 'Missed'}: '
+                        '${lastDose.medicationName} ${lastDose.doseAmount} · '
+                        '${TimeOfDayLite(lastAnswer.loggedAt.hour, lastAnswer.loggedAt.minute).label}',
+                        style: const TextStyle(color: onboardMuted, fontSize: 13),
+                      ),
+                    ),
+                  ],
                 ),
               ),
           ],
@@ -354,10 +390,10 @@ class _NextDoseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        color: onboardInk,
-        borderRadius: BorderRadius.circular(28),
+        color: const Color(0xFF1F3B32),
+        borderRadius: BorderRadius.circular(26),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,27 +401,27 @@ class _NextDoseCard extends StatelessWidget {
           Text(
             '${dose.scheduledAt.isBefore(DateTime.now()) ? 'DUE' : 'NEXT DOSE'} · ${dose.time.label.toUpperCase()}',
             style: const TextStyle(
-              color: Color(0xFFB8D0C5),
-              fontSize: 12,
-              letterSpacing: 1,
-              fontWeight: FontWeight.w700,
+              color: Color(0xFF9FC0B2),
+              fontSize: 12.5,
+              letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             dose.medicationName,
             style: const TextStyle(
+              fontFamily: headingFont,
               color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
+              fontSize: 26,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 1),
           Text(
             '${dose.doseAmount} · for ${dose.person.displayName}',
-            style: const TextStyle(color: Color(0xFFB8D0C5), fontSize: 15),
+            style: const TextStyle(color: Color(0xFFB8D0C5), fontSize: 13.5),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Row(
             children: [
               for (final (label, status) in [
@@ -396,8 +432,11 @@ class _NextDoseCard extends StatelessWidget {
                   child: FilledButton(
                     onPressed: () => onAnswer(status),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B5A4D),
-                      minimumSize: const Size.fromHeight(48),
+                      backgroundColor: const Color(0x24FFFFFF),
+                      minimumSize: const Size.fromHeight(46),
+                      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                      side: const BorderSide(color: Color(0x38FFFFFF)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                     child: Text(tr(context, label)),
                   ),
@@ -425,99 +464,256 @@ class _NumbersCard extends ConsumerWidget {
       MeasurementKind.bloodPressure,
       MeasurementKind.bloodSugar,
     ];
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => MetricsScreen(personId: person.id),
-                      ),
-                    ),
-                    child: Text(
-                      "${person.displayName}'s numbers ›",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).push(
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 11, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => LogMeasurementScreen(personId: person.id),
+                      builder: (_) => MetricsScreen(personId: person.id),
                     ),
                   ),
-                  child: const Text('+ Log'),
+                  child: const Text(
+                    "Today's numbers ›",
+                    style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                for (final kind in shown)
-                  Expanded(
-                    child: Builder(
-                      builder: (context) {
-                        final last = readings
-                            .where((m) => m.kind == kind)
-                            .firstOrNull;
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => LogMeasurementScreen(
-                                personId: person.id,
-                                initialKind: kind,
+              ),
+              InkWell(
+                borderRadius: BorderRadius.circular(999),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => LogMeasurementScreen(personId: person.id),
+                  ),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1F3B32),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Text(
+                    '+ Log',
+                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 9),
+          Row(
+            children: [
+              for (final (i, kind) in shown.indexed) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: Builder(
+                    builder: (context) {
+                      final last = readings.where((m) => m.kind == kind).firstOrNull;
+                      final tile = Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              kind == MeasurementKind.bloodPressure ? 'BP' : kind.label,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: onboardMuted,
                               ),
                             ),
-                          ),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: last == null ? null : onboardBg,
-                              border: last == null
-                                  ? Border.all(color: const Color(0xFFD5E4DC))
-                                  : null,
-                              borderRadius: BorderRadius.circular(16),
+                            const SizedBox(height: 1),
+                            Text(
+                              last == null ? '+ Add' : last.display,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: last == null ? 14 : 15.5,
+                                fontWeight: FontWeight.w700,
+                                color: last == null ? const Color(0xFF1F3B32) : null,
+                              ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  kind == MeasurementKind.bloodPressure
-                                      ? 'BP'
-                                      : kind.label,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: onboardMuted,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  last == null ? '+ Add' : last.display,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
+                          ],
+                        ),
+                      );
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => LogMeasurementScreen(
+                              personId: person.id,
+                              initialKind: kind,
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                        child: last == null
+                            ? CustomPaint(painter: _DashedBorder(), child: tile)
+                            : Ink(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F3),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: tile,
+                              ),
+                      );
+                    },
                   ),
+                ),
               ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The dashed outline of an empty reading tile in the Today frame.
+class _DashedBorder extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFC5D2CC)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        (Offset.zero & size).deflate(0.75),
+        const Radius.circular(12),
+      ));
+    for (final metric in path.computeMetrics()) {
+      for (var d = 0.0; d < metric.length; d += 8) {
+        canvas.drawPath(metric.extractPath(d, d + 4), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorder old) => false;
+}
+
+/// Overlapping circles for the family, with a "+N" bubble past three people.
+class _AvatarStack extends StatelessWidget {
+  const _AvatarStack({required this.people, required this.selectedId, required this.onSelect});
+
+  final List<PersonProfile> people;
+  final PersonId? selectedId;
+  final ValueChanged<PersonId> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final overflow = people.length > 3;
+    final visible = overflow ? people.take(2).toList() : people;
+    Widget circle(Color bg, Color fg, String text, bool selected, VoidCallback onTap) =>
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: bg,
+              shape: BoxShape.circle,
+              border: Border.all(color: selected ? onboardInk : onboardBg, width: 2),
             ),
+            child: Text(text, style: TextStyle(color: fg, fontSize: 13, fontWeight: FontWeight.w600)),
+          ),
+        );
+    final count = visible.length + (overflow ? 1 : 0);
+    return SizedBox(
+      width: 38.0 + 28 * (count - 1),
+      height: 38,
+      child: Stack(
+        children: [
+          for (final (i, p) in visible.indexed)
+            Positioned(
+              left: 28.0 * i,
+              child: () {
+                final (bg, fg) = avatarColors(i);
+                final name = p.displayName.trim();
+                return circle(bg, fg, name.isEmpty ? '?' : name[0].toUpperCase(),
+                    p.id == selectedId, () => onSelect(p.id));
+              }(),
+            ),
+          if (overflow)
+            Positioned(
+              left: 28.0 * visible.length,
+              child: circle(
+                const Color(0xFF1F3B32),
+                Colors.white,
+                '+${people.length - 2}',
+                false,
+                () => _pick(context),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _pick(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final p in people)
+              ListTile(
+                leading: PersonAvatar(name: p.displayName, size: 40),
+                title: Text(p.displayName),
+                selected: p.id == selectedId,
+                onTap: () {
+                  Navigator.pop(sheet);
+                  onSelect(p.id);
+                },
+              ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RoundButton extends StatelessWidget {
+  const _RoundButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.dark = false,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: dark ? const Color(0xFF1F3B32) : Colors.white,
+        elevation: dark ? 0 : 1,
+        shadowColor: const Color(0x1414201C),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: Icon(icon, size: 20, color: dark ? Colors.white : const Color(0xFF1F3B32)),
+          ),
         ),
       ),
     );

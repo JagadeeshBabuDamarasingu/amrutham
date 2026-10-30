@@ -40,6 +40,11 @@ const _avatarColors = [
   (Color(0xFF2F5547), Colors.white),
 ];
 
+(Color, Color) avatarColors(int index) => _avatarColors[index % _avatarColors.length];
+
+/// Heading face from the Doop frames (greeting, big card titles).
+const headingFont = 'Bricolage';
+
 /// Rounded-square initial, coloured by position so a family reads at a glance.
 class PersonAvatar extends StatelessWidget {
   const PersonAvatar({
@@ -117,6 +122,7 @@ ThemeData appTheme() {
     onSecondaryContainer: Colors.white,
   );
   return ThemeData(
+    fontFamily: 'Figtree',
     colorScheme: scheme,
     scaffoldBackgroundColor: onboardBg,
     appBarTheme: const AppBarTheme(
