@@ -6,10 +6,12 @@ import '../model/ids.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
 
+/// Adds a doctor or place, or edits one when [editing] is given.
 class AddCareProviderScreen extends ConsumerStatefulWidget {
-  const AddCareProviderScreen({super.key, required this.personId});
+  const AddCareProviderScreen({super.key, required this.personId, this.editing});
 
   final PersonId personId;
+  final CareProvider? editing;
 
   @override
   ConsumerState<AddCareProviderScreen> createState() => _State();
@@ -27,6 +29,23 @@ class _State extends ConsumerState<AddCareProviderScreen> {
   bool _saving = false;
 
   @override
+  void initState() {
+    super.initState();
+    final e = widget.editing;
+    if (e == null) return;
+    _kind = e.kind;
+    _current = e.isCurrent;
+    _name.text = e.name;
+    _specialty.text = e.specialty ?? '';
+    _worksAt.text = e.worksAt ?? '';
+    _phone.text = e.phone ?? '';
+    _location.text = e.location ?? '';
+    _consultsFor
+      ..clear()
+      ..addAll(e.personIds);
+  }
+
+  @override
   void dispose() {
     for (final c in [_name, _specialty, _worksAt, _phone, _location]) {
       c.dispose();
@@ -38,25 +57,86 @@ class _State extends ConsumerState<AddCareProviderScreen> {
       c.text.trim().isEmpty ? null : c.text.trim();
 
   Future<void> _save() async {
-    setState(() => _saving = true);
     final repository = await ref.read(careTeamRepositoryProvider.future);
+    final editing = widget.editing;
+    if (editing == null) {
+      // The same doctor is often added for a second family member: offer the
+      // saved one instead of a second copy.
+      final all = ref.read(careProvidersAllProvider).valueOrNull ?? [];
+      final dup = sameProvider(all, _kind, _name.text);
+      if (dup != null) {
+        if (!mounted) return;
+        final choice = await showDialog<String>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('${dup.name} is already saved'),
+            content: const Text(
+              "They're already in your family's care team. Use the saved one "
+              'instead of adding a second copy?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'new'),
+                child: const Text('Add anyway'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'use'),
+                child: const Text('Use saved'),
+              ),
+            ],
+          ),
+        );
+        if (choice == null) return;
+        if (choice == 'use') {
+          for (final person in _consultsFor) {
+            await repository.linkPerson(dup.id, person);
+          }
+          if (mounted) Navigator.of(context).pop();
+          return;
+        }
+      }
+    }
+    setState(() => _saving = true);
     final isDoctor = _kind == CareKind.doctor;
-    await repository.add(
-      kind: _kind,
-      name: _name.text.trim(),
-      specialty: isDoctor ? _opt(_specialty) : null,
-      worksAt: isDoctor ? _opt(_worksAt) : null,
-      phone: _opt(_phone),
-      location: _opt(_location),
-      personIds: _consultsFor.toList(),
-      isCurrent: _current,
-    );
+    final specialty = isDoctor ? _opt(_specialty) : null;
+    final worksAt = isDoctor ? _opt(_worksAt) : null;
+    if (editing == null) {
+      await repository.add(
+        kind: _kind,
+        name: _name.text.trim(),
+        specialty: specialty,
+        worksAt: worksAt,
+        phone: _opt(_phone),
+        location: _opt(_location),
+        personIds: _consultsFor.toList(),
+        isCurrent: _current,
+      );
+    } else {
+      await repository.update(
+        editing.id,
+        kind: _kind,
+        name: _name.text.trim(),
+        specialty: specialty,
+        worksAt: worksAt,
+        phone: _opt(_phone),
+        location: _opt(_location),
+        personIds: _consultsFor.toList(),
+        isCurrent: _current,
+      );
+    }
     if (mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final people = ref.watch(profilesProvider).valueOrNull ?? [];
+    // Watched so the saved list is loaded by the time Save checks for a
+    // duplicate (a plain ref.read would still be loading).
+    ref.watch(careProvidersAllProvider);
     final isDoctor = _kind == CareKind.doctor;
     return Scaffold(
       appBar: AppBar(
@@ -69,8 +149,8 @@ class _State extends ConsumerState<AddCareProviderScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
         children: [
-          const Text(
-            'Add to care team',
+          Text(
+            widget.editing == null ? 'Add to care team' : 'Edit',
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.8),
           ),
           const SizedBox(height: 16),

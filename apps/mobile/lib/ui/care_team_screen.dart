@@ -4,9 +4,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../model/care_provider.dart';
 import '../model/ids.dart';
+import '../model/person.dart';
 import '../providers/app_providers.dart';
 import 'add_care_provider_screen.dart';
 import 'app_style.dart';
+import 'care_provider_picker_screen.dart';
 
 /// Doctors and places one person consults, with a call button for each.
 class CareTeamScreen extends ConsumerStatefulWidget {
@@ -31,6 +33,7 @@ class _CareTeamScreenState extends ConsumerState<CareTeamScreen> {
   }
 
   Future<void> _more(CareProvider p) async {
+    final others = p.personIds.where((id) => id != widget.personId).length;
     final action = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -39,46 +42,82 @@ class _CareTeamScreenState extends ConsumerState<CareTeamScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Edit'),
+              onTap: () => Navigator.pop(context, 'edit'),
+            ),
+            ListTile(
               leading: Icon(p.isCurrent ? Icons.archive_outlined : Icons.unarchive_outlined),
               title: Text(p.isCurrent ? 'Move to Past' : 'Move to Current'),
               onTap: () => Navigator.pop(context, 'move'),
             ),
             ListTile(
-              leading: const Icon(Icons.delete_outline),
-              title: const Text('Delete'),
-              onTap: () => Navigator.pop(context, 'delete'),
+              leading: const Icon(Icons.person_remove_outlined),
+              title: Text(others > 0 ? 'Remove from this care team' : 'Delete'),
+              onTap: () => Navigator.pop(context, 'remove'),
             ),
+            if (others > 0)
+              ListTile(
+                leading: const Icon(Icons.delete_outline),
+                title: const Text('Delete for everyone'),
+                onTap: () => Navigator.pop(context, 'delete'),
+              ),
           ],
         ),
       ),
     );
+    if (action == null || !mounted) return;
     final repository = await ref.read(careTeamRepositoryProvider.future);
-    if (action == 'move') {
-      await repository.setCurrent(p.id, !p.isCurrent);
-    } else if (action == 'delete' && mounted) {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Delete ${p.name}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Keep'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete'),
-            ),
-          ],
-        ),
-      );
-      if (ok == true) await repository.delete(p.id);
+    if (!mounted) return;
+    switch (action) {
+      case 'edit':
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AddCareProviderScreen(personId: widget.personId, editing: p),
+          ),
+        );
+      case 'move':
+        await repository.setCurrent(p.id, !p.isCurrent);
+      case 'remove':
+        if (await _confirm(
+          'Remove ${p.name}?',
+          others > 0
+              ? 'They stay on the care team of the $others other '
+                  '${others == 1 ? 'person' : 'people'}.'
+              : 'This deletes the entry.',
+        )) {
+          await repository.unlinkPerson(p.id, widget.personId);
+        }
+      case 'delete':
+        if (await _confirm(
+          'Delete ${p.name} for everyone?',
+          'They are removed from the care team of all ${p.personIds.length} people.',
+        )) {
+          await repository.delete(p.id);
+        }
     }
+  }
+
+  Future<bool> _confirm(String title, String body) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Keep')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Remove')),
+        ],
+      ),
+    );
+    return ok == true;
   }
 
   @override
   Widget build(BuildContext context) {
     final all = ref.watch(careTeamProvider(widget.personId)).valueOrNull ?? [];
+    // Watched so the "+ Add" button knows whether there is anyone to reuse.
+    ref.watch(careProvidersAllProvider);
     final name = ref
         .watch(profilesProvider)
         .valueOrNull
@@ -94,11 +133,18 @@ class _CareTeamScreenState extends ConsumerState<CareTeamScreen> {
     return Scaffold(
       appBar: AppBar(),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => AddCareProviderScreen(personId: widget.personId),
-          ),
-        ),
+        onPressed: () {
+          // Offer the doctors already saved for the family before a blank form.
+          final saved = ref.read(careProvidersAllProvider).valueOrNull ?? [];
+          final reusable = saved.any((p) => !p.personIds.contains(widget.personId));
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => reusable
+                  ? CareProviderPickerScreen(personId: widget.personId)
+                  : AddCareProviderScreen(personId: widget.personId),
+            ),
+          );
+        },
         backgroundColor: onboardInk,
         foregroundColor: Colors.white,
         label: const Text('+ Add'),
@@ -155,6 +201,11 @@ class _CareTeamScreenState extends ConsumerState<CareTeamScreen> {
       ?p.worksAt,
       if (p.kind == CareKind.facility) ?p.location,
     ].join(' · ');
+    final people = ref.watch(profilesProvider).valueOrNull ?? [];
+    final alsoSees = [
+      for (final person in people)
+        if (person.id != widget.personId && p.personIds.contains(person.id)) person.firstName,
+    ];
     final initials = p.name
         .replaceFirst(RegExp(r'^Dr\.?\s*', caseSensitive: false), '')
         .split(' ')
@@ -196,6 +247,11 @@ class _CareTeamScreenState extends ConsumerState<CareTeamScreen> {
                       Text(
                         subtitle,
                         style: const TextStyle(color: onboardMuted, fontSize: 13),
+                      ),
+                    if (alsoSees.isNotEmpty)
+                      Text(
+                        'Also sees ${alsoSees.join(', ')}',
+                        style: const TextStyle(color: onboardMuted, fontSize: 12),
                       ),
                   ],
                 ),

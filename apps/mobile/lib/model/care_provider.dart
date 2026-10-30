@@ -25,3 +25,26 @@ class CareProvider {
     required this.isCurrent,
   });
 }
+
+/// A name reduced for comparing: case, "Dr." and punctuation don't matter, so
+/// "Dr. S. Rao" and "S Rao" are the same doctor.
+String careNameKey(String name) => name
+    .toLowerCase()
+    .replaceAll(RegExp(r'[.,]'), ' ')
+    .replaceFirst(RegExp(r'^\s*dr\s+'), '')
+    .trim()
+    .replaceAll(RegExp(r'\s+'), ' ');
+
+/// An entry in [all] of the same kind that [name] already refers to.
+CareProvider? sameProvider(
+  Iterable<CareProvider> all,
+  CareKind kind,
+  String name, {
+  CareProviderId? except,
+}) {
+  final key = careNameKey(name);
+  if (key.isEmpty) return null;
+  return all
+      .where((p) => p.kind == kind && p.id != except && careNameKey(p.name) == key)
+      .firstOrNull;
+}

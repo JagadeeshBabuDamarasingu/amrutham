@@ -270,6 +270,12 @@ final careTeamRepositoryProvider = FutureProvider<CareTeamRepository>((ref) asyn
   return CareTeamRepository(db);
 });
 
+/// Every doctor and place saved for the family, so one can be reused.
+final careProvidersAllProvider = StreamProvider<List<CareProvider>>((ref) async* {
+  final repository = await ref.watch(careTeamRepositoryProvider.future);
+  yield* repository.watchAll();
+});
+
 final careTeamProvider =
     StreamProvider.family<List<CareProvider>, PersonId>((ref, personId) async* {
       final repository = await ref.watch(careTeamRepositoryProvider.future);

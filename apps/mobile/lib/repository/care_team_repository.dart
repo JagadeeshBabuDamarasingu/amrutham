@@ -26,6 +26,15 @@ class CareTeamRepository {
     );
   }
 
+  /// Everyone saved for the whole family, A to Z.
+  Stream<List<CareProvider>> watchAll() {
+    return _realm.all<CareProviderRow>().changes.map(
+      (c) =>
+          c.results.map(_fromRow).toList()
+            ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())),
+    );
+  }
+
   Future<CareProvider> add({
     required CareKind kind,
     required String name,
@@ -58,6 +67,53 @@ class CareTeamRepository {
   Future<void> setCurrent(CareProviderId id, bool isCurrent) async {
     final row = _realm.find<CareProviderRow>(id.value);
     if (row != null) _realm.write(() => row.isCurrent = isCurrent);
+  }
+
+  /// Puts an existing doctor or place on one more person's care team.
+  Future<void> linkPerson(CareProviderId id, PersonId personId) async {
+    final row = _realm.find<CareProviderRow>(id.value);
+    if (row == null || row.personIds.contains(personId.value)) return;
+    _realm.write(() => row.personIds.add(personId.value));
+  }
+
+  /// Takes one person off. The entry itself goes when nobody is left, so a
+  /// doctor shared by three people is not lost when one of them drops out.
+  Future<void> unlinkPerson(CareProviderId id, PersonId personId) async {
+    final row = _realm.find<CareProviderRow>(id.value);
+    if (row == null) return;
+    _realm.write(() {
+      row.personIds.remove(personId.value);
+      if (row.personIds.isEmpty) _realm.delete(row);
+    });
+  }
+
+  /// Replaces every editable field. Null clears an optional one.
+  Future<void> update(
+    CareProviderId id, {
+    required CareKind kind,
+    required String name,
+    String? specialty,
+    String? worksAt,
+    String? phone,
+    String? location,
+    required List<PersonId> personIds,
+    required bool isCurrent,
+  }) async {
+    final row = _realm.find<CareProviderRow>(id.value);
+    if (row == null || personIds.isEmpty) return;
+    _realm.write(() {
+      row
+        ..kind = kind.name
+        ..name = name
+        ..specialty = specialty
+        ..worksAt = worksAt
+        ..phone = phone
+        ..location = location
+        ..isCurrent = isCurrent;
+      row.personIds
+        ..clear()
+        ..addAll(personIds.map((p) => p.value));
+    });
   }
 
   Future<void> delete(CareProviderId id) async {
