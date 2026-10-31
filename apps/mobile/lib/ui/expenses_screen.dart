@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../model/expense.dart';
@@ -8,6 +12,7 @@ import '../model/person.dart';
 import '../providers/app_providers.dart';
 import 'add_expense_screen.dart';
 import 'app_style.dart';
+import 'expense_export.dart';
 import 'log_measurement_screen.dart' show monthNames;
 
 const _categoryColors = {
@@ -457,16 +462,31 @@ class _YearViewState extends ConsumerState<YearViewScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          OnboardButton(
-            label: 'Export CSV',
-            onPressed: inYear.isEmpty
-                ? null
-                : () => SharePlus.instance.share(
-                    ShareParams(
-                      subject: 'amrutham-expenses-$_year.csv',
-                      text: _csv(inYear, people),
-                    ),
-                  ),
+          Row(
+            children: [
+              Expanded(
+                child: OnboardButton(
+                  label: 'Export CSV',
+                  onPressed: inYear.isEmpty ? null : () => _shareCsv(inYear, people),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+                  onPressed: inYear.isEmpty
+                      ? null
+                      : () => Printing.layoutPdf(
+                          name: 'Medical expenses $_year',
+                          onLayout: (format) => Printing.convertHtml(
+                            format: format,
+                            html: expensesPdfHtml(_year, inYear, people),
+                          ),
+                        ),
+                  child: const Text('Export PDF'),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           const Text(
@@ -478,18 +498,13 @@ class _YearViewState extends ConsumerState<YearViewScreen> {
     );
   }
 
-  String _csv(List<Expense> expenses, List<PersonProfile> people) {
-    String q(String? s) => '"${(s ?? '').replaceAll('"', '""')}"';
-    final b = StringBuffer('Date,Person,Category,What,Paid to,Paid by,Amount (INR)\n');
-    for (final e in expenses.reversed) {
-      final name = people.where((p) => p.id == e.personId).firstOrNull?.displayName;
-      final d = e.spentOn;
-      b.writeln(
-        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')},'
-        '${q(name)},${e.category.label},${q(e.title)},${q(e.payee)},${q(e.paidBy)},'
-        '${(e.amountPaise / 100).toStringAsFixed(2)}',
-      );
-    }
-    return b.toString();
+  /// Shared as a real .csv file, so a spreadsheet app opens it directly.
+  Future<void> _shareCsv(List<Expense> expenses, List<PersonProfile> people) async {
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/amrutham-expenses-$_year.csv');
+    await file.writeAsString(expensesCsv(expenses, people));
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(file.path, mimeType: 'text/csv')], subject: 'Medical expenses $_year'),
+    );
   }
 }
