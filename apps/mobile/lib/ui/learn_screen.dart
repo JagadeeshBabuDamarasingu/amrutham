@@ -15,6 +15,7 @@ const _hubIcons = {
   LearnHub.sexualHealth: Icons.favorite_border,
   LearnHub.growingUp: Icons.family_restroom,
   LearnHub.mentalWellbeing: Icons.self_improvement,
+  LearnHub.heritage: Icons.auto_stories_outlined,
 };
 
 Future<void> _openUrl(BuildContext context, String url) async {
@@ -160,7 +161,7 @@ class HubScreen extends StatelessWidget {
     final children = <Widget>[];
     String? group;
     for (final g in guides) {
-      if (hub == LearnHub.money && g.category != group) {
+      if ((hub == LearnHub.money || hub == LearnHub.heritage) && g.category != group) {
         group = g.category;
         children.add(SectionLabel(g.category));
       }
@@ -208,6 +209,11 @@ class HubScreen extends StatelessWidget {
           action: 'Open help now ›',
           onTap: () => _push(context, const HelpNowScreen()),
         );
+      case LearnHub.heritage:
+        callout = const _HubCallout(
+          kicker: 'HISTORY, NOT TREATMENT',
+          title: 'These guides tell how old ideas travelled. They are not advice on treating anything.',
+        );
       case LearnHub.money:
         callout = null;
     }
@@ -252,7 +258,7 @@ class HubScreen extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           ?callout,
-          if (hub != LearnHub.money) const SectionLabel('Guides'),
+          if (hub != LearnHub.money && hub != LearnHub.heritage) const SectionLabel('Guides'),
           ...children,
         ],
       ),

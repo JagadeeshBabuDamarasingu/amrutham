@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:amrutham/learn/learn_content.dart';
 import 'package:amrutham/ui/app_shell.dart';
+import 'package:amrutham/ui/learn_screen.dart';
 
 void main() {
   test('guides have unique ids, and none claims a review nobody did', () {
@@ -83,5 +85,72 @@ void main() {
       expect(tip.toLowerCase(), isNot(contains('cancer')));
       expect(tip.toLowerCase(), isNot(contains('die')));
     }
+  });
+
+  group('Our healing heritage', () {
+    final heritage = allGuides.where((g) => g.hub == LearnHub.heritage).toList();
+
+    test('has the five guides, in surgery then yoga and meditation, all still Draft', () {
+      expect(heritage.map((g) => g.id), [
+        'sushruta',
+        'surgery-today',
+        'yoga-what-it-is',
+        'old-names-new-names',
+        'research-says',
+      ]);
+      expect(heritage.map((g) => g.category).toSet(), {'Surgery', 'Yoga and meditation'});
+      expect(heritage.every((g) => g.isDraft), isTrue);
+    });
+
+    test('every guide points to a public health or research source', () {
+      for (final g in heritage) {
+        final links = g.blocks.whereType<LearnSourceLink>().toList();
+        expect(links, isNotEmpty, reason: g.id);
+        for (final l in links) {
+          expect(l.url, startsWith('https://'), reason: g.id);
+          expect(l.host, anyOf('pmc.ncbi.nlm.nih.gov', 'nccih.nih.gov'), reason: g.id);
+          expect(Uri.parse(l.url).host, endsWith(l.host), reason: '${g.id}: the label must match the link');
+        }
+      }
+    });
+
+    test('the Sushruta guide says the dates are estimates and the title an honorific', () {
+      final g = heritage.firstWhere((x) => x.id == 'sushruta');
+      final text = g.blocks
+          .map((b) => switch (b) {
+                LearnParagraph(:final text) => text,
+                LearnCallout(:final body) => body ?? '',
+                _ => '',
+              })
+          .join(' ');
+      expect(text, contains('estimate'));
+      expect(text, contains('honorific'));
+    });
+
+    test('the guides that mention breathing or yoga carry their cautions', () {
+      final yoga = heritage.firstWhere((x) => x.id == 'yoga-what-it-is');
+      expect(yoga.blocks.whereType<LearnCallout>().any((c) => c.title.contains('Ask a doctor')), isTrue);
+      final research = heritage.firstWhere((x) => x.id == 'research-says');
+      expect(research.blocks.whereType<LearnHelpLink>(), isNotEmpty);
+      expect(
+        research.blocks.whereType<LearnCallout>().any((c) => c.title.contains('breathing')),
+        isTrue,
+      );
+    });
+
+    testWidgets('the hub is on the Learn tab and opens with its note and two sections', (tester) async {
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: LearnScreen())));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('Our healing heritage'), 200);
+      final card = find.ancestor(of: find.text('Our healing heritage'), matching: find.byType(Card)).first;
+      expect(find.descendant(of: card, matching: find.text('5 guides')), findsOneWidget);
+      await tester.tap(find.text('Our healing heritage'));
+      await tester.pumpAndSettle();
+      expect(find.text('HISTORY, NOT TREATMENT'), findsOneWidget);
+      expect(find.text('Sushruta, the father of surgery'), findsOneWidget);
+      expect(find.text('SURGERY'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('YOGA AND MEDITATION'), 200);
+      expect(find.text('YOGA AND MEDITATION'), findsOneWidget);
+    });
   });
 }

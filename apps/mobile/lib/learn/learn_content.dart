@@ -16,7 +16,8 @@ enum LearnHub {
   money('Insurance and money', 'How cover, savings and government schemes fit together.', false),
   sexualHealth('Sexual health', 'Plain, factual guides from public health sources.', true),
   growingUp('Growing up and family', "Puberty, periods, pregnancy and a baby's first care.", true),
-  mentalWellbeing('Mental wellbeing', 'Plain guides on feelings, stress and getting help.', true);
+  mentalWellbeing('Mental wellbeing', 'Plain guides on feelings, stress and getting help.', true),
+  heritage('Our healing heritage', 'Old Indian ideas in surgery, yoga and meditation, and what is left of them today.', false);
 
   const LearnHub(this.title, this.blurb, this.isPrivate);
   final String title;
@@ -853,6 +854,203 @@ const clinicalGuides = <LearnGuide>[
         ),
       ]),
       LearnHelpLink(),
+    ],
+  ),
+
+  // ---- Our healing heritage (history, not treatment) ----
+  LearnGuide(
+    id: 'sushruta',
+    hub: LearnHub.heritage,
+    category: 'Surgery',
+    title: 'Sushruta, the father of surgery',
+    summary: 'An ancient physician-teacher, and the text he is linked with.',
+    footer: _draftFooter,
+    blocks: [
+      LearnCallout(
+        tone: CalloutTone.know,
+        title: 'Often called the father of surgery.',
+        body: 'It is an honorific, not a settled fact.',
+      ),
+      LearnHeading('Who he was'),
+      LearnParagraph(
+        'A physician-teacher of ancient India, linked with Varanasi and known '
+        'through one Sanskrit text, the Sushruta Samhita. Scholars date it from '
+        'about the 6th century BCE to the early centuries CE, so every date is an '
+        'estimate. The text we have was revised over time, so it may not be the '
+        'work of one person.',
+      ),
+      LearnBullets([
+        (
+          'Eight kinds of surgical work',
+          'Cutting, excising, scraping, puncturing, probing, extracting, draining and stitching.',
+        ),
+        (
+          'Over a hundred instruments',
+          'Blunt and sharp tools, some shaped like animal and bird jaws for a firm grip.',
+        ),
+        (
+          'Rebuilding a nose',
+          'A flap of living skin from the cheek was turned over to remake a nose lost to injury.',
+        ),
+        (
+          'Practise before you operate',
+          'The text has students rehearse cuts on fruit, leaves and leather before a patient.',
+        ),
+      ]),
+      LearnSourceLink(
+        label: 'READ MORE',
+        host: 'pmc.ncbi.nlm.nih.gov',
+        url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11000756/',
+      ),
+    ],
+  ),
+  LearnGuide(
+    id: 'surgery-today',
+    hub: LearnHub.heritage,
+    category: 'Surgery',
+    title: 'What survives in modern surgery',
+    summary: 'The ideas that lasted, and how today differs.',
+    footer: _draftFooter,
+    blocks: [
+      LearnCallout(
+        tone: CalloutTone.know,
+        title: 'The honest picture',
+        body: 'An ancient text is not a surgical manual. Its value today is history, and a few ideas that lasted.',
+      ),
+      LearnBullets([
+        (
+          'The "Indian method" of nose repair',
+          'Rebuilding a nose with a skin flap reached Europe in the late 1700s. Forehead flaps are still used in reconstructive surgery.',
+        ),
+        (
+          'Rehearse before you operate',
+          "Training on models first lives on in today's simulation training for surgeons.",
+        ),
+        (
+          'Care for the wound',
+          'The text stresses cleanliness. Infection control is central now, built on much later discoveries about germs.',
+        ),
+        (
+          'A craft with duties',
+          'It sets out what a surgeon owes a student and a patient, much like medical ethics today.',
+        ),
+      ]),
+      LearnCallout(
+        tone: CalloutTone.know,
+        title: 'Not the same as today',
+        body: 'Modern surgery relies on anaesthesia, sterile technique and scans that did not exist then. Operations belong with a trained surgeon.',
+      ),
+      LearnSourceLink(
+        label: 'READ MORE',
+        host: 'pmc.ncbi.nlm.nih.gov',
+        url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11527508/',
+      ),
+    ],
+  ),
+  LearnGuide(
+    id: 'yoga-what-it-is',
+    hub: LearnHub.heritage,
+    category: 'Yoga and meditation',
+    title: 'Yoga: what it is, what studies show',
+    summary: 'More than poses, and what the research suggests.',
+    footer: _draftFooter,
+    blocks: [
+      LearnCallout(
+        tone: CalloutTone.know,
+        title: 'Yoga is more than poses.',
+        body: 'Traditionally it joins posture, breath and focus.',
+      ),
+      LearnHeading('Three old ideas'),
+      LearnBullets([
+        ('Asana', 'posture'),
+        ('Pranayama', 'breath'),
+        ('Dhyana', 'focus'),
+      ]),
+      LearnList('What studies suggest', [
+        'May ease low-back and neck pain in the short term.',
+        'Can be a helpful addition to treatment for stress and low mood.',
+        'Small, mixed evidence for sleep and for weight.',
+        'Usually safe when taught well. Sprains and strains are the common injuries.',
+      ]),
+      LearnCallout(
+        tone: CalloutTone.know,
+        title: 'Ask a doctor first if',
+        body: 'you are pregnant, have a back or joint problem, high blood pressure, a heart or eye condition, or are recovering from surgery. Hot yoga adds overheating and dehydration.',
+      ),
+      LearnSourceLink(
+        label: 'READ MORE',
+        host: 'nccih.nih.gov',
+        url: 'https://www.nccih.nih.gov/health/yoga-what-you-need-to-know',
+      ),
+    ],
+  ),
+  LearnGuide(
+    id: 'old-names-new-names',
+    hub: LearnHub.heritage,
+    category: 'Yoga and meditation',
+    title: 'Old names, new names',
+    summary: 'How old practices came to be studied under new names.',
+    footer: _draftFooter,
+    blocks: [
+      LearnCallout(
+        tone: CalloutTone.good,
+        title: 'Credit where it began',
+        body: 'Researchers did not invent these. They studied, simplified and renamed practices India has kept for centuries.',
+      ),
+      LearnBullets([
+        ('Pranayama (breath practice)', 'is studied as slow, paced breathing.'),
+        ('Dhyana (meditation)', 'is studied as focused-attention meditation.'),
+        ('Vipassana (insight meditation)', 'is taught in courses and clinics as mindfulness.'),
+        ('Asana (posture)', 'is used as mindful movement and therapeutic yoga.'),
+      ]),
+      LearnHeading('Close cousins, not copies'),
+      LearnParagraph(
+        'The modern versions are taught as short courses without the religious '
+        'frame. They are inspired by the old practices, not identical to them.',
+      ),
+      LearnCallout(
+        tone: CalloutTone.good,
+        title: 'A real example',
+        body: 'Mindfulness-based stress reduction began at a US medical centre in 1979. It drew on Buddhist meditation and yoga, and was taught in secular terms.',
+      ),
+      LearnSourceLink(
+        label: 'READ MORE',
+        host: 'nccih.nih.gov',
+        url: 'https://www.nccih.nih.gov/health/tips/8-things-to-know-about-meditation-and-mindfulness',
+      ),
+    ],
+  ),
+  LearnGuide(
+    id: 'research-says',
+    hub: LearnHub.heritage,
+    category: 'Yoga and meditation',
+    title: "What research says, and doesn't",
+    summary: 'Three common claims, checked.',
+    footer: _draftFooter,
+    blocks: [
+      LearnMythFact(
+        myth: 'Mindfulness is a modern Western idea.',
+        fact: 'It is adapted from Buddhist practice. The English word stands for the Pali sati.',
+      ),
+      LearnMythFact(
+        myth: 'It cures anxiety or depression.',
+        fact: 'Studies find modest benefits for stress, anxiety, low mood and sleep, best alongside treatment, not instead of it.',
+      ),
+      LearnMythFact(
+        myth: 'It carries no risk.',
+        fact: 'Few studies looked for harm. Some people have unpleasant experiences, and long retreats can be intense.',
+      ),
+      LearnCallout(
+        tone: CalloutTone.know,
+        title: 'Be careful with breathing practices',
+        body: 'Forceful breathing and breath-holding are not for everyone, including people with high blood pressure, heart or lung disease, or in pregnancy. Keep it slow and gentle, and stop if you feel dizzy.',
+      ),
+      LearnHelpLink(),
+      LearnSourceLink(
+        label: 'READ MORE',
+        host: 'nccih.nih.gov',
+        url: 'https://www.nccih.nih.gov/health/tips/8-things-to-know-about-meditation-and-mindfulness',
+      ),
     ],
   ),
 ];
