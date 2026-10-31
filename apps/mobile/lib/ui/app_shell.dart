@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../backup/auto_backup.dart';
+import '../backup/auto_backup_scheduler.dart';
 import '../providers/app_providers.dart';
 
 import 'app_style.dart';
@@ -32,8 +34,49 @@ const dailyTips = [
 String tipForDay(DateTime d) =>
     dailyTips[d.difference(DateTime(d.year)).inDays % dailyTips.length];
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver {
   int _index = 0;
+  bool _backingUp = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Catch up on any automatic backup that is due, and keep Android's
+    // schedule in step with the settings.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autoBackup());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _autoBackup();
+  }
+
+  Future<void> _autoBackup() async {
+    if (_backingUp) return;
+    _backingUp = true;
+    try {
+      final store = ref.read(onboardingStoreProvider);
+      await runAutoBackup(
+        realm: await ref.read(databaseProvider.future),
+        vault: await ref.read(vaultDirectoryProvider.future),
+        store: store,
+      );
+      await AutoBackupScheduler.sync(store);
+      ref.invalidate(autoBackupSettingsProvider);
+      ref.invalidate(driveStatusProvider);
+    } catch (_) {
+      // Recorded per destination by runAutoBackup; nothing to show here.
+    } finally {
+      _backingUp = false;
+    }
+  }
 
   static const _tabs = [
     (Icons.schedule, 'Today'),

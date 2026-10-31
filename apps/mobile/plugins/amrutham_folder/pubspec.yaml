@@ -1,0 +1,19 @@
+name: amrutham_folder
+description: Android-only. Lets the app write its backup into a folder the person picked, from the app or a background task.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.38.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: app.amrutham.folder
+        pluginClass: FolderPlugin

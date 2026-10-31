@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../crypto/recovery_code.dart';
 import '../providers/app_providers.dart';
 import '../ui/recovery_code_dialog.dart';
+import 'auto_backup.dart';
 import 'backup_folder.dart';
 import 'vault_backup.dart';
 import 'drive_backup.dart';
@@ -49,6 +50,7 @@ Future<void> runBackup(BuildContext context, WidgetRef ref) async {
       await DriveSession.instance.upload(bytes);
       await store.putSetting(driveLastBackupKey, DateTime.now().toIso8601String());
       ref.invalidate(driveStatusProvider);
+      ref.invalidate(autoBackupSettingsProvider);
       saved.add('Google Drive');
     } catch (_) {
       messenger.showSnackBar(
@@ -61,6 +63,8 @@ Future<void> runBackup(BuildContext context, WidgetRef ref) async {
   if (folder != null) {
     try {
       await writeToBackupFolder(folder, backupFileName, bytes);
+      await store.putSetting(folderLastBackupKey, DateTime.now().toIso8601String());
+      ref.invalidate(autoBackupSettingsProvider);
       saved.add('your folder');
     } on FileSystemException {
       messenger.showSnackBar(_folderFailed);

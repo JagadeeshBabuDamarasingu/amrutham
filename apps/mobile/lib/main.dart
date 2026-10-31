@@ -6,6 +6,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'backup/auto_backup_scheduler.dart';
 import 'crash/crash_log.dart';
 import 'providers/app_providers.dart';
 import 'ui/app_shell.dart';
@@ -21,6 +22,7 @@ Future<void> main() async {
   await (await CrashLog.open()).install();
   await _initTimeZone();
   await _initNotifications();
+  await AutoBackupScheduler.init();
 
   runApp(
     ProviderScope(

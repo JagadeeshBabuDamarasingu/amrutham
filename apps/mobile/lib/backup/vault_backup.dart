@@ -324,6 +324,34 @@ class VaultBackup {
     });
   }
 
+  /// Derives the key once so scheduled backups can encrypt without the code.
+  /// The key opens only backups made with this [AutoBackupKey.salt]; the code
+  /// itself is not recoverable from it. Kept in secure storage on this phone.
+  static Future<AutoBackupKey> deriveAutoKey(RecoveryCode code) {
+    final rng = Random.secure();
+    final salt = List<int>.generate(16, (_) => rng.nextInt(256));
+    return Isolate.run(() async {
+      final key = await _key(code.value, salt);
+      return AutoBackupKey(salt, await key.extractBytes());
+    });
+  }
+
+  /// Same file format as [encrypt], so a restore with the recovery code opens
+  /// it: the key is what the code derives to under the stored salt. Each backup
+  /// still gets its own random nonce.
+  static Future<List<int>> encryptWithKey(Map<String, dynamic> data, AutoBackupKey auto) {
+    final json = jsonEncode(data);
+    final nonce = List<int>.generate(12, (_) => Random.secure().nextInt(256));
+    return Isolate.run(() async {
+      final box = await AesGcm.with256bits().encrypt(
+        utf8.encode(json),
+        secretKey: SecretKey(auto.key),
+        nonce: nonce,
+      );
+      return <int>[...utf8.encode(_magic), ...auto.salt, ...box.nonce, ...box.cipherText, ...box.mac.bytes];
+    });
+  }
+
   static Future<Map<String, dynamic>> decrypt(List<int> bytes, RecoveryCode code) async {
     final head = utf8.encode(_magic).length;
     if (bytes.length < head + 16 + 12 + 16 ||
@@ -351,5 +379,29 @@ class VaultBackup {
     // both together once benchmarked on a low-end phone (spec §8).
     return Argon2id(memory: 19456, parallelism: 1, iterations: 2, hashLength: 32)
         .deriveKeyFromPassword(password: code, nonce: salt);
+  }
+}
+
+/// A key made from the recovery code, plus the salt it was made under.
+class AutoBackupKey {
+  const AutoBackupKey(this.salt, this.key);
+
+  final List<int> salt;
+  final List<int> key;
+
+  /// "salt.key", both base64, for secure storage.
+  String encode() => '${base64Encode(salt)}.${base64Encode(key)}';
+
+  static AutoBackupKey? decode(String? stored) {
+    if (stored == null) return null;
+    final parts = stored.split('.');
+    if (parts.length != 2) return null;
+    try {
+      final salt = base64Decode(parts[0]);
+      final key = base64Decode(parts[1]);
+      return salt.length == 16 && key.length == 32 ? AutoBackupKey(salt, key) : null;
+    } on FormatException {
+      return null;
+    }
   }
 }

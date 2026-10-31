@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../backup/backup_flow.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
+import 'auto_backup_screen.dart';
 import 'language_screen.dart';
 import 'problem_report.dart';
 import 'recovery_code_dialog.dart';
@@ -88,6 +89,20 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   trailing: recoverySet ? const Icon(Icons.chevron_right) : null,
                   onTap: recoverySet ? () => runBackup(context, ref) : null,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                  title: const Text('Automatic backups', style: TextStyle(fontWeight: FontWeight.w800)),
+                  subtitle: Text(
+                    (ref.watch(autoBackupSettingsProvider).valueOrNull?.enabled ?? false)
+                        ? 'On, ${ref.watch(autoBackupSettingsProvider).valueOrNull?.everyDays == 7 ? 'every week' : 'every day'}'
+                        : 'Off. Back up by itself to Google Drive or a folder.',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AutoBackupScreen()),
+                  ),
                 ),
                 const Divider(height: 1),
                 ListTile(

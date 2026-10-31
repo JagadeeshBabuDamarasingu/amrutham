@@ -76,6 +76,10 @@ dependencies:
     sdk: flutter
   google_sign_in: ^7.2.0
   http: ^1.6.0
+  workmanager: ^0.10.10
+  # Android folder access that also works in a background task; see its lib file.
+  amrutham_folder:
+    path: plugins/amrutham_folder
 
 dev_dependencies:
   flutter_test:

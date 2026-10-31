@@ -10,6 +10,7 @@ import '../crypto/key_manager.dart';
 import '../crypto/onboarding_store.dart';
 import '../db/connection.dart';
 import '../model/allergy.dart';
+import '../backup/auto_backup.dart';
 import '../backup/drive_backup.dart';
 import '../model/family_history.dart';
 import '../model/care_provider.dart';
@@ -335,6 +336,11 @@ final driveStatusProvider = FutureProvider<(String?, DateTime?)>((ref) async {
   final last = await store.setting(driveLastBackupKey);
   return (await store.setting(driveEmailKey), last == null ? null : DateTime.parse(last));
 });
+
+/// Automatic backup choices and what the last runs did.
+final autoBackupSettingsProvider = FutureProvider<AutoBackupSettings>(
+  (ref) => AutoBackupSettings.load(ref.watch(onboardingStoreProvider)),
+);
 
 final backupFolderProvider = FutureProvider<String?>(
   (ref) => ref.watch(onboardingStoreProvider).backupFolder(),
