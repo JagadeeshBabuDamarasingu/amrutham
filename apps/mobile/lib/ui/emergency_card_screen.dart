@@ -32,8 +32,9 @@ class EmergencyCardScreen extends ConsumerWidget {
         ?.where((p) => p.id == personId)
         .firstOrNull;
     final allergies = ref.watch(allergiesProvider(personId)).valueOrNull ?? [];
-    final courses =
-        ref.watch(activeCoursesProvider(personId)).valueOrNull ?? [];
+    final courses = distinctMedicines(
+      ref.watch(activeCoursesProvider(personId)).valueOrNull ?? [],
+    );
 
     if (person == null) return const Scaffold(body: SizedBox());
 
@@ -180,6 +181,14 @@ class EmergencyCardScreen extends ConsumerWidget {
   }
 
   static String _shortBlood(String? group) => shortBlood(group);
+
+  /// One entry per medicine name: two courses of the same medicine are one
+  /// line on a card someone has to read quickly.
+  @visibleForTesting
+  static List<MedicationCourse> distinctMedicines(List<MedicationCourse> courses) {
+    final seen = <String>{};
+    return [for (final c in courses) if (seen.add(c.medicationName.trim().toLowerCase())) c];
+  }
 
   static String _allergyLine(AllergyRecord a) =>
       '${a.substance} · ${a.reaction}'

@@ -40,7 +40,6 @@ public class EmergencyWidgetProvider extends CardProvider {
         int chosen = w >= 300 ? R.layout.amrutham_emergency_widget_wide
                 : w >= 200 && h >= 150 ? R.layout.amrutham_emergency_widget_large
                 : R.layout.amrutham_emergency_widget;
-        android.util.Log.d("AmruthamWidgets", "card " + widgetId + " is " + w + "x" + h + " dp");
         return chosen;
     }
 
