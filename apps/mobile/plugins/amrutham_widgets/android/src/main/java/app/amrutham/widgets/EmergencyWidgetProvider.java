@@ -25,7 +25,7 @@ public class EmergencyWidgetProvider extends CardProvider {
     }
 
     /**
-     * The large layout when the card is placed large. The size comes from the
+     * The wide layout for 5 x 2, the tall one when placed large, else compact. The size comes from the
      * widget's own options, which every launcher reports; Android 12's
      * size-keyed layouts are not used because some launchers draw nothing for
      * them.
@@ -35,7 +35,9 @@ public class EmergencyWidgetProvider extends CardProvider {
         Bundle o = manager.getAppWidgetOptions(widgetId);
         int w = o == null ? 0 : o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
         int h = o == null ? 0 : o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0);
-        return w >= 240 && h >= 150 ? R.layout.amrutham_emergency_widget_large : R.layout.amrutham_emergency_widget;
+        if (w >= 300 && h < 150) return R.layout.amrutham_emergency_widget_wide;
+        if (w >= 240 && h >= 150) return R.layout.amrutham_emergency_widget_large;
+        return R.layout.amrutham_emergency_widget;
     }
 
     @Override

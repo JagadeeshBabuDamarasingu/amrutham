@@ -35,7 +35,7 @@ public class DialWidgetProvider extends CardProvider {
             return;
         }
         v.setViewVisibility(R.id.amrutham_dial, View.VISIBLE);
-        v.setTextViewText(R.id.amrutham_dial, dial.optString("label", ""));
+        v.setTextViewText(R.id.amrutham_dial, "Dial " + dial.optString("label", ""));
         v.setViewVisibility(R.id.amrutham_name, View.VISIBLE);
         v.setTextViewText(R.id.amrutham_name, "for " + s.optString("name", ""));
         v.setOnClickPendingIntent(R.id.amrutham_root, dial(context, widgetId, dial));

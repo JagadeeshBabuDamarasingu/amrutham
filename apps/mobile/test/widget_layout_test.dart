@@ -19,6 +19,7 @@ void main() {
     for (final name in [
       'amrutham_emergency_widget',
       'amrutham_emergency_widget_large',
+      'amrutham_emergency_widget_wide',
       'amrutham_dial_widget',
       'amrutham_blood_widget',
     ]) {
