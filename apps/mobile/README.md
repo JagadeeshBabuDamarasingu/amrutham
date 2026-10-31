@@ -25,6 +25,5 @@ Drive backup needs an OAuth client that only you can create:
 3. Create an **OAuth client ID** of type *Android* with the app's package name
    and the SHA-1 of the signing key (debug: `cd android && ./gradlew signingReport`;
    release: your upload and Play App Signing keys).
-4. Create a second **Web application** client and pass its ID to the app by
-   adding `serverClientId` in `DriveSession._init` (`lib/backup/drive_backup.dart`),
-   or in `android/app/src/main/res/values/strings.xml` as `default_web_client_id`.
+4. Create a second **Web application** client. Its ID is `_webClientId` in
+   `lib/backup/drive_backup.dart`, passed to `GoogleSignIn` as `serverClientId`.

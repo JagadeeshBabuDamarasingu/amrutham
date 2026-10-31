@@ -92,6 +92,12 @@ class DriveApi {
   }
 }
 
+/// The Web application OAuth client of the Amrutham Google Cloud project. Not
+/// a secret. The Android clients (debug, upload, Play signing keys) are matched
+/// by package name and SHA-1 and need nothing here.
+const _webClientId =
+    '741908044343-fhjhvs3o76vd2c9lc3nasc29pb1oq38r.apps.googleusercontent.com';
+
 /// Google sign-in plus an authorised [DriveApi]. Needs an OAuth client for the
 /// app's package name and signing key in Google Cloud (see the README).
 class DriveSession {
@@ -102,7 +108,7 @@ class DriveSession {
 
   Future<void> _init() async {
     if (_ready) return;
-    await GoogleSignIn.instance.initialize();
+    await GoogleSignIn.instance.initialize(serverClientId: _webClientId);
     _ready = true;
   }
 
