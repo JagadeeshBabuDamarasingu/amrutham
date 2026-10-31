@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:realm/realm.dart';
 
 import '../crypto/key_manager.dart';
+import '../quick_access/widget_settings.dart';
 import '../crypto/onboarding_store.dart';
 import '../db/connection.dart';
 import '../model/allergy.dart';
@@ -69,6 +70,14 @@ final profileRepositoryProvider = FutureProvider<ProfileRepository>((
 ) async {
   final db = await ref.watch(databaseProvider.future);
   return ProfileRepository(db);
+});
+
+/// Device-local choices for the home screen emergency cards (off until the
+/// person turns them on). Invalidate after changing them.
+final widgetSettingsProvider = FutureProvider<WidgetSettings>((ref) async {
+  return WidgetSettings.decode(
+    await ref.watch(onboardingStoreProvider).setting(WidgetSettings.storeKey),
+  );
 });
 
 final profilesProvider = StreamProvider<List<PersonProfile>>((ref) async* {

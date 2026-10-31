@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/amrutham_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/amrutham_widget_bg"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/amrutham_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/amrutham_widget_label"
+        android:textAllCaps="true"
+        android:textColor="#9FC0B2"
+        android:textSize="10sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/amrutham_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/amrutham_blood"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#F0A91E"
+        android:textSize="26sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/amrutham_allergies"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textColor="#DCEBE4"
+        android:textSize="12sp"/>
+
+    <TextView
+        android:id="@+id/amrutham_medicines"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textColor="#DCEBE4"
+        android:textSize="12sp"/>
+
+    <TextView
+        android:id="@+id/amrutham_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#DCEBE4"
+        android:textSize="13sp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:id="@+id/amrutham_dial"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/amrutham_widget_button"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:padding="9dp"
+        android:textColor="#2A1D00"
+        android:textSize="14sp"
+        android:textStyle="bold"/>
+</LinearLayout>

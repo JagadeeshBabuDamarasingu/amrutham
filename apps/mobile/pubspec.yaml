@@ -80,6 +80,8 @@ dependencies:
   # Android folder access that also works in a background task; see its lib file.
   amrutham_folder:
     path: plugins/amrutham_folder
+  amrutham_widgets:
+    path: plugins/amrutham_widgets
 
 dev_dependencies:
   flutter_test:

@@ -9,6 +9,7 @@ import '../model/ids.dart';
 import '../model/medication.dart';
 import '../model/person.dart';
 import '../providers/app_providers.dart';
+import '../quick_access/emergency_snapshot.dart' show shortBlood;
 import 'app_style.dart';
 
 /// One page a stranger can read: blood group, allergies, what the person is
@@ -169,10 +170,7 @@ class EmergencyCardScreen extends ConsumerWidget {
     );
   }
 
-  static String _shortBlood(String? group) {
-    if (group == null) return '—';
-    return group.replaceAll(' positive', '+').replaceAll(' negative', '−');
-  }
+  static String _shortBlood(String? group) => shortBlood(group);
 
   static String _allergyLine(AllergyRecord a) =>
       '${a.substance} · ${a.reaction}'

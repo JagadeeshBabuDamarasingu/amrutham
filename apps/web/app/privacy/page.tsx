@@ -38,6 +38,15 @@ export default function Privacy() {
 					Documents you add are saved as ordinary files in a folder on your phone.
 				</li>
 				<li>
+					If you turn on home screen emergency cards, the app keeps a small copy of only
+					the details you chose to show (for example a name, blood group, allergies and a
+					phone number to dial) in a file on your phone, so the home screen can display
+					it. That copy is not encrypted like the database. Anyone who can see your home
+					screen can read what a card shows. The copy is left out of Android&apos;s cloud
+					backup and device transfer, and it is deleted when you turn the cards off. The
+					cards are off until you turn them on.
+				</li>
+				<li>
 					Your recovery code is never stored. The phone keeps only a salted hash used to
 					check a code you type.
 				</li>

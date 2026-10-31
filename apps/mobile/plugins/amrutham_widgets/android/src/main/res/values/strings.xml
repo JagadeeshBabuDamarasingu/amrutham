@@ -1,0 +1,4 @@
+<resources>
+    <string name="amrutham_widget_label">Emergency card</string>
+    <string name="amrutham_widget_description">Name, blood group, allergies and a button to dial an emergency contact. You choose what it shows.</string>
+</resources>

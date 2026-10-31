@@ -16,6 +16,13 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  amrutham_widgets:
+    dependency: "direct main"
+    description:
+      path: "plugins/amrutham_widgets"
+      relative: true
+    source: path
+    version: "0.0.1"
   analyzer:
     dependency: "direct overridden"
     description:

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../backup/auto_backup.dart';
 import '../backup/auto_backup_scheduler.dart';
 import '../providers/app_providers.dart';
+import '../quick_access/widget_host.dart';
 
 import 'app_style.dart';
 import 'strings.dart';
@@ -87,7 +88,7 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WidgetSyncHost(child: Scaffold(
       body: IndexedStack(
         index: _index,
         children: const [
@@ -174,6 +175,6 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
           ],
         ),
       ),
-    );
+    ));
   }
 }

@@ -1,0 +1,19 @@
+name: amrutham_widgets
+description: Android-only. Home screen emergency cards (widgets) and the hand-off from the app to them.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.38.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: app.amrutham.widgets
+        pluginClass: WidgetsPlugin

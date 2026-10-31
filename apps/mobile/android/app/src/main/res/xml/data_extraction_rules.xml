@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 and newer. The home screen cards keep a plain copy of what they
+     show; it must never be copied to the person's Google account or to a new
+     phone. Everything else keeps Android's default. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="amrutham_widgets.xml"/>
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="amrutham_widgets.xml"/>
+    </device-transfer>
+</data-extraction-rules>

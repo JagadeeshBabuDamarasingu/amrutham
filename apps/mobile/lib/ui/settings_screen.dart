@@ -10,6 +10,7 @@ import 'problem_report.dart';
 import 'recovery_code_dialog.dart';
 import 'restore_screen.dart';
 import 'storage_screens.dart';
+import 'widgets_settings_screen.dart';
 import 'strings.dart';
 
 /// Only what is real today: the privacy promise and the recovery code check.
@@ -146,6 +147,22 @@ class SettingsScreen extends ConsumerWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const LanguageScreen()),
+              ),
+            ),
+          ),
+          const SectionLabel('Home screen'),
+          Card(
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              title: const Text('Home screen widgets', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: Text(
+                (ref.watch(widgetSettingsProvider).valueOrNull?.enabled ?? false)
+                    ? 'Emergency cards are on'
+                    : 'Off. Put an emergency card on your home screen.',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const WidgetsSettingsScreen()),
               ),
             ),
           ),
