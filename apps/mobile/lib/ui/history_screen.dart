@@ -7,6 +7,7 @@ import '../model/medication.dart';
 import '../providers/app_providers.dart';
 import 'add_history_event_screen.dart';
 import 'app_style.dart';
+import 'item_actions.dart';
 import 'log_measurement_screen.dart' show monthNames;
 
 enum _Filter {
@@ -95,29 +96,22 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     ]..sort((a, b) => b.date.compareTo(a.date));
   }
 
-  Future<void> _confirmDelete(_Item item) async {
+  Future<void> _actions(_Item item) async {
     final event = item.event;
     if (event == null) return;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete this entry?'),
-        content: Text(event.title),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
+    await showItemActions(
+      context,
+      title: event.title,
+      onEdit: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => AddHistoryEventScreen(personId: widget.personId, editing: event),
+        ),
       ),
+      onDelete: () async {
+        final repository = await ref.read(historyRepositoryProvider.future);
+        await repository.deleteEvent(event.id);
+      },
     );
-    if (ok != true) return;
-    final repository = await ref.read(historyRepositoryProvider.future);
-    await repository.deleteEvent(event.id);
   }
 
   @override
@@ -238,7 +232,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               padding: const EdgeInsets.only(bottom: 8),
               child: InkWell(
                 borderRadius: BorderRadius.circular(18),
-                onLongPress: item.event == null ? null : () => _confirmDelete(item),
+                onTap: item.event == null ? null : () => _actions(item),
                 child: Ink(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(

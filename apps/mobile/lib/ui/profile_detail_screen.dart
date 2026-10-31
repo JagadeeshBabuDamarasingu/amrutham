@@ -12,7 +12,9 @@ import 'add_medication_course_screen.dart';
 import 'app_style.dart';
 import 'care_team_screen.dart';
 import 'course_detail_screen.dart';
+import 'create_profile_screen.dart';
 import 'emergency_card_screen.dart';
+import 'item_actions.dart';
 import 'history_screen.dart';
 import 'vaccine_record_screen.dart';
 import 'log_measurement_screen.dart';
@@ -43,7 +45,17 @@ class ProfileDetailScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            tooltip: 'Edit details',
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => CreateProfileScreen(editing: person)),
+            ),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
@@ -245,6 +257,20 @@ class ProfileDetailScreen extends ConsumerWidget {
                             '${entry.relationship}: ${entry.conditionText}',
                           ),
                           subtitle: Text(_familyHistorySubtitle(entry)),
+                          trailing: const Icon(Icons.more_horiz),
+                          onTap: () => showItemActions(
+                            context,
+                            title: '${entry.relationship}: ${entry.conditionText}',
+                            onEdit: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => AddFamilyHistoryScreen(personId: personId, editing: entry),
+                              ),
+                            ),
+                            onDelete: () async {
+                              final repository = await ref.read(profileRepositoryProvider.future);
+                              await repository.deleteFamilyHistoryEntry(entry.id);
+                            },
+                          ),
                         ),
                       ),
                     )
@@ -278,6 +304,20 @@ class ProfileDetailScreen extends ConsumerWidget {
                         child: ListTile(
                           title: Text(allergy.substance),
                           subtitle: Text(allergy.reaction),
+                          trailing: const Icon(Icons.more_horiz),
+                          onTap: () => showItemActions(
+                            context,
+                            title: allergy.substance,
+                            onEdit: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => AddAllergyScreen(personId: personId, editing: allergy),
+                              ),
+                            ),
+                            onDelete: () async {
+                              final repository = await ref.read(profileRepositoryProvider.future);
+                              await repository.deleteAllergyRecord(allergy.id);
+                            },
+                          ),
                         ),
                       ),
                     )
@@ -510,7 +550,17 @@ class _MemorialView extends ConsumerWidget {
       ),
     );
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            tooltip: 'Edit details',
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => CreateProfileScreen(editing: person)),
+            ),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [

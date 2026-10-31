@@ -113,6 +113,37 @@ class ProfileRepository {
     );
   }
 
+  /// Replaces the editable details. Emergency contacts are left alone.
+  Future<void> updateProfile(
+    PersonId id, {
+    required String displayName,
+    String? givenName,
+    String? surname,
+    required RelationshipType relationship,
+    DateTime? dateOfBirth,
+    String? sex,
+    String? bloodGroup,
+    bool isDeceased = false,
+    DateTime? dateOfDeath,
+    String? causeOfDeath,
+  }) async {
+    final row = _realm.find<PersonRow>(id.value);
+    if (row == null) return;
+    _realm.write(() {
+      row
+        ..displayName = displayName
+        ..givenName = givenName
+        ..surname = surname
+        ..relationship = relationship.name
+        ..dateOfBirth = dateOfBirth
+        ..sex = sex
+        ..bloodGroup = bloodGroup
+        ..isDeceased = isDeceased
+        ..dateOfDeath = dateOfDeath
+        ..causeOfDeath = causeOfDeath;
+    });
+  }
+
   Future<void> addEmergencyContact(
     PersonId personId,
     EmergencyContact contact,
@@ -192,6 +223,33 @@ class ProfileRepository {
     );
   }
 
+  Future<void> updateFamilyHistoryEntry(
+    FamilyHistoryEntryId id, {
+    required String relationship,
+    required String conditionText,
+    int? onsetAgeApprox,
+    String? outcome,
+    required Certainty certainty,
+    String? notes,
+  }) async {
+    final row = _realm.find<FamilyHistoryEntryRow>(id.value);
+    if (row == null) return;
+    _realm.write(() {
+      row
+        ..relationship = relationship
+        ..conditionText = conditionText
+        ..onsetAgeApprox = onsetAgeApprox
+        ..outcome = outcome
+        ..certainty = certainty.name
+        ..notes = notes;
+    });
+  }
+
+  Future<void> deleteFamilyHistoryEntry(FamilyHistoryEntryId id) async {
+    final row = _realm.find<FamilyHistoryEntryRow>(id.value);
+    if (row != null) _realm.write(() => _realm.delete(row));
+  }
+
   // ---- AllergyRecord ----
 
   Stream<List<AllergyRecord>> watchAllergies(PersonId personId) {
@@ -244,5 +302,30 @@ class ProfileRepository {
       certainty: certainty,
       notes: notes,
     );
+  }
+
+  Future<void> updateAllergyRecord(
+    AllergyRecordId id, {
+    required String substance,
+    required String reaction,
+    String? severity,
+    required Certainty certainty,
+    String? notes,
+  }) async {
+    final row = _realm.find<AllergyRecordRow>(id.value);
+    if (row == null) return;
+    _realm.write(() {
+      row
+        ..substance = substance
+        ..reaction = reaction
+        ..severity = severity
+        ..certainty = certainty.name
+        ..notes = notes;
+    });
+  }
+
+  Future<void> deleteAllergyRecord(AllergyRecordId id) async {
+    final row = _realm.find<AllergyRecordRow>(id.value);
+    if (row != null) _realm.write(() => _realm.delete(row));
   }
 }

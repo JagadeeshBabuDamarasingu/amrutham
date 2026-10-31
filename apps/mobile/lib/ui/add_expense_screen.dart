@@ -10,12 +10,14 @@ import '../providers/app_providers.dart';
 import 'app_style.dart';
 import 'log_measurement_screen.dart' show monthNames;
 
-/// Add an expense. Pass [from] to start from an existing one ("Duplicate").
+/// Add an expense. Pass [from] to start from an existing one ("Duplicate"),
+/// or [editing] to change one in place.
 class AddExpenseScreen extends ConsumerStatefulWidget {
-  const AddExpenseScreen({super.key, this.personId, this.from});
+  const AddExpenseScreen({super.key, this.personId, this.from, this.editing});
 
   final PersonId? personId;
   final Expense? from;
+  final Expense? editing;
 
   @override
   ConsumerState<AddExpenseScreen> createState() => _State();
@@ -24,16 +26,20 @@ class AddExpenseScreen extends ConsumerStatefulWidget {
 class _State extends ConsumerState<AddExpenseScreen> {
   static const _methods = ['Cash', 'UPI', 'Card', 'Insurance', 'Other'];
 
+  /// The expense the form starts from: the one being edited, or the one being
+  /// duplicated.
+  Expense? get _base => widget.editing ?? widget.from;
+
   late final _amount = TextEditingController(
-    text: widget.from == null ? '' : (widget.from!.amountPaise / 100).toString().replaceFirst(RegExp(r'\.0$'), ''),
+    text: _base == null ? '' : (_base!.amountPaise / 100).toString().replaceFirst(RegExp(r'\.0$'), ''),
   );
-  late final _title = TextEditingController(text: widget.from?.title ?? '');
-  late final _payee = TextEditingController(text: widget.from?.payee ?? '');
-  late PersonId? _person = widget.from?.personId ?? widget.personId;
-  late ExpenseCategory _category = widget.from?.category ?? ExpenseCategory.consultation;
-  late String? _paidBy = widget.from?.paidBy;
+  late final _title = TextEditingController(text: _base?.title ?? '');
+  late final _payee = TextEditingController(text: _base?.payee ?? '');
+  late PersonId? _person = _base?.personId ?? widget.personId;
+  late ExpenseCategory _category = _base?.category ?? ExpenseCategory.consultation;
+  late String? _paidBy = _base?.paidBy;
   File? _receipt;
-  DateTime _date = DateTime.now();
+  late DateTime _date = widget.editing?.spentOn ?? DateTime.now();
   bool _saving = false;
 
   @override
@@ -88,16 +94,32 @@ class _State extends ConsumerState<AddExpenseScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     final repository = await ref.read(expenseRepositoryProvider.future);
-    await repository.add(
-      personId: _person!,
-      title: _title.text.trim(),
-      payee: _payee.text.trim().isEmpty ? null : _payee.text.trim(),
-      amountPaise: parseRupees(_amount.text)!,
-      category: _category,
-      paidBy: _paidBy,
-      spentOn: _date,
-      receipt: _receipt,
-    );
+    final payee = _payee.text.trim().isEmpty ? null : _payee.text.trim();
+    final editing = widget.editing;
+    if (editing == null) {
+      await repository.add(
+        personId: _person!,
+        title: _title.text.trim(),
+        payee: payee,
+        amountPaise: parseRupees(_amount.text)!,
+        category: _category,
+        paidBy: _paidBy,
+        spentOn: _date,
+        receipt: _receipt,
+      );
+    } else {
+      await repository.update(
+        editing.id,
+        personId: _person!,
+        title: _title.text.trim(),
+        payee: payee,
+        amountPaise: parseRupees(_amount.text)!,
+        category: _category,
+        paidBy: _paidBy,
+        spentOn: _date,
+        receipt: _receipt,
+      );
+    }
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -115,8 +137,8 @@ class _State extends ConsumerState<AddExpenseScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
         children: [
-          const Text(
-            'Add expense',
+          Text(
+            widget.editing == null ? 'Add expense' : 'Edit expense',
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.8),
           ),
           const SizedBox(height: 16),
@@ -211,13 +233,13 @@ class _State extends ConsumerState<AddExpenseScreen> {
           OutlinedButton.icon(
             onPressed: _addReceipt,
             icon: Icon(_receipt == null ? Icons.photo_camera_outlined : Icons.check),
-            label: Text(_receipt == null ? 'Add a photo of the bill' : 'Photo added. Tap to change'),
+            label: Text(_receipt == null ? (widget.editing == null ? 'Add a photo of the bill' : 'Replace the photo of the bill') : 'Photo added. Tap to change'),
             style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
           ),
           const SizedBox(height: 28),
           _saving
               ? const Center(child: CircularProgressIndicator())
-              : OnboardButton(label: 'Save expense', onPressed: _valid ? _save : null),
+              : OnboardButton(label: widget.editing == null ? 'Save expense' : 'Save changes', onPressed: _valid ? _save : null),
         ],
       ),
     );

@@ -8,21 +8,23 @@ import 'app_style.dart';
 import 'log_measurement_screen.dart' show monthNames;
 
 /// A visit, procedure or scan. Pick a future date for something planned.
+/// Pass [editing] to change a saved one.
 class AddHistoryEventScreen extends ConsumerStatefulWidget {
-  const AddHistoryEventScreen({super.key, required this.personId});
+  const AddHistoryEventScreen({super.key, required this.personId, this.editing});
 
   final PersonId personId;
+  final HistoryEvent? editing;
 
   @override
   ConsumerState<AddHistoryEventScreen> createState() => _State();
 }
 
 class _State extends ConsumerState<AddHistoryEventScreen> {
-  HistoryKind _kind = HistoryKind.visit;
-  final _title = TextEditingController();
-  final _provider = TextEditingController();
-  final _notes = TextEditingController();
-  DateTime _date = DateTime.now();
+  late HistoryKind _kind = widget.editing?.kind ?? HistoryKind.visit;
+  late final _title = TextEditingController(text: widget.editing?.title);
+  late final _provider = TextEditingController(text: widget.editing?.provider);
+  late final _notes = TextEditingController(text: widget.editing?.notes);
+  late DateTime _date = widget.editing?.eventDate ?? DateTime.now();
   bool _saving = false;
 
   @override
@@ -49,14 +51,26 @@ class _State extends ConsumerState<AddHistoryEventScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     final repository = await ref.read(historyRepositoryProvider.future);
-    await repository.addEvent(
-      personId: widget.personId,
-      kind: _kind,
-      title: _title.text.trim(),
-      eventDate: _date,
-      provider: _nullIfEmpty(_provider),
-      notes: _nullIfEmpty(_notes),
-    );
+    final editing = widget.editing;
+    if (editing == null) {
+      await repository.addEvent(
+        personId: widget.personId,
+        kind: _kind,
+        title: _title.text.trim(),
+        eventDate: _date,
+        provider: _nullIfEmpty(_provider),
+        notes: _nullIfEmpty(_notes),
+      );
+    } else {
+      await repository.updateEvent(
+        editing.id,
+        kind: _kind,
+        title: _title.text.trim(),
+        eventDate: _date,
+        provider: _nullIfEmpty(_provider),
+        notes: _nullIfEmpty(_notes),
+      );
+    }
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -64,7 +78,7 @@ class _State extends ConsumerState<AddHistoryEventScreen> {
   Widget build(BuildContext context) {
     final planned = _date.isAfter(DateTime.now());
     return Scaffold(
-      appBar: AppBar(title: const Text('Add to history')),
+      appBar: AppBar(title: Text(widget.editing == null ? 'Add to history' : 'Edit history entry')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
         children: [
@@ -114,7 +128,7 @@ class _State extends ConsumerState<AddHistoryEventScreen> {
           _saving
               ? const Center(child: CircularProgressIndicator())
               : OnboardButton(
-                  label: 'Save',
+                  label: widget.editing == null ? 'Save' : 'Save changes',
                   onPressed: _title.text.trim().isEmpty ? null : _save,
                 ),
         ],

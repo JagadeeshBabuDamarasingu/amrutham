@@ -75,6 +75,42 @@ class MedicationRepository {
     );
   }
 
+  /// Edits the course's own details. Status has its own method; reminders must
+  /// be re-armed by the caller afterwards.
+  Future<void> updateCourse(
+    MedicationCourseId courseId, {
+    required String medicationName,
+    required DateTime startDate,
+    DateTime? endDate,
+    String? prescriberName,
+    String? reason,
+  }) async {
+    final row = _realm.find<MedicationCourseRow>(courseId.value);
+    if (row == null) return;
+    _realm.write(() {
+      row
+        ..medicationName = medicationName
+        ..startDate = startDate
+        ..endDate = endDate
+        ..prescriberName = prescriberName
+        ..reason = reason;
+    });
+  }
+
+  /// Removes the course with its schedule phases and dose answers.
+  Future<void> deleteCourse(MedicationCourseId courseId) async {
+    _realm.write(() {
+      _realm.deleteMany(
+        _realm.query<SchedulePhaseRow>(r'courseId == $0', [courseId.value]),
+      );
+      _realm.deleteMany(
+        _realm.query<DoseLogRow>(r'courseId == $0', [courseId.value]),
+      );
+      final row = _realm.find<MedicationCourseRow>(courseId.value);
+      if (row != null) _realm.delete(row);
+    });
+  }
+
   Future<MedicationCourse?> courseById(MedicationCourseId courseId) async {
     final row = _realm.find<MedicationCourseRow>(courseId.value);
     return row == null ? null : _courseFromRow(row);
@@ -176,6 +212,47 @@ class MedicationRepository {
       phaseStart: phaseStart,
       phaseEnd: phaseEnd,
     );
+  }
+
+  Future<void> updateSchedulePhase(
+    SchedulePhaseId id, {
+    required String doseAmount,
+    required int frequency,
+    required int period,
+    required PeriodUnit periodUnit,
+    Set<int>? daysOfWeek,
+    required List<String> timesOfDay,
+    bool isPrn = false,
+    String? prnReason,
+    String? prnMaxFrequency,
+    required DateTime phaseStart,
+    DateTime? phaseEnd,
+  }) async {
+    final row = _realm.find<SchedulePhaseRow>(id.value);
+    if (row == null) return;
+    _realm.write(() {
+      row
+        ..doseAmount = doseAmount
+        ..frequency = frequency
+        ..period = period
+        ..periodUnit = periodUnit.name
+        ..isPrn = isPrn
+        ..prnReason = prnReason
+        ..prnMaxFrequency = prnMaxFrequency
+        ..phaseStart = phaseStart
+        ..phaseEnd = phaseEnd;
+      row.daysOfWeek
+        ..clear()
+        ..addAll(daysOfWeek == null ? const <int>[] : (daysOfWeek.toList()..sort()));
+      row.timesOfDay
+        ..clear()
+        ..addAll(timesOfDay);
+    });
+  }
+
+  Future<void> deleteSchedulePhase(SchedulePhaseId id) async {
+    final row = _realm.find<SchedulePhaseRow>(id.value);
+    if (row != null) _realm.write(() => _realm.delete(row));
   }
 
   /// The only query the reminder engine is allowed to read from. Excludes:

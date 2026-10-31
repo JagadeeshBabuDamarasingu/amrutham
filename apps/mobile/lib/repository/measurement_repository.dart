@@ -54,6 +54,24 @@ class MeasurementRepository {
     );
   }
 
+  Future<void> updateMeasurement(
+    MeasurementId id, {
+    required MeasurementKind kind,
+    required double value,
+    double? value2,
+    required DateTime measuredAt,
+  }) async {
+    final row = _realm.find<MeasurementRow>(id.value);
+    if (row == null) return;
+    _realm.write(() {
+      row
+        ..kind = kind.name
+        ..value = value
+        ..value2 = kind.hasSecondValue ? value2 : null
+        ..measuredAt = measuredAt;
+    });
+  }
+
   Future<void> deleteMeasurement(MeasurementId id) async {
     final row = _realm.find<MeasurementRow>(id.value);
     if (row != null) _realm.write(() => _realm.delete(row));

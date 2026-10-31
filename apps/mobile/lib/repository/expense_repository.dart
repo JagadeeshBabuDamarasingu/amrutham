@@ -83,6 +83,39 @@ class ExpenseRepository {
     );
   }
 
+  /// Replaces every editable field. A new [receipt] replaces the old photo;
+  /// null keeps what is there.
+  Future<void> update(
+    ExpenseId id, {
+    required PersonId personId,
+    required String title,
+    String? payee,
+    required int amountPaise,
+    required ExpenseCategory category,
+    String? paidBy,
+    required DateTime spentOn,
+    File? receipt,
+  }) async {
+    final row = _realm.find<ExpenseRow>(id.value);
+    if (row == null) return;
+    _realm.write(() {
+      row
+        ..personId = personId.value
+        ..title = title
+        ..payee = payee
+        ..amountPaise = amountPaise
+        ..category = category.name
+        ..paidBy = paidBy
+        ..spentOn = spentOn;
+    });
+    if (receipt != null && vaultDir != null) {
+      await receiptFor(id)?.delete();
+      final dir = Directory(p.join(vaultDir!.path, receiptsDir));
+      await dir.create(recursive: true);
+      await receipt.copy(p.join(dir.path, '${id.value}${p.extension(receipt.path).toLowerCase()}'));
+    }
+  }
+
   Future<void> delete(ExpenseId id) async {
     final row = _realm.find<ExpenseRow>(id.value);
     if (row != null) _realm.write(() => _realm.delete(row));

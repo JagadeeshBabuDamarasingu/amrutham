@@ -72,6 +72,26 @@ class RecordRepository {
     return _fromRow(_realm.find<RecordRow>(id.value)!);
   }
 
+  /// Changes the details shown in the app. The files keep their names, so the
+  /// vault folder stays as it was.
+  Future<void> update(
+    RecordId id, {
+    required RecordType type,
+    required String title,
+    required DateTime recordDate,
+    String? source,
+  }) async {
+    final row = _realm.find<RecordRow>(id.value);
+    if (row == null) return;
+    _realm.write(() {
+      row
+        ..type = type.name
+        ..title = title
+        ..recordDate = recordDate
+        ..source = source;
+    });
+  }
+
   Future<void> delete(RecordId id) async {
     final row = _realm.find<RecordRow>(id.value);
     if (row == null) return;

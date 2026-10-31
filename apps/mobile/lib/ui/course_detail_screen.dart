@@ -5,7 +5,9 @@ import '../model/ids.dart';
 import '../model/medication.dart';
 import '../model/schedule_phase.dart';
 import '../providers/app_providers.dart';
+import 'add_medication_course_screen.dart';
 import 'add_schedule_phase_screen.dart';
+import 'item_actions.dart';
 
 class CourseDetailScreen extends ConsumerWidget {
   const CourseDetailScreen({
@@ -49,7 +51,45 @@ class CourseDetailScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(course?.medicationName ?? 'Medication')),
+      appBar: AppBar(
+        title: Text(course?.medicationName ?? 'Medication'),
+        actions: [
+          if (course != null)
+            IconButton(
+              tooltip: 'Edit',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AddMedicationCourseScreen(personId: personId, editing: course),
+                ),
+              ),
+            ),
+          if (course != null)
+            IconButton(
+              tooltip: 'Delete',
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () async {
+                final ok = await showDialog<bool>(
+                  context: context,
+                  builder: (dialog) => AlertDialog(
+                    title: Text('Delete ${course.medicationName}?'),
+                    content: const Text('Its schedule and dose answers are deleted too. Its reminders stop.'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Keep')),
+                      TextButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Delete')),
+                    ],
+                  ),
+                );
+                if (ok != true) return;
+                final repository = await ref.read(medicationRepositoryProvider.future);
+                await repository.deleteCourse(courseId);
+                final reminders = await ref.read(reminderRepositoryProvider.future);
+                await reminders.armRemindersForPerson(personId);
+                if (context.mounted) Navigator.of(context).pop();
+              },
+            ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: null,
         onPressed: () => Navigator.of(context).push(
@@ -86,7 +126,32 @@ class CourseDetailScreen extends ConsumerWidget {
                     }
                     return Column(
                       children: phases
-                          .map((phase) => _PhaseCard(phase: phase))
+                          .map(
+                            (phase) => _PhaseCard(
+                              phase: phase,
+                              onTap: () => showItemActions(
+                                context,
+                                title: phase.doseAmount,
+                                deleteTitle: 'Delete this schedule phase?',
+                                onEdit: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => AddSchedulePhaseScreen(
+                                      personId: personId,
+                                      courseId: courseId,
+                                      isFirstPhase: false,
+                                      editing: phase,
+                                    ),
+                                  ),
+                                ),
+                                onDelete: () async {
+                                  final repository = await ref.read(medicationRepositoryProvider.future);
+                                  await repository.deleteSchedulePhase(phase.id);
+                                  final reminders = await ref.read(reminderRepositoryProvider.future);
+                                  await reminders.armRemindersForPerson(personId);
+                                },
+                              ),
+                            ),
+                          )
                           .toList(),
                     );
                   },
@@ -147,9 +212,10 @@ class _CourseSummary extends StatelessWidget {
 }
 
 class _PhaseCard extends StatelessWidget {
-  const _PhaseCard({required this.phase});
+  const _PhaseCard({required this.phase, required this.onTap});
 
   final SchedulePhase phase;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +223,8 @@ class _PhaseCard extends StatelessWidget {
       child: ListTile(
         title: Text(phase.doseAmount),
         subtitle: Text(_subtitle()),
+        trailing: const Icon(Icons.more_horiz),
+        onTap: onTap,
       ),
     );
   }

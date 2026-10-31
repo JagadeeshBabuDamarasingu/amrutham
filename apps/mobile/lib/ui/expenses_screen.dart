@@ -290,6 +290,15 @@ class ExpenseDetailScreen extends ConsumerWidget {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => AddExpenseScreen(editing: e)),
+                  ),
+                  child: const Text('Edit'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (_) => AddExpenseScreen(from: e)),
                   ),
                   child: const Text('Duplicate'),

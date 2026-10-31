@@ -24,11 +24,15 @@ class AddSchedulePhaseScreen extends ConsumerStatefulWidget {
     required this.personId,
     required this.courseId,
     required this.isFirstPhase,
+    this.editing,
   });
 
   final PersonId personId;
   final MedicationCourseId courseId;
   final bool isFirstPhase;
+
+  /// A saved phase to change instead of adding a new one.
+  final SchedulePhase? editing;
 
   @override
   ConsumerState<AddSchedulePhaseScreen> createState() =>
@@ -52,6 +56,24 @@ class _AddSchedulePhaseScreenState
   DateTime? _phaseEnd;
   String? _timesError;
   bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.editing;
+    if (e == null) return;
+    _doseAmountController.text = e.doseAmount;
+    _frequencyController.text = '${e.frequency}';
+    _periodController.text = '${e.period}';
+    _prnReasonController.text = e.prnReason ?? '';
+    _prnMaxFrequencyController.text = e.prnMaxFrequency ?? '';
+    _periodUnit = e.periodUnit;
+    _times.addAll(e.timesOfDay);
+    _selectedDays.addAll(e.daysOfWeek ?? const {});
+    _isPrn = e.isPrn;
+    _phaseStart = e.phaseStart;
+    _phaseEnd = e.phaseEnd;
+  }
 
   @override
   void dispose() {
@@ -110,27 +132,49 @@ class _AddSchedulePhaseScreenState
     final medicationRepository = await ref.read(
       medicationRepositoryProvider.future,
     );
-    await medicationRepository.addSchedulePhase(
-      courseId: widget.courseId,
-      doseAmount: _doseAmountController.text.trim(),
-      // frequency/period are unused for PRN rows but the column is NOT
-      // NULL — see specs/phase-1-v1/02-architecture.md §4.
-      frequency: _isPrn ? 1 : int.parse(_frequencyController.text.trim()),
-      period: _isPrn ? 1 : int.parse(_periodController.text.trim()),
-      periodUnit: _periodUnit,
-      daysOfWeek: _selectedDays.isEmpty ? null : _selectedDays,
-      timesOfDay: _isPrn ? const [] : _times,
-      isPrn: _isPrn,
-      prnReason: _isPrn && _prnReasonController.text.trim().isNotEmpty
-          ? _prnReasonController.text.trim()
-          : null,
-      prnMaxFrequency:
-          _isPrn && _prnMaxFrequencyController.text.trim().isNotEmpty
-          ? _prnMaxFrequencyController.text.trim()
-          : null,
-      phaseStart: _phaseStart,
-      phaseEnd: _phaseEnd,
-    );
+    final editing = widget.editing;
+    final doseAmount = _doseAmountController.text.trim();
+    final frequency = _isPrn ? 1 : int.parse(_frequencyController.text.trim());
+    final period = _isPrn ? 1 : int.parse(_periodController.text.trim());
+    final prnReason = _isPrn && _prnReasonController.text.trim().isNotEmpty
+        ? _prnReasonController.text.trim()
+        : null;
+    final prnMax = _isPrn && _prnMaxFrequencyController.text.trim().isNotEmpty
+        ? _prnMaxFrequencyController.text.trim()
+        : null;
+    if (editing == null) {
+      await medicationRepository.addSchedulePhase(
+        courseId: widget.courseId,
+        doseAmount: doseAmount,
+        // frequency/period are unused for PRN rows but the column is NOT
+        // NULL — see specs/phase-1-v1/02-architecture.md §4.
+        frequency: frequency,
+        period: period,
+        periodUnit: _periodUnit,
+        daysOfWeek: _selectedDays.isEmpty ? null : _selectedDays,
+        timesOfDay: _isPrn ? const [] : _times,
+        isPrn: _isPrn,
+        prnReason: prnReason,
+        prnMaxFrequency: prnMax,
+        phaseStart: _phaseStart,
+        phaseEnd: _phaseEnd,
+      );
+    } else {
+      await medicationRepository.updateSchedulePhase(
+        editing.id,
+        doseAmount: doseAmount,
+        frequency: frequency,
+        period: period,
+        periodUnit: _periodUnit,
+        daysOfWeek: _selectedDays.isEmpty ? null : _selectedDays,
+        timesOfDay: _isPrn ? const [] : _times,
+        isPrn: _isPrn,
+        prnReason: prnReason,
+        prnMaxFrequency: prnMax,
+        phaseStart: _phaseStart,
+        phaseEnd: _phaseEnd,
+      );
+    }
 
     final reminderRepository = await ref.read(
       reminderRepositoryProvider.future,
@@ -173,7 +217,11 @@ class _AddSchedulePhaseScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.isFirstPhase ? 'Set the schedule' : 'Add a taper phase',
+          widget.editing != null
+              ? 'Edit schedule'
+              : widget.isFirstPhase
+              ? 'Set the schedule'
+              : 'Add a taper phase',
         ),
       ),
       body: Form(

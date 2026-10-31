@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../model/health_record.dart';
 import '../providers/app_providers.dart';
 import 'add_record_screen.dart';
+import 'edit_record_screen.dart';
 import 'app_style.dart';
 import 'log_measurement_screen.dart' show monthNames;
 import 'settings_screen.dart';
@@ -299,6 +300,15 @@ class _RecordDetailState extends ConsumerState<RecordDetailScreen> {
                           ),
                         ),
                   child: const Text('Share a copy'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => EditRecordScreen(record: r)),
+                  ),
+                  child: const Text('Edit'),
                 ),
               ),
               const SizedBox(width: 10),

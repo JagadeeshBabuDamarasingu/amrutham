@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/certainty.dart';
+import '../model/family_history.dart';
 import '../model/ids.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
 
 class AddFamilyHistoryScreen extends ConsumerStatefulWidget {
-  const AddFamilyHistoryScreen({super.key, required this.personId});
+  const AddFamilyHistoryScreen({super.key, required this.personId, this.editing});
 
   final PersonId personId;
+  final FamilyHistoryEntry? editing;
 
   @override
   ConsumerState<AddFamilyHistoryScreen> createState() =>
@@ -18,12 +20,12 @@ class AddFamilyHistoryScreen extends ConsumerStatefulWidget {
 
 class _AddFamilyHistoryScreenState
     extends ConsumerState<AddFamilyHistoryScreen> {
-  final _relationshipController = TextEditingController();
-  final _conditionController = TextEditingController();
-  final _onsetAgeController = TextEditingController();
-  final _outcomeController = TextEditingController();
-  final _notesController = TextEditingController();
-  Certainty _certainty = Certainty.reported;
+  late final _relationshipController = TextEditingController(text: widget.editing?.relationship);
+  late final _conditionController = TextEditingController(text: widget.editing?.conditionText);
+  late final _onsetAgeController = TextEditingController(text: widget.editing?.onsetAgeApprox?.toString());
+  late final _outcomeController = TextEditingController(text: widget.editing?.outcome);
+  late final _notesController = TextEditingController(text: widget.editing?.notes);
+  late Certainty _certainty = widget.editing?.certainty ?? Certainty.reported;
   bool _saving = false;
 
   @override
@@ -40,19 +42,35 @@ class _AddFamilyHistoryScreenState
     setState(() => _saving = true);
 
     final repository = await ref.read(profileRepositoryProvider.future);
-    await repository.addFamilyHistoryEntry(
-      personId: widget.personId,
-      relationship: _relationshipController.text.trim(),
-      conditionText: _conditionController.text.trim(),
-      onsetAgeApprox: int.tryParse(_onsetAgeController.text.trim()),
-      outcome: _outcomeController.text.trim().isEmpty
-          ? null
-          : _outcomeController.text.trim(),
-      certainty: _certainty,
-      notes: _notesController.text.trim().isEmpty
-          ? null
-          : _notesController.text.trim(),
-    );
+    final outcome = _outcomeController.text.trim().isEmpty
+        ? null
+        : _outcomeController.text.trim();
+    final notes = _notesController.text.trim().isEmpty
+        ? null
+        : _notesController.text.trim();
+    final onset = int.tryParse(_onsetAgeController.text.trim());
+    final editing = widget.editing;
+    if (editing == null) {
+      await repository.addFamilyHistoryEntry(
+        personId: widget.personId,
+        relationship: _relationshipController.text.trim(),
+        conditionText: _conditionController.text.trim(),
+        onsetAgeApprox: onset,
+        outcome: outcome,
+        certainty: _certainty,
+        notes: notes,
+      );
+    } else {
+      await repository.updateFamilyHistoryEntry(
+        editing.id,
+        relationship: _relationshipController.text.trim(),
+        conditionText: _conditionController.text.trim(),
+        onsetAgeApprox: onset,
+        outcome: outcome,
+        certainty: _certainty,
+        notes: notes,
+      );
+    }
 
     if (!mounted) return;
     Navigator.of(context).pop();
@@ -75,8 +93,8 @@ class _AddFamilyHistoryScreenState
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
         children: [
-          const Text(
-            'Add family history',
+          Text(
+            widget.editing == null ? 'Add family history' : 'Edit family history',
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.8),
           ),
           const SizedBox(height: 6),
@@ -121,7 +139,7 @@ class _AddFamilyHistoryScreenState
           const SizedBox(height: 28),
           _saving
               ? const Center(child: CircularProgressIndicator())
-              : OnboardButton(label: 'Save', onPressed: _valid ? _save : null),
+              : OnboardButton(label: widget.editing == null ? 'Save' : 'Save changes', onPressed: _valid ? _save : null),
         ],
       ),
     );

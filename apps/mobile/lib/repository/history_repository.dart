@@ -53,6 +53,26 @@ class HistoryRepository {
     );
   }
 
+  Future<void> updateEvent(
+    HistoryEventId id, {
+    required HistoryKind kind,
+    required String title,
+    required DateTime eventDate,
+    String? provider,
+    String? notes,
+  }) async {
+    final row = _realm.find<HistoryEventRow>(id.value);
+    if (row == null) return;
+    _realm.write(() {
+      row
+        ..kind = kind.name
+        ..title = title
+        ..eventDate = eventDate
+        ..provider = provider
+        ..notes = notes;
+    });
+  }
+
   Future<void> deleteEvent(HistoryEventId id) async {
     final row = _realm.find<HistoryEventRow>(id.value);
     if (row != null) _realm.write(() => _realm.delete(row));

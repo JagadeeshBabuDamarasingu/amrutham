@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../model/allergy.dart';
 import '../model/certainty.dart';
 import '../model/ids.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
 
 class AddAllergyScreen extends ConsumerStatefulWidget {
-  const AddAllergyScreen({super.key, required this.personId});
+  const AddAllergyScreen({super.key, required this.personId, this.editing});
 
   final PersonId personId;
+  final AllergyRecord? editing;
 
   @override
   ConsumerState<AddAllergyScreen> createState() => _AddAllergyScreenState();
 }
 
 class _AddAllergyScreenState extends ConsumerState<AddAllergyScreen> {
-  final _substanceController = TextEditingController();
-  final _reactionController = TextEditingController();
-  final _severityController = TextEditingController();
-  final _notesController = TextEditingController();
-  Certainty _certainty = Certainty.reported;
+  late final _substanceController = TextEditingController(text: widget.editing?.substance);
+  late final _reactionController = TextEditingController(text: widget.editing?.reaction);
+  late final _severityController = TextEditingController(text: widget.editing?.severity);
+  late final _notesController = TextEditingController(text: widget.editing?.notes);
+  late Certainty _certainty = widget.editing?.certainty ?? Certainty.reported;
   bool _saving = false;
 
   @override
@@ -36,18 +38,32 @@ class _AddAllergyScreenState extends ConsumerState<AddAllergyScreen> {
     setState(() => _saving = true);
 
     final repository = await ref.read(profileRepositoryProvider.future);
-    await repository.addAllergyRecord(
-      personId: widget.personId,
-      substance: _substanceController.text.trim(),
-      reaction: _reactionController.text.trim(),
-      severity: _severityController.text.trim().isEmpty
-          ? null
-          : _severityController.text.trim(),
-      certainty: _certainty,
-      notes: _notesController.text.trim().isEmpty
-          ? null
-          : _notesController.text.trim(),
-    );
+    final severity = _severityController.text.trim().isEmpty
+        ? null
+        : _severityController.text.trim();
+    final notes = _notesController.text.trim().isEmpty
+        ? null
+        : _notesController.text.trim();
+    final editing = widget.editing;
+    if (editing == null) {
+      await repository.addAllergyRecord(
+        personId: widget.personId,
+        substance: _substanceController.text.trim(),
+        reaction: _reactionController.text.trim(),
+        severity: severity,
+        certainty: _certainty,
+        notes: notes,
+      );
+    } else {
+      await repository.updateAllergyRecord(
+        editing.id,
+        substance: _substanceController.text.trim(),
+        reaction: _reactionController.text.trim(),
+        severity: severity,
+        certainty: _certainty,
+        notes: notes,
+      );
+    }
 
     if (!mounted) return;
     Navigator.of(context).pop();
@@ -70,8 +86,8 @@ class _AddAllergyScreenState extends ConsumerState<AddAllergyScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
         children: [
-          const Text(
-            'Add an allergy',
+          Text(
+            widget.editing == null ? 'Add an allergy' : 'Edit allergy',
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.8),
           ),
           const SectionLabel('Substance'),
@@ -107,7 +123,7 @@ class _AddAllergyScreenState extends ConsumerState<AddAllergyScreen> {
           const SizedBox(height: 28),
           _saving
               ? const Center(child: CircularProgressIndicator())
-              : OnboardButton(label: 'Save allergy', onPressed: _valid ? _save : null),
+              : OnboardButton(label: widget.editing == null ? 'Save allergy' : 'Save changes', onPressed: _valid ? _save : null),
         ],
       ),
     );

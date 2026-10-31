@@ -13,10 +13,12 @@ class LogMeasurementScreen extends ConsumerStatefulWidget {
     super.key,
     required this.personId,
     this.initialKind = MeasurementKind.weight,
+    this.editing,
   });
 
   final PersonId personId;
   final MeasurementKind initialKind;
+  final Measurement? editing;
 
   @override
   ConsumerState<LogMeasurementScreen> createState() =>
@@ -24,10 +26,14 @@ class LogMeasurementScreen extends ConsumerStatefulWidget {
 }
 
 class _LogMeasurementScreenState extends ConsumerState<LogMeasurementScreen> {
-  late MeasurementKind _kind = widget.initialKind;
-  final _first = TextEditingController();
-  final _second = TextEditingController();
-  late DateTime _when = DateTime.now();
+  late MeasurementKind _kind = widget.editing?.kind ?? widget.initialKind;
+  late final _first = TextEditingController(
+    text: widget.editing == null ? '' : _plain(widget.editing!.value),
+  );
+  late final _second = TextEditingController(
+    text: widget.editing?.value2 == null ? '' : _plain(widget.editing!.value2!),
+  );
+  late DateTime _when = widget.editing?.measuredAt ?? DateTime.now();
   bool _saving = false;
 
   @override
@@ -85,13 +91,24 @@ class _LogMeasurementScreenState extends ConsumerState<LogMeasurementScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     final repository = await ref.read(measurementRepositoryProvider.future);
-    await repository.addMeasurement(
-      personId: widget.personId,
-      kind: _kind,
-      value: _firstValue!,
-      value2: _kind.hasSecondValue ? _secondValue : null,
-      measuredAt: _when,
-    );
+    final editing = widget.editing;
+    if (editing == null) {
+      await repository.addMeasurement(
+        personId: widget.personId,
+        kind: _kind,
+        value: _firstValue!,
+        value2: _kind.hasSecondValue ? _secondValue : null,
+        measuredAt: _when,
+      );
+    } else {
+      await repository.updateMeasurement(
+        editing.id,
+        kind: _kind,
+        value: _firstValue!,
+        value2: _kind.hasSecondValue ? _secondValue : null,
+        measuredAt: _when,
+      );
+    }
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -106,7 +123,7 @@ class _LogMeasurementScreenState extends ConsumerState<LogMeasurementScreen> {
       backgroundColor: onboardBg,
       appBar: AppBar(
         backgroundColor: onboardBg,
-        title: const Text('Log a measurement'),
+        title: Text(widget.editing == null ? 'Log a measurement' : 'Edit reading'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -171,7 +188,7 @@ class _LogMeasurementScreenState extends ConsumerState<LogMeasurementScreen> {
               ),
             ),
           ),
-          if (last != null) ...[
+          if (last != null && widget.editing == null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
@@ -223,7 +240,7 @@ class _LogMeasurementScreenState extends ConsumerState<LogMeasurementScreen> {
           _saving
               ? const Center(child: CircularProgressIndicator())
               : OnboardButton(
-                  label: 'Save reading',
+                  label: widget.editing == null ? 'Save reading' : 'Save changes',
                   onPressed: _valid ? _save : null,
                 ),
         ],

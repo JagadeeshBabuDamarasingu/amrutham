@@ -6,6 +6,7 @@ import '../model/measurement.dart';
 import '../providers/app_providers.dart';
 import 'log_measurement_screen.dart';
 import 'app_style.dart';
+import 'item_actions.dart';
 
 /// Daily metrics for one person: a chart of the chosen kind, the latest of
 /// every kind, and the readings behind them. Values are shown exactly as
@@ -32,31 +33,20 @@ class _MetricsScreenState extends ConsumerState<MetricsScreen> {
     ),
   );
 
-  Future<void> _confirmDelete(Measurement m) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete this reading?'),
-        content: Text(
-          '${m.kind.label} ${m.display} ${m.kind.unit}, '
-          '${dateLabel(m.measuredAt)}.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
+  Future<void> _actions(Measurement m) => showItemActions(
+    context,
+    title: '${m.kind.label} ${m.display} ${m.kind.unit}, ${dateLabel(m.measuredAt)}',
+    deleteTitle: 'Delete this reading?',
+    onEdit: () => Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LogMeasurementScreen(personId: widget.personId, editing: m),
       ),
-    );
-    if (ok != true) return;
-    final repository = await ref.read(measurementRepositoryProvider.future);
-    await repository.deleteMeasurement(m.id);
-  }
+    ),
+    onDelete: () async {
+      final repository = await ref.read(measurementRepositoryProvider.future);
+      await repository.deleteMeasurement(m.id);
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -161,11 +151,8 @@ class _MetricsScreenState extends ConsumerState<MetricsScreen> {
                     '${dateLabel(m.measuredAt)}, '
                     '${TimeOfDay.fromDateTime(m.measuredAt).format(context)}',
                   ),
-                  trailing: IconButton(
-                    tooltip: 'Delete reading',
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () => _confirmDelete(m),
-                  ),
+                  trailing: const Icon(Icons.more_horiz),
+                  onTap: () => _actions(m),
                 ),
               const SizedBox(height: 12),
               const Text(
