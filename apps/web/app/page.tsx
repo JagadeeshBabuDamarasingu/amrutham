@@ -32,8 +32,20 @@ const features = [
 
 const openPrinciples = [
 	{
+		title: "Free, forever",
+		body: "No price, no ads, no paywalled features, and your data is never sold. Amrutham is meant to stay free for every family, not just for a launch period.",
+	},
+	{
+		title: "Open source",
+		body: "The code is public under the GPL-3.0 licence. Read it, run it, change it. Anything built from it has to stay open too.",
+	},
+	{
 		title: "Check our claims, don't trust them",
 		body: "No account, no analytics, no server of ours: you can confirm each of those in the code instead of taking our word for it.",
+	},
+	{
+		title: "Private by design",
+		body: "Records live on your phone, in a database encrypted with a key on the device. Backups are encrypted before they leave, and only go where you point them.",
 	},
 	{
 		title: "No lock-in",
@@ -54,6 +66,14 @@ const screens = [
 ] as const;
 
 const faqs = [
+	{
+		q: "Is it really free?",
+		a: "Yes. There is no price, no ads, no paid tier and no selling of data, and that is the intention for as long as Amrutham exists.",
+	},
+	{
+		q: "Is it open source?",
+		a: "Yes. The code is public under the GPL-3.0 licence, so you can read how it handles your data. Anything built from it must stay open under the same terms.",
+	},
 	{
 		q: "Do I need an account?",
 		a: "No. There is no sign-up and no login. Your records live on your phone.",
@@ -161,10 +181,11 @@ export default function Home() {
 
 				<section className="section" id="open-source">
 					<div className="container">
-						<h2>Built in the open, so you can check it.</h2>
+						<h2>Free, open source, and built on trust.</h2>
 						<p className="section-lede">
-							A health app asks for a lot of trust. The source is public, so what we say
-							about your privacy is something you can read for yourself.
+							A health app asks for a lot of trust. So Amrutham costs nothing, the source
+							is public under the {site.licenseName} licence, and your family&apos;s health
+							stays on your phone unless you choose otherwise.
 						</p>
 						<ul className="feature-grid">
 							{openPrinciples.map((p) => (
@@ -235,6 +256,9 @@ export default function Home() {
 					<span className="footer-links">
 						<a href={site.repoUrl} rel="noopener">
 							Source
+						</a>
+						<a href={site.licenseUrl} rel="noopener">
+							{site.licenseName}
 						</a>
 						<Link href="/privacy">Privacy</Link>
 					</span>

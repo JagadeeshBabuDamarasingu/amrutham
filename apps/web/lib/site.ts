@@ -14,5 +14,9 @@ export const site = {
 	repoUrl:
 		process.env.NEXT_PUBLIC_REPO_URL ??
 		"https://github.com/JagadeeshBabuDamarasingu/amrutham",
+	licenseName: "GPL-3.0",
+	licenseUrl:
+		(process.env.NEXT_PUBLIC_REPO_URL ??
+			"https://github.com/JagadeeshBabuDamarasingu/amrutham") + "/blob/root/LICENSE",
 	contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || null,
 } as const;
