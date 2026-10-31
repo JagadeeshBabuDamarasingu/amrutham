@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Used when the card is placed large (Android 12 and newer picks it by size).
+     Same ids as the compact layout, so one piece of code fills both. Only view
+     types a widget may inflate. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/amrutham_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/amrutham_widget_bg"
+    android:orientation="vertical"
+    android:padding="18dp">
+
+    <TextView
+        android:id="@+id/amrutham_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/amrutham_widget_label"
+        android:textAllCaps="true"
+        android:textColor="#9FC0B2"
+        android:textSize="12sp"
+        android:textStyle="bold"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:gravity="top"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/amrutham_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="#FFFFFF"
+            android:textSize="28sp"
+            android:textStyle="bold"/>
+
+        <LinearLayout
+            android:id="@+id/amrutham_blood_tile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/amrutham_widget_tile"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingBottom="6dp"
+            android:paddingEnd="14dp"
+            android:paddingStart="14dp"
+            android:paddingTop="6dp">
+
+            <TextView
+                android:id="@+id/amrutham_blood_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BLOOD"
+                android:textColor="#4A3300"
+                android:textSize="10sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/amrutham_blood"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#2A1D00"
+                android:textSize="32sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/amrutham_blood_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="#DCEBE4"
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/amrutham_allergies"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:ellipsize="end"
+        android:maxLines="3"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/amrutham_medicines"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="3"
+        android:textColor="#DCEBE4"
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/amrutham_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#DCEBE4"
+        android:textSize="16sp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:id="@+id/amrutham_dial"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/amrutham_widget_button"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:minHeight="60dp"
+        android:padding="12dp"
+        android:textColor="#2A1D00"
+        android:textSize="20sp"
+        android:textStyle="bold"/>
+</LinearLayout>

@@ -27,13 +27,38 @@
         android:textSize="20sp"
         android:textStyle="bold"/>
 
-    <TextView
-        android:id="@+id/amrutham_blood"
+    <LinearLayout
+        android:id="@+id/amrutham_blood_tile"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#F0A91E"
-        android:textSize="26sp"
-        android:textStyle="bold"/>
+        android:gravity="bottom"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/amrutham_blood"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#F0A91E"
+            android:textSize="26sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/amrutham_blood_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="4dp"
+            android:paddingStart="6dp"
+            android:text="blood group"
+            android:textColor="#9FC0B2"
+            android:textSize="10sp"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/amrutham_blood_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#DCEBE4"
+        android:textSize="12sp"/>
 
     <TextView
         android:id="@+id/amrutham_allergies"

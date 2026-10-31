@@ -7,10 +7,15 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
+import android.util.SizeF;
 import android.view.View;
 import android.widget.RemoteViews;
 
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /** One emergency card. Each card shows one person, chosen when it was added. */
 public class EmergencyWidgetProvider extends AppWidgetProvider {
@@ -41,11 +46,22 @@ public class EmergencyWidgetProvider extends AppWidgetProvider {
         for (int id : ids) manager.updateAppWidget(id, render(context, id));
     }
 
+    /** Android 12+ chooses the large layout when the card is placed large. */
     static RemoteViews render(Context context, int widgetId) {
-        RemoteViews v = new RemoteViews(context.getPackageName(), R.layout.amrutham_emergency_widget);
+        RemoteViews compact = build(context, widgetId, R.layout.amrutham_emergency_widget);
+        if (Build.VERSION.SDK_INT < 31) return compact;
+        Map<SizeF, RemoteViews> bySize = new HashMap<>();
+        bySize.put(new SizeF(110f, 110f), compact);
+        bySize.put(new SizeF(250f, 160f), build(context, widgetId, R.layout.amrutham_emergency_widget_large));
+        return new RemoteViews(bySize);
+    }
+
+    private static RemoteViews build(Context context, int widgetId, int layout) {
+        RemoteViews v = new RemoteViews(context.getPackageName(), layout);
         int[] fields = {
-            R.id.amrutham_name, R.id.amrutham_blood, R.id.amrutham_allergies,
-            R.id.amrutham_medicines, R.id.amrutham_message, R.id.amrutham_dial,
+            R.id.amrutham_name, R.id.amrutham_blood_tile, R.id.amrutham_blood_note,
+            R.id.amrutham_allergies, R.id.amrutham_medicines, R.id.amrutham_message,
+            R.id.amrutham_dial,
         };
         for (int f : fields) v.setViewVisibility(f, View.GONE);
 
@@ -64,7 +80,12 @@ public class EmergencyWidgetProvider extends AppWidgetProvider {
             JSONObject s = new JSONObject(json);
             v.setViewVisibility(R.id.amrutham_name, View.VISIBLE);
             v.setTextViewText(R.id.amrutham_name, s.optString("name", ""));
-            show(v, R.id.amrutham_blood, s, "blood");
+            if (!s.isNull("blood")) {
+                v.setViewVisibility(R.id.amrutham_blood_tile, View.VISIBLE);
+                v.setTextViewText(R.id.amrutham_blood, s.optString("blood", ""));
+                v.setContentDescription(R.id.amrutham_blood_tile, "Blood group " + s.optString("blood", ""));
+            }
+            show(v, R.id.amrutham_blood_note, s, "bloodNote");
             show(v, R.id.amrutham_allergies, s, "allergies");
             show(v, R.id.amrutham_medicines, s, "medicines");
             JSONObject dial = s.optJSONObject("dial");

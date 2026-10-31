@@ -28,9 +28,11 @@ class EmergencySnapshot {
     final out = <String, Object?>{'v': version, 'name': person.displayName};
 
     if (options.bloodGroup) {
-      out['blood'] = person.bloodGroup == null
-          ? 'Blood group not added'
-          : shortBlood(person.bloodGroup);
+      if (person.bloodGroup == null) {
+        out['bloodNote'] = 'Blood group not added';
+      } else {
+        out['blood'] = shortBlood(person.bloodGroup);
+      }
     }
     if (options.allergies) {
       final names = [for (final a in allergies) a.substance];
