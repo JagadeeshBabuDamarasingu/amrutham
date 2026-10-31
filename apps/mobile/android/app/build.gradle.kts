@@ -40,6 +40,8 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Shown under the icon; the debug build overrides it.
+        manifestPlaceholders["appLabel"] = "Amrutham"
     }
 
     signingConfigs {
@@ -54,6 +56,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // A debug build installs beside the real app instead of over it.
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["appLabel"] = "Amrutham Debug"
+        }
         release {
             signingConfig = if (keyProps.isEmpty) {
                 logger.warn("android/key.properties not found: signing release with the DEBUG key")
