@@ -1,8 +1,8 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../backup/backup_flow.dart';
+import '../backup/backup_folder.dart';
 import '../backup/drive_backup.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
@@ -62,9 +62,9 @@ class StorageChoiceScreen extends ConsumerWidget {
             'A folder on this phone',
             folder == null
                 ? 'Works with any app that syncs a folder'
-                : '$folder\nTap to change. Hold to stop using it.',
+                : '${backupFolderLabel(folder)}\nTap to change. Hold to stop using it.',
             () async {
-              final path = await FilePicker.getDirectoryPath();
+              final path = await pickBackupFolder();
               if (path == null) return;
               await ref.read(onboardingStoreProvider).setBackupFolder(path);
               ref.invalidate(backupFolderProvider);

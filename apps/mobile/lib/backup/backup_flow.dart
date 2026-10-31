@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -8,8 +9,13 @@ import 'package:share_plus/share_plus.dart';
 import '../crypto/recovery_code.dart';
 import '../providers/app_providers.dart';
 import '../ui/recovery_code_dialog.dart';
+import 'backup_folder.dart';
 import 'vault_backup.dart';
 import 'drive_backup.dart';
+
+const _folderFailed = SnackBar(
+  content: Text("Couldn't write to that folder. Choose it again in Where backups go."),
+);
 
 /// Asks for the recovery code, then writes an encrypted backup to Google
 /// Drive and/or the chosen folder, or opens the share sheet if neither is set.
@@ -54,13 +60,12 @@ Future<void> runBackup(BuildContext context, WidgetRef ref) async {
   final folder = await store.backupFolder();
   if (folder != null) {
     try {
-      // One fixed name, overwritten each time, so a sync app sees one file.
-      await File('$folder/amrutham-backup.amrutham').writeAsBytes(bytes, flush: true);
+      await writeToBackupFolder(folder, backupFileName, bytes);
       saved.add('your folder');
     } on FileSystemException {
-      messenger.showSnackBar(
-        const SnackBar(content: Text("Couldn't write to that folder.")),
-      );
+      messenger.showSnackBar(_folderFailed);
+    } on PlatformException {
+      messenger.showSnackBar(_folderFailed);
     }
   }
 
