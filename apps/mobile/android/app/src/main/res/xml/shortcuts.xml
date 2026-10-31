@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App-icon shortcuts. The package is written out because a shortcut file cannot use
+     manifest placeholders; the debug build has its own copy with the .debug id. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="emergency"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_emergency"
+        android:shortcutShortLabel="@string/shortcut_emergency_short"
+        android:shortcutLongLabel="@string/shortcut_emergency_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="app.amrutham.MainActivity"
+            android:targetPackage="app.amrutham">
+            <extra android:name="amrutham_action" android:value="emergency"/>
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="log_reading"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_reading"
+        android:shortcutShortLabel="@string/shortcut_log_reading_short"
+        android:shortcutLongLabel="@string/shortcut_log_reading_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="app.amrutham.MainActivity"
+            android:targetPackage="app.amrutham">
+            <extra android:name="amrutham_action" android:value="log-reading"/>
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="next_dose"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_dose"
+        android:shortcutShortLabel="@string/shortcut_next_dose_short"
+        android:shortcutLongLabel="@string/shortcut_next_dose_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="app.amrutham.MainActivity"
+            android:targetPackage="app.amrutham">
+            <extra android:name="amrutham_action" android:value="next-dose"/>
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="add_record"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_record"
+        android:shortcutShortLabel="@string/shortcut_add_record_short"
+        android:shortcutLongLabel="@string/shortcut_add_record_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="app.amrutham.MainActivity"
+            android:targetPackage="app.amrutham">
+            <extra android:name="amrutham_action" android:value="add-record"/>
+        </intent>
+    </shortcut>
+</shortcuts>

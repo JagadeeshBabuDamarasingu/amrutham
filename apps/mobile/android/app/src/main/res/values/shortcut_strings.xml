@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcut_emergency_short">Emergency</string>
+    <string name="shortcut_emergency_long">Emergency card</string>
+    <string name="shortcut_log_reading_short">Reading</string>
+    <string name="shortcut_log_reading_long">Log a reading</string>
+    <string name="shortcut_next_dose_short">Next dose</string>
+    <string name="shortcut_next_dose_long">Next dose</string>
+    <string name="shortcut_add_record_short">Record</string>
+    <string name="shortcut_add_record_long">Add a record</string>
+</resources>

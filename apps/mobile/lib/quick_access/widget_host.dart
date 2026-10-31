@@ -4,11 +4,13 @@ import 'package:amrutham_widgets/amrutham_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../model/ids.dart';
 import '../model/medication.dart';
 import '../providers/app_providers.dart';
+import '../ui/add_record_screen.dart';
 import '../ui/emergency_card_screen.dart';
+import '../ui/log_measurement_screen.dart';
 import 'emergency_snapshot.dart';
+import 'launch_action.dart';
 
 /// Keeps the home screen cards in step with the app, and opens the emergency
 /// card when one is tapped. It copies to the widgets only while the person has
@@ -42,12 +44,28 @@ class _State extends ConsumerState<WidgetSyncHost> {
     super.dispose();
   }
 
-  void _open(Map<String, String> action) {
-    final person = action['personId'];
-    if (!mounted || action['action'] != 'emergency' || person == null) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => EmergencyCardScreen(personId: PersonId(person))),
-    );
+  Future<void> _open(Map<String, String> action) async {
+    if (!mounted) return;
+    final living = [
+      for (final p in await ref.read(profilesProvider.future))
+        if (!p.isDeceased) p.id,
+    ];
+    if (!mounted) return;
+    final target = resolveLaunch(action, living: living, selected: ref.read(selectedPersonIdProvider));
+    if (target == null) return;
+    final navigator = Navigator.of(context);
+    final id = target.personId;
+    switch (target.kind) {
+      case LaunchKind.nextDose:
+        // Today is the first tab: close whatever is open on top of it.
+        navigator.popUntil((route) => route.isFirst);
+      case LaunchKind.emergencyCard:
+        navigator.push(MaterialPageRoute(builder: (_) => EmergencyCardScreen(personId: id!)));
+      case LaunchKind.logReading:
+        navigator.push(MaterialPageRoute(builder: (_) => LogMeasurementScreen(personId: id!)));
+      case LaunchKind.addRecord:
+        navigator.push(MaterialPageRoute(builder: (_) => AddRecordScreen(personId: id)));
+    }
   }
 
   /// Several changes arrive together (a restore, a profile save): copy once.
