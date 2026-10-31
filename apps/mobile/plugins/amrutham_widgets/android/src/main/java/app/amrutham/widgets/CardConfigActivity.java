@@ -59,9 +59,23 @@ public class CardConfigActivity extends Activity {
                 .show();
     }
 
+    /** Draws the widget with the provider it was placed from. */
+    private android.widget.RemoteViews renderFor(int widgetId) {
+        AppWidgetManager manager = AppWidgetManager.getInstance(this);
+        android.appwidget.AppWidgetProviderInfo info = manager.getAppWidgetInfo(widgetId);
+        try {
+            CardProvider p = info != null && info.provider != null
+                    ? (CardProvider) Class.forName(info.provider.getClassName()).getDeclaredConstructor().newInstance()
+                    : new EmergencyWidgetProvider();
+            return p.render(this, manager, widgetId);
+        } catch (Exception e) {
+            return new EmergencyWidgetProvider().render(this, manager, widgetId);
+        }
+    }
+
     private void choose(int widgetId, String personId) {
         WidgetStore.setPerson(this, widgetId, personId);
-        AppWidgetManager.getInstance(this).updateAppWidget(widgetId, EmergencyWidgetProvider.render(this, widgetId));
+        AppWidgetManager.getInstance(this).updateAppWidget(widgetId, renderFor(widgetId));
         Intent result = new Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
         setResult(RESULT_OK, result);
         finish();

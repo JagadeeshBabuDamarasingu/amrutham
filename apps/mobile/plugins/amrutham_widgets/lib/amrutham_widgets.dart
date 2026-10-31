@@ -34,11 +34,12 @@ class AmruthamWidgets {
     }
   }
 
-  /// Asks the launcher to add a card for [personId]. False when the launcher
+  /// Asks the launcher to add a widget for [personId]: `card` (the full emergency
+  /// card), `dial` (one big dial button) or `blood` (blood group and allergies). False when the launcher
   /// can't be asked; the person then adds it from the widget list.
-  static Future<bool> pinCard(String personId) async {
+  static Future<bool> pinCard(String personId, {String kind = 'card'}) async {
     try {
-      return await _channel.invokeMethod<bool>('pinCard', {'personId': personId}) ?? false;
+      return await _channel.invokeMethod<bool>('pinCard', {'personId': personId, 'kind': kind}) ?? false;
     } on MissingPluginException {
       return false;
     }

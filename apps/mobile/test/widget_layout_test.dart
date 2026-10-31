@@ -16,7 +16,12 @@ void main() {
       'ProgressBar', 'TextClock', 'TextView', 'CheckBox', 'RadioButton',
       'RadioGroup', 'Switch',
     };
-    for (final name in ['amrutham_emergency_widget', 'amrutham_emergency_widget_large']) {
+    for (final name in [
+      'amrutham_emergency_widget',
+      'amrutham_emergency_widget_large',
+      'amrutham_dial_widget',
+      'amrutham_blood_widget',
+    ]) {
       final xml = File(
         'plugins/amrutham_widgets/android/src/main/res/layout/$name.xml',
       ).readAsStringSync();

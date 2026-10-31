@@ -1,4 +1,8 @@
 <resources>
     <string name="amrutham_widget_label">Emergency card</string>
     <string name="amrutham_widget_description">Name, blood group, allergies and a button to dial an emergency contact. You choose what it shows.</string>
+    <string name="amrutham_dial_label">Dial a contact</string>
+    <string name="amrutham_dial_description">One big button that opens the dialer for an emergency contact.</string>
+    <string name="amrutham_blood_label">Blood group and allergies</string>
+    <string name="amrutham_blood_description">A person\'s blood group and allergies, for a quick glance.</string>
 </resources>

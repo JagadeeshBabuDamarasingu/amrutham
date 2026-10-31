@@ -11,6 +11,28 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/amrutham_emergency_widget_info"/>
         </receiver>
+        <receiver
+            android:name="app.amrutham.widgets.DialWidgetProvider"
+            android:exported="true"
+            android:label="@string/amrutham_dial_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/amrutham_dial_widget_info"/>
+        </receiver>
+        <receiver
+            android:name="app.amrutham.widgets.BloodWidgetProvider"
+            android:exported="true"
+            android:label="@string/amrutham_blood_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/amrutham_blood_widget_info"/>
+        </receiver>
         <activity
             android:name="app.amrutham.widgets.CardConfigActivity"
             android:exported="true"

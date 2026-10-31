@@ -84,11 +84,11 @@ public class WidgetsPlugin
     /** The action a widget tap carried, taken off the intent so it is not replayed. */
     private static Map<String, String> actionOf(Intent intent) {
         if (intent == null) return null;
-        String action = intent.getStringExtra(EmergencyWidgetProvider.EXTRA_ACTION);
-        String person = intent.getStringExtra(EmergencyWidgetProvider.EXTRA_PERSON);
+        String action = intent.getStringExtra(CardProvider.EXTRA_ACTION);
+        String person = intent.getStringExtra(CardProvider.EXTRA_PERSON);
         if (action == null) return null;
-        intent.removeExtra(EmergencyWidgetProvider.EXTRA_ACTION);
-        intent.removeExtra(EmergencyWidgetProvider.EXTRA_PERSON);
+        intent.removeExtra(CardProvider.EXTRA_ACTION);
+        intent.removeExtra(CardProvider.EXTRA_PERSON);
         Map<String, String> m = new HashMap<>();
         m.put("action", action);
         if (person != null) m.put("personId", person);
@@ -109,19 +109,20 @@ public class WidgetsPlugin
                     }
                     WidgetStore.replace(context, enabled, array.toString(),
                             snapshots == null ? new HashMap<String, String>() : snapshots);
-                    EmergencyWidgetProvider.updateAll(context);
+                    CardProvider.updateAll(context);
                     result.success(null);
                     break;
                 }
                 case "cardCounts": {
                     AppWidgetManager manager = AppWidgetManager.getInstance(context);
-                    int[] ids = manager.getAppWidgetIds(new ComponentName(context, EmergencyWidgetProvider.class));
                     Map<String, Integer> counts = new HashMap<>();
-                    for (int id : ids) {
-                        String person = WidgetStore.personFor(context, id);
-                        if (person != null) {
-                            Integer n = counts.get(person);
-                            counts.put(person, n == null ? 1 : n + 1);
+                    for (Class<?> c : CardProvider.ALL) {
+                        for (int id : manager.getAppWidgetIds(new ComponentName(context, c))) {
+                            String person = WidgetStore.personFor(context, id);
+                            if (person != null) {
+                                Integer n = counts.get(person);
+                                counts.put(person, n == null ? 1 : n + 1);
+                            }
                         }
                     }
                     result.success(counts);
@@ -134,9 +135,12 @@ public class WidgetsPlugin
                         result.success(false);
                         break;
                     }
+                    String kind = call.argument("kind");
+                    Class<?> target = "dial".equals(kind) ? DialWidgetProvider.class
+                            : "blood".equals(kind) ? BloodWidgetProvider.class
+                            : EmergencyWidgetProvider.class;
                     WidgetStore.setPending(context, personId);
-                    result.success(manager.requestPinAppWidget(
-                            new ComponentName(context, EmergencyWidgetProvider.class), null, null));
+                    result.success(manager.requestPinAppWidget(new ComponentName(context, target), null, null));
                     break;
                 }
                 case "initialAction": {

@@ -194,27 +194,36 @@ class CardOptionsScreen extends ConsumerWidget {
                 ),
               ),
           ],
-          const SizedBox(height: 24),
-          OnboardButton(
-            label: 'Add to home screen',
-            onPressed: () async {
-              final asked = await AmruthamWidgets.pinCard(person.id.value);
-              if (!context.mounted || asked) return;
-              await showDialog<void>(
-                context: context,
-                builder: (dialog) => AlertDialog(
-                  title: const Text('Add it from your home screen'),
-                  content: const Text(
-                    'Your phone can\'t be asked to add it from here. Touch and '
-                    'hold an empty spot on your home screen, choose Widgets, '
-                    'then Amrutham, and pick "Emergency card". You\'ll choose '
-                    'who it is for.',
-                  ),
-                  actions: [TextButton(onPressed: () => Navigator.pop(dialog), child: const Text('OK'))],
-                ),
-              );
-            },
-          ),
+          const SectionLabel('Add to home screen'),
+          for (final (kind, title, sub) in const [
+            ('card', 'Emergency card', 'Name, blood group, allergies and a dial button. The full card.'),
+            ('dial', 'Dial button', 'One big button that opens the dialer. Good for a phone used by an older person.'),
+            ('blood', 'Blood group and allergies', 'Just those two, for a quick glance.'),
+          ])
+            Card(
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: Text(sub),
+                trailing: const Icon(Icons.add_circle_outline),
+                onTap: () async {
+                  final asked = await AmruthamWidgets.pinCard(person.id.value, kind: kind);
+                  if (!context.mounted || asked) return;
+                  await showDialog<void>(
+                    context: context,
+                    builder: (dialog) => AlertDialog(
+                      title: const Text('Add it from your home screen'),
+                      content: Text(
+                        'Your phone can\'t be asked to add it from here. Touch and '
+                        'hold an empty spot on your home screen, choose Widgets, '
+                        'then Amrutham, and pick "$title". You\'ll choose who it is for.',
+                      ),
+                      actions: [TextButton(onPressed: () => Navigator.pop(dialog), child: const Text('OK'))],
+                    ),
+                  );
+                },
+              ),
+            ),
         ],
       ),
     );
