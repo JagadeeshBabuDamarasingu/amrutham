@@ -41,7 +41,8 @@ class EmergencySnapshot {
           : 'Allergic to ${names.join(', ')}';
     }
     if (options.medicines) {
-      final names = [for (final m in medicines) m.medicationName];
+      // The same medicine can have more than one course: say it once.
+      final names = <String>{for (final m in medicines) m.medicationName}.toList();
       out['medicines'] = names.isEmpty
           ? 'No medicines added to Amrutham'
           : names.length <= 3

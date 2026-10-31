@@ -35,9 +35,13 @@ public class EmergencyWidgetProvider extends CardProvider {
         Bundle o = manager.getAppWidgetOptions(widgetId);
         int w = o == null ? 0 : o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
         int h = o == null ? 0 : o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0);
-        if (w >= 300 && h < 150) return R.layout.amrutham_emergency_widget_wide;
-        if (w >= 240 && h >= 150) return R.layout.amrutham_emergency_widget_large;
-        return R.layout.amrutham_emergency_widget;
+        // Rows differ a lot between launchers (about 120 dp tall on some), so the
+        // layout follows the width: wide is the two-column card at any height.
+        int chosen = w >= 300 ? R.layout.amrutham_emergency_widget_wide
+                : w >= 200 && h >= 150 ? R.layout.amrutham_emergency_widget_large
+                : R.layout.amrutham_emergency_widget;
+        android.util.Log.d("AmruthamWidgets", "card " + widgetId + " is " + w + "x" + h + " dp");
+        return chosen;
     }
 
     @Override

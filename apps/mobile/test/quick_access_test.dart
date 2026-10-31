@@ -100,6 +100,10 @@ void main() {
       );
       expect(five['medicines'], 'Takes A, B, C +2 more');
       expect(
+        _build(medicines: [_med('A'), _med('A')], options: const CardOptions(medicines: true))['medicines'],
+        'Takes A',
+      );
+      expect(
         _build(options: const CardOptions(medicines: true))['medicines'],
         'No medicines added to Amrutham',
       );
