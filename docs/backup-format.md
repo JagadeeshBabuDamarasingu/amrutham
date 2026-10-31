@@ -2,7 +2,7 @@
 
 Your backup is yours, so the format is public. Anyone can write a tool that reads one, as long as they hold the recovery code. This page is the specification; the reference implementation is [`apps/mobile/lib/backup/vault_backup.dart`](../apps/mobile/lib/backup/vault_backup.dart), and the JSON layout is also given as a [JSON Schema](backup-schema.json).
 
-Format version: **1**. Licence: GPL-3.0, like the rest of the repository.
+Schema version: **1.0.0** (see [section 6](#6-versioning)). Licence: GPL-3.0, like the rest of the repository.
 
 ## 1. Envelope
 
@@ -48,7 +48,8 @@ The top level is an object. Dates are ISO 8601 strings in UTC (for example `2026
 
 | Key | Content |
 | --- | --- |
-| `version` | `1`. A reader must refuse a higher number. |
+| `schemaVersion` | Semantic version of this document, for example `"1.0.0"`. See section 6. |
+| `version` | The major number of `schemaVersion` as an integer (`1`). Kept so older app builds, which only know this key, still open the file. Files made before `schemaVersion` existed have only this key; read that as `<version>.0.0`. |
 | `createdAt` | When the backup was made. |
 | `people` | Family members: name parts, relationship, date of birth, sex, blood group, deceased flag and details, emergency contacts. |
 | `familyHistory` | Conditions in relatives, per person. |
@@ -76,10 +77,34 @@ Unknown keys must be ignored, so a later version can add fields.
 
 Any language with Argon2 and AES-GCM can do this; no Amrutham code is needed.
 
-## 6. Stability promise
+## 6. Versioning
 
-Version 1 will keep opening. A change that older readers couldn't understand raises `version`; Amrutham will keep reading older versions.
+`schemaVersion` is a [semantic version](https://semver.org) of the JSON document. The envelope (section 1) is versioned separately, by its magic.
+
+| Change | Bump | A reader of the same major... |
+| --- | --- | --- |
+| A new optional field or table | **minor** (1.0.0 to 1.1.0) | still opens it and ignores what it doesn't know |
+| Wording or clarification, data unchanged | **patch** | opens it as before |
+| Anything an older reader couldn't understand: a field removed, renamed or retyped, new meaning for a value | **major** (1.x to 2.0.0) | must refuse it |
+
+Rules for readers:
+
+1. Parse `schemaVersion`. If it is missing, use `version` as the major and read it as `<version>.0.0`.
+2. Pick the reader for that **major**. If your app has none, stop **before changing anything** and say whether the backup is newer (update the app) or too old.
+3. A reader for major N reads every N.x.y. Missing optional keys mean "none".
+
+Rules for Amrutham:
+
+- Every major ever written keeps its own reader in the app (`_readers` in `vault_backup.dart`) and is never deleted, so a backup from any past release opens in the newest app.
+- A major bump ships with a reader for the old major, the new one, and a test that opens a frozen sample of the old one.
+- Changing the document means bumping `schemaVersion` and this page together.
+
+History:
+
+| Schema | Changes |
+| --- | --- |
+| 1.0.0 | Everything described above, including the given name and surname, care team, expenses with receipts and dose logs (all optional when reading, so the earliest files, which lack them, are still 1.x). |
 
 ## 7. Known limits
 
-The whole vault is one JSON document held in memory, with files in base64, which is about a third larger than the files themselves. That suits a family's records; a vault with hundreds of large scans would need a streamed format, which would be a new `version`.
+The whole vault is one JSON document held in memory, with files in base64, which is about a third larger than the files themselves. That suits a family's records; a vault with hundreds of large scans would need a streamed format, which would be a new major version.

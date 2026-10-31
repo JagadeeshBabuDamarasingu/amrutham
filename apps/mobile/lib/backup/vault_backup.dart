@@ -29,7 +29,19 @@ class BackupException implements Exception {
 // large scans needs a streamed/zip format.
 class VaultBackup {
   static const _magic = 'AMRBK1';
-  static const _version = 1;
+
+  /// Semantic version of the JSON document inside the envelope (the envelope
+  /// itself is versioned by its magic). See docs/backup-format.md §5.
+  ///
+  /// - MAJOR: a change an older reader can't understand. Needs a new reader
+  ///   in [_readers]; the old ones stay so old backups keep opening.
+  /// - MINOR: a new optional field or table. Readers of the same major ignore
+  ///   what they don't know, so they still open it.
+  /// - PATCH: wording or clarification only; the data is unchanged.
+  static const schemaVersion = '1.0.0';
+
+  /// One reader per MAJOR version ever written. Never delete one.
+  static const _readers = <int, _Reader>{1: _restoreV1};
 
   // ---- snapshot / restore (plain JSON, no crypto) ----
 
@@ -63,7 +75,10 @@ class VaultBackup {
       }
     }
     return {
-      'version': _version,
+      // `version` is the major, kept so builds from before `schemaVersion`
+      // existed still open this file.
+      'version': 1,
+      'schemaVersion': schemaVersion,
       'createdAt': d(DateTime.now()),
       'people': [
         for (final x in realm.all<PersonRow>())
@@ -158,16 +173,48 @@ class VaultBackup {
     };
   }
 
-  /// Replaces everything on this phone with [data]. Returns the person ids so
-  /// the caller can re-arm their reminders.
+  /// Reads `schemaVersion` ("1.2.3"). A file from before it existed only has
+  /// the integer `version`, which was the major.
+  static ({int major, int minor, int patch}) parseSchemaVersion(Map<String, dynamic> data) {
+    final text = data['schemaVersion'];
+    if (text is String) {
+      final m = RegExp(r'^(\d+)\.(\d+)\.(\d+)$').firstMatch(text);
+      if (m != null) {
+        return (major: int.parse(m[1]!), minor: int.parse(m[2]!), patch: int.parse(m[3]!));
+      }
+    } else if (text == null && data['version'] is int) {
+      return (major: data['version'] as int, minor: 0, patch: 0);
+    }
+    throw BackupException("That file isn't an Amrutham backup.");
+  }
+
+  /// Replaces everything on this phone with [data], using the reader for the
+  /// backup's own major version. Returns the person ids so the caller can
+  /// re-arm their reminders.
   static Future<List<String>> restore(
     Realm realm,
     Directory vault,
     Map<String, dynamic> data,
   ) async {
-    if (data['version'] != _version) {
-      throw BackupException('This backup was made by a newer version of Amrutham.');
+    final v = parseSchemaVersion(data);
+    final read = _readers[v.major];
+    if (read == null) {
+      throw BackupException(
+        v.major > int.parse(schemaVersion.split('.').first)
+            ? 'This backup was made by a newer version of Amrutham. Update the app to open it.'
+            : 'This backup is in a format that is no longer supported.',
+      );
     }
+    return await read(realm, vault, data);
+  }
+
+  /// Reader for major version 1 (all of 1.x). Fields it doesn't know are
+  /// ignored; fields added in a minor version are optional.
+  static Future<List<String>> _restoreV1(
+    Realm realm,
+    Directory vault,
+    Map<String, dynamic> data,
+  ) async {
     DateTime t(Object? v) => DateTime.parse(v as String).toLocal();
     DateTime? to(Object? v) => v == null ? null : t(v);
     List<Map<String, dynamic>> list(String k) =>
@@ -381,6 +428,8 @@ class VaultBackup {
         .deriveKeyFromPassword(password: code, nonce: salt);
   }
 }
+
+typedef _Reader = Future<List<String>> Function(Realm, Directory, Map<String, dynamic>);
 
 /// A key made from the recovery code, plus the salt it was made under.
 class AutoBackupKey {

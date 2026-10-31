@@ -1,16 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://amrutham.app/backup-schema.json",
-  "title": "Amrutham backup, format version 1 (the JSON inside the encrypted envelope)",
+  "title": "Amrutham backup, schema 1.x (the JSON inside the encrypted envelope)",
   "type": "object",
   "required": [
-    "version",
-    "createdAt",
     "people"
   ],
   "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of this document"
+    },
     "version": {
-      "const": 1
+      "type": "integer",
+      "minimum": 1,
+      "description": "Major number of schemaVersion; the only version key in files made before schemaVersion existed"
     },
     "createdAt": {
       "type": "string",
@@ -655,5 +660,17 @@
         }
       }
     }
-  }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "schemaVersion"
+      ]
+    },
+    {
+      "required": [
+        "version"
+      ]
+    }
+  ]
 }
