@@ -79,21 +79,26 @@ class TodayScreen extends ConsumerWidget {
                         style: const TextStyle(color: onboardMuted, fontSize: 14),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        selected == null
-                            ? _greeting(context, now)
-                            : '${_greeting(context, now)},\n${selected.firstName}',
-                        style: const TextStyle(
-                          fontFamily: headingFont,
-                          fontSize: 34,
-                          height: 1.05,
-                          fontWeight: FontWeight.w700,
-                          // The variable font needs its axes set explicitly;
-                          // opsz follows the size, as the design's CSS does.
-                          fontVariations: [FontVariation('wght', 700), FontVariation('opsz', 34)],
-                          letterSpacing: -0.68,
+                      // The greeting stays on one line (scaled down a little if the
+                      // phone is narrow or the text large) and the name takes the
+                      // line below, instead of "Good / afternoon," wrapping.
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          selected == null ? _greeting(context, now) : '${_greeting(context, now)},',
+                          maxLines: 1,
+                          softWrap: false,
+                          style: _greetingStyle,
                         ),
                       ),
+                      if (selected != null)
+                        Text(
+                          selected.firstName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _greetingStyle,
+                        ),
                     ],
                   ),
                 ),
@@ -239,6 +244,17 @@ class TodayScreen extends ConsumerWidget {
       ),
     );
   }
+
+  static const _greetingStyle = TextStyle(
+    fontFamily: headingFont,
+    fontSize: 34,
+    height: 1.05,
+    fontWeight: FontWeight.w700,
+    // The variable font needs its axes set explicitly; opsz follows the size,
+    // as the design's CSS does.
+    fontVariations: [FontVariation('wght', 700), FontVariation('opsz', 34)],
+    letterSpacing: -0.68,
+  );
 
   static String _greeting(BuildContext context, DateTime now) => tr(
     context,

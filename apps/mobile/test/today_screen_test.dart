@@ -40,6 +40,21 @@ Future<void> _pumpToday(WidgetTester tester, List<_Member> members) async {
 }
 
 void main() {
+  testWidgets('the greeting stays on one line and the name is on the next', (tester) async {
+    tester.view.physicalSize = const Size(320 * 3, 800 * 3); // a narrow phone
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await _pumpToday(tester, [('Anita', RelationshipType.self, false)]);
+    final greeting = find.textContaining(RegExp(r'^Good (morning|afternoon|evening),$'));
+    expect(greeting, findsOneWidget);
+    final name = find.text('Anita');
+    expect(name, findsOneWidget);
+    // One line: no taller than a single 34 px line.
+    expect(tester.getSize(greeting).height, lessThan(34 * 1.05 * 1.3));
+    // And the name sits below it, not beside it.
+    expect(tester.getTopLeft(name).dy, greaterThan(tester.getTopLeft(greeting).dy));
+  });
+
   testWidgets('greets the person marked as self', (tester) async {
     await _pumpToday(tester, [
       ('Kiran', RelationshipType.parent, false),
