@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../backup/backup_flow.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
+import '../lock/lock_controller.dart';
+import '../lock/lock_settings.dart';
+import 'app_lock_screen.dart';
 import 'auto_backup_screen.dart';
 import 'language_screen.dart';
 import 'problem_report.dart';
@@ -57,6 +60,22 @@ class SettingsScreen extends ConsumerWidget {
                 _Bullet('Database encrypted with a key on this device'),
                 _Bullet('Plain files you can read without the app'),
               ],
+            ),
+          ),
+          const SectionLabel('App lock'),
+          Card(
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              title: const Text('Lock Amrutham', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: Text(
+                (ref.watch(lockSettingsProvider).valueOrNull ?? const LockSettings()).enabled
+                    ? "On. Opens with your phone's lock."
+                    : "Off. Keep other people out with your phone's lock.",
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AppLockScreen()),
+              ),
             ),
           ),
           const SectionLabel('Recovery'),

@@ -16,9 +16,13 @@ import 'app_style.dart';
 /// taking, who to call. Built from what's already recorded; entries that
 /// aren't confirmed say so ("as reported") rather than looking verified.
 class EmergencyCardScreen extends ConsumerWidget {
-  const EmergencyCardScreen({super.key, required this.personId});
+  const EmergencyCardScreen({super.key, required this.personId, this.locked = false});
 
   final PersonId personId;
+
+  /// Shown over the app lock: only the card itself, with no Print, Share or
+  /// Add contact, which need the app to be unlocked.
+  final bool locked;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,7 +38,7 @@ class EmergencyCardScreen extends ConsumerWidget {
     if (person == null) return const Scaffold(body: SizedBox());
 
     return Scaffold(
-      appBar: AppBar(),
+      appBar: locked ? null : AppBar(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
@@ -126,15 +130,17 @@ class EmergencyCardScreen extends ConsumerWidget {
                         '${c.relationship == null ? '' : ' (${c.relationship})'}'
                         ' ${c.phone}',
                       ),
-                    TextButton(
-                      onPressed: () => _addContact(context, ref),
-                      child: const Text('+ Add contact'),
-                    ),
+                    if (!locked)
+                      TextButton(
+                        onPressed: () => _addContact(context, ref),
+                        child: const Text('+ Add contact'),
+                      ),
                   ]),
                 ],
               ),
             ),
           ),
+          if (!locked) ...[
           const SizedBox(height: 12),
           OnboardButton(
             label: 'Share copy',
@@ -159,10 +165,13 @@ class EmergencyCardScreen extends ConsumerWidget {
             ),
             child: const Text('Print or save as PDF'),
           ),
+          ],
           const SizedBox(height: 16),
-          const Text(
-            'Printed or shared, it works even if this phone is lost, locked '
-            'or dead. Entries marked "as reported" are not verified.',
+          Text(
+            locked
+                ? 'Printing and sharing need Amrutham to be unlocked. Entries marked "as reported" are not verified.'
+                : 'Printed or shared, it works even if this phone is lost, locked '
+                      'or dead. Entries marked "as reported" are not verified.',
             style: TextStyle(color: onboardMuted, height: 1.4),
           ),
         ],

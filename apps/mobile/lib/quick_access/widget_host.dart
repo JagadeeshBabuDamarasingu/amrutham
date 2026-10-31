@@ -9,6 +9,7 @@ import '../providers/app_providers.dart';
 import '../ui/add_record_screen.dart';
 import '../ui/emergency_card_screen.dart';
 import '../ui/log_measurement_screen.dart';
+import '../lock/lock_controller.dart';
 import 'emergency_snapshot.dart';
 import 'launch_action.dart';
 
@@ -53,8 +54,18 @@ class _State extends ConsumerState<WidgetSyncHost> {
     if (!mounted) return;
     final target = resolveLaunch(action, living: living, selected: ref.read(selectedPersonIdProvider));
     if (target == null) return;
-    final navigator = Navigator.of(context);
+    // The emergency card is open to anyone; everything else needs the lock opened.
+    final lock = ref.read(lockProvider.notifier);
+    await lock.whenReady;
+    if (!mounted) return;
     final id = target.personId;
+    if (target.kind == LaunchKind.emergencyCard && ref.read(lockProvider).locked) {
+      lock.showCard(id!);
+      return;
+    }
+    if (target.kind != LaunchKind.emergencyCard && !await lock.ensureUnlocked()) return;
+    if (!mounted) return;
+    final navigator = Navigator.of(context);
     switch (target.kind) {
       case LaunchKind.nextDose:
         // Today is the first tab: close whatever is open on top of it.

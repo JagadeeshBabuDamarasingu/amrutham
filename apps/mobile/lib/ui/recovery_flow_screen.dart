@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../crypto/recovery_code.dart';
 import '../providers/app_providers.dart';
+import '../lock/ask_lock.dart';
 import 'app_style.dart';
 
 /// Makes sure a recovery code exists before the first record is saved
@@ -18,6 +19,7 @@ Future<bool> ensureRecoverySetUp(BuildContext context, WidgetRef ref) async {
   final done = await Navigator.of(context).push<bool>(
     MaterialPageRoute(builder: (_) => const RecoveryFlowScreen()),
   );
+  if (done == true && context.mounted) await maybeAskForLock(context, ref);
   return done ?? false;
 }
 

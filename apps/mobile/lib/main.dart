@@ -8,6 +8,8 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'backup/auto_backup_scheduler.dart';
 import 'crash/crash_log.dart';
+import 'lock/app_navigator.dart';
+import 'lock/lock_gate.dart';
 import 'providers/app_providers.dart';
 import 'ui/app_shell.dart';
 import 'ui/app_style.dart';
@@ -62,6 +64,8 @@ class AmruthamApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
+      builder: (context, child) => LockGate(child: child ?? const SizedBox.shrink()),
       title: 'Amrutham',
       locale: Locale(ref.watch(languageProvider)),
       supportedLocales: const [Locale('en'), Locale('hi'), Locale('te')],

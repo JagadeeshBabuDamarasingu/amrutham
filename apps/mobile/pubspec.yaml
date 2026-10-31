@@ -82,6 +82,7 @@ dependencies:
     path: plugins/amrutham_folder
   amrutham_widgets:
     path: plugins/amrutham_widgets
+  local_auth: ^3.0.2
 
 dev_dependencies:
   flutter_test:
