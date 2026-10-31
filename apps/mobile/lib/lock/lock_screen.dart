@@ -69,9 +69,16 @@ class LockScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: _pine,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
+        // Scrollable, and as tall as the screen when there is room: the lock
+        // screen must never be cut off at large text on a small phone.
+        child: LayoutBuilder(
+          builder: (context, box) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: box.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
             children: [
               const SizedBox(height: 56),
               Container(
@@ -189,6 +196,10 @@ class LockScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
             ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),

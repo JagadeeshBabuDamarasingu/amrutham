@@ -289,7 +289,9 @@ class _HubCallout extends StatelessWidget {
               children: [
                 const CircleAvatar(radius: 9, backgroundColor: Color(0xFF2A1D00), child: Text('!', style: TextStyle(fontSize: 11, color: onboardAmber, fontWeight: FontWeight.w900))),
                 const SizedBox(width: 8),
-                Text(kicker, style: const TextStyle(fontSize: 11, letterSpacing: 1, fontWeight: FontWeight.w800, color: Color(0xFF2A1D00))),
+                Flexible(
+                  child: Text(kicker, style: const TextStyle(fontSize: 11, letterSpacing: 1, fontWeight: FontWeight.w800, color: Color(0xFF2A1D00))),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -318,7 +320,12 @@ class ReviewPill extends StatelessWidget {
         : guide.reviewOverdue
         ? ('Review overdue', const Color(0xFFFAEFD0))
         : ('Reviewed ${_monthYear(guide.reviewedOn!)}', const Color(0xFFD5E4DC));
-    return Row(
+    // A Wrap, not a Row: at large text on a narrow phone the pill and the due
+    // date must go on two lines instead of running off the edge.
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -326,7 +333,6 @@ class ReviewPill extends StatelessWidget {
           child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
         ),
         if (guide.nextReviewDue != null) ...[
-          const SizedBox(width: 8),
           Text(
             '${guide.reviewOverdue ? 'Was due' : 'Next due'} ${_monthYear(guide.nextReviewDue!)}',
             style: const TextStyle(fontSize: 12, color: onboardMuted),
