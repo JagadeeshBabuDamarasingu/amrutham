@@ -176,7 +176,7 @@ void main() {
     final db = await _pump(tester, (_) => const CareTeamScreen(personId: _amma));
 
     expect(find.text('Also sees Appa'), findsOneWidget);
-    await tester.tap(find.text('Apollo Hospitals'));
+    await tester.longPress(find.text('Apollo Hospitals'));
     await tester.pumpAndSettle();
     expect(find.text('Edit'), findsOneWidget);
     expect(find.text('Delete for everyone'), findsOneWidget);
@@ -193,7 +193,7 @@ void main() {
   testWidgets('an unshared doctor offers Delete, not Delete for everyone', (tester) async {
     await _pump(tester, (_) => const CareTeamScreen(personId: _appa));
 
-    await tester.tap(find.text('Dr. S. Rao'));
+    await tester.longPress(find.text('Dr. S. Rao'));
     await tester.pumpAndSettle();
     expect(find.text('Delete'), findsOneWidget);
     expect(find.text('Delete for everyone'), findsNothing);

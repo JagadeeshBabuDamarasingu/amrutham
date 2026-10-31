@@ -8,6 +8,7 @@ import '../model/person.dart';
 import '../providers/app_providers.dart';
 import 'add_care_provider_screen.dart';
 import 'app_style.dart';
+import 'care_provider_detail_screen.dart';
 import 'care_provider_picker_screen.dart';
 
 /// Doctors and places one person consults, with a call button for each.
@@ -207,18 +208,16 @@ class _CareTeamScreenState extends ConsumerState<CareTeamScreen> {
       for (final person in people)
         if (person.id != widget.personId && p.personIds.contains(person.id)) person.firstName,
     ];
-    final initials = p.name
-        .replaceFirst(RegExp(r'^Dr\.?\s*', caseSensitive: false), '')
-        .split(' ')
-        .where((w) => w.isNotEmpty)
-        .take(2)
-        .map((w) => w[0].toUpperCase())
-        .join();
+    final initials = careInitials(p.name);
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
         onLongPress: () => _more(p),
-        onTap: () => _more(p),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CareProviderDetailScreen(providerId: p.id, personId: widget.personId),
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
