@@ -1,32 +1,52 @@
 # Tasks
 
-Work still to do on Amrutham. Items that need the owner's decision or action are in [TODO.md](TODO.md).
+Engineering work on Amrutham. Things that need the owner's decision or action are in [TODO.md](TODO.md).
+Design decisions and the review findings behind them are in [concepts_brief.md](concepts_brief.md).
 
-## Designed in Doop, not built in the app
-- [ ] **Learn: "Our healing heritage"** hub plus five guides (Sushruta, what survives in modern surgery, Yoga, old names/new names, what research says). Designs are on Doop page "09" (frames 12a-12f). Build after the designs are approved:
-  - add a `LearnHub` and the five guides (marked Draft) to `lib/learn/learn_content.dart`
-  - add the hub to `learn_screen.dart` and the "Our healing heritage" chip on the library
-  - tests in `test/learn_test.dart`
-- [ ] Doop "Promotions" posters and README images: render final PNGs locally with Edge (`assets/announcements/src/shot.bat`) into `docs/images/` (`banner.png`, `screens.png`, `privacy.png`), then commit `README.md` with them.
+Last updated overnight, 2026-11-01. The phone was disconnected, so **nothing below marked "not run on a phone" has been seen working on a device.**
 
-## Features not built yet
-- [ ] **Edit screens** for profile, expenses, medical history, medicines and allergies (only the care team has "edit all fields" so far).
-- [ ] **"Linked to" picker on expenses** (link an expense to a care provider or record).
-- [ ] **Family devices**: pairing, Tailscale and live sync between phones.
-- [ ] **More languages**: Hindi and Telugu cover the main screens only; the rest of the app and other languages are open.
-- [ ] Hindi and Telugu strings of the new screens (Add sheet, care team, backups, automatic backups).
+## Built and tested (unit and widget tests; 204 pass)
 
-## Needs checking on a real phone
-- [ ] Automatic background backups (WorkManager). Drive in the background may fail and fall back to catching up when the app opens.
-- [ ] Backing up to a folder through the Android document tree.
-- [ ] `.debug` build running beside the release app, plus the new adaptive and white-background icons.
-- [ ] Release build signed with the upload key (needs `android/key.properties`).
+- Edit and delete for profiles, medicines and schedule phases, readings, history, expenses (and receipt), records, allergies and family history.
+- Public backup format with a semantic `schemaVersion`, one reader per major version, and a test that fails if the document's shape changes without a bump (`docs/backup-format.md`, `docs/backup-schema.json`).
+- Home screen widgets: Emergency card (5x2), Dial (5x1), Blood group and allergies (2x2), with per-person settings, backup exclusion for the widget copy, and the four app-icon shortcuts.
+- App lock using the phone's own lock (no PIN): locks at start and after 1/5/15 minutes or right away, emergency card open while locked, widgets and shortcuts lock-aware, Settings screen, one-time question after onboarding. **Not run on a phone.**
+- Learn: Our healing heritage (hub and five guides, all Draft).
+- Expenses: year view now has Export PDF as well as CSV (a real `.csv` file).
+- Care team: doctor and hospital detail pages (call, message, directions, workplace link, visits and spending matched by name).
+- Today greeting keeps "Good afternoon," on one line with the name below.
+- A 130%-text sweep over 25 screens (found and fixed three overflows, including the lock screen).
+
+## Not built yet
+
+### Needs a decision before it can be built (see TODO.md)
+- [ ] **Family devices: pair and sync** (Doop 3b, 3c). Large, and a security design.
+- [ ] **Next-dose widget** (Doop 13b). Read-only is easy; Taken / Not taken from the widget needs a write path that has not been proven.
+- [ ] **More languages** (Doop 9a-9m). Only English, Hindi and Telugu exist, and the Hindi and Telugu strings are unreviewed. The lock, widgets, shortcuts and new screens are English only.
+- [ ] **Add-member wizard** (Doop 2a-2d): the design is three steps (basics, allergies and surgeries, medicines); the app has one screen and separate add screens.
+- [ ] **Recovery-code changes** from the brief: manual backups reusing the stored key, a monthly "do you still have it?" card on Today, "where I kept it" choices, and a replace-the-code flow. Needs the three open decisions in TODO.md. Includes fixing the stale key after a restore.
+
+### Small follow-ups
+- [ ] Doctor page: clinic days and notes (needs a schema change, `schemaVersion` 1.1.0 and a Realm migration). "Linked to" picker so visits and spending match a saved doctor, not just by name.
+- [ ] Emergency card screen lists a medicine twice when two courses share its name (the widget already de-duplicates).
+- [ ] Remove the temporary "card sized" log line in `plugins/amrutham_widgets`.
+- [ ] Update Doop 13b and 13e to say "Not taken", not "Skip", once the status wording is settled.
+- [ ] Vault-ready screen (Doop 0e) and a progress screen while restoring (0g) were not checked against the app.
+- [ ] "Right away" lock timeout will lock when you return from the camera or a file picker. Consider ignoring those.
+- [ ] A "visit summary for a doctor" export from History (suggested in the audit, never designed).
+- [ ] Opt-in measurement reminders (suggested in the audit, never designed).
+- [ ] One back-button pattern across screens (audit).
+
+## Needs checking on a real phone (morning checklist is in TODO.md)
+- App lock (biometric prompt, Android 8 and below theme, hide-in-recents, relock timing, widget and shortcut taps while locked).
+- Widgets and shortcuts after the latest changes, especially a freshly added card's default size.
+- Release build signed with the upload key.
+- Background and folder backups (from earlier work).
 
 ## Quality and housekeeping
-- [ ] Audit that every dependency's licence is compatible with GPL-3.0.
-- [ ] Review every Learn guide against sources; they are all Draft.
-- [ ] Check the Android 13+ notification permission flow and exact-alarm behaviour for reminders on different phones.
+- [ ] Check every dependency's licence is compatible with GPL-3.0.
+- [ ] Review every Learn guide against its sources; all are Draft (the heritage ones especially).
 - [ ] Add CI (`flutter analyze` and `flutter test`) on push.
-- [ ] Decide what to do with untracked or modified files: generated linux/windows/macos plugin registrants, `.ignore`, `DESIGN.md`, `assets/`, `apps/mobile/android/build/` (the last should probably be git-ignored).
-- [ ] Riverpod 3.x upgrade is blocked by the Realm dependency; revisit later.
-- [ ] Play Store listing pieces: privacy policy page on the website, data-safety form answers, screenshots, short and long descriptions.
+- [ ] Untracked files to decide on: `.ignore`, `DESIGN.md` (empty), `README.md` (waits for images), `assets/`, `apps/mobile/android/build/` (should be git-ignored), the generated Linux, macOS and Windows plugin registrants.
+- [ ] Play Store listing: privacy policy page, data-safety answers, screenshots, descriptions. The privacy page now mentions the widget copy; it should also mention the biometric prompt and `hide in recents`.
+- [ ] Riverpod 3 upgrade is blocked by Realm; revisit later.
