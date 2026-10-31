@@ -220,62 +220,82 @@ class EmergencyCardScreen extends ConsumerWidget {
   }
 
   Future<void> _addContact(BuildContext context, WidgetRef ref) async {
-    final name = TextEditingController();
-    final phone = TextEditingController();
-    final relation = TextEditingController();
-    final ok = await showDialog<bool>(
+    final contact = await showDialog<EmergencyContact>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Emergency contact'),
-        content: Column(
+      builder: (_) => const _ContactDialog(),
+    );
+    if (contact == null) return;
+    final repository = await ref.read(profileRepositoryProvider.future);
+    await repository.addEmergencyContact(personId, contact);
+  }
+}
+
+/// Owns its text controllers, so they are disposed with the dialog and never
+/// while it is still animating closed.
+class _ContactDialog extends StatefulWidget {
+  const _ContactDialog();
+
+  @override
+  State<_ContactDialog> createState() => _ContactDialogState();
+}
+
+class _ContactDialogState extends State<_ContactDialog> {
+  final _name = TextEditingController();
+  final _phone = TextEditingController();
+  final _relation = TextEditingController();
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _phone.dispose();
+    _relation.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    if (_name.text.trim().isEmpty || _phone.text.trim().isEmpty) return;
+    Navigator.pop(
+      context,
+      EmergencyContact(
+        name: _name.text.trim(),
+        phone: _phone.text.trim(),
+        relationship: _relation.text.trim().isEmpty ? null : _relation.text.trim(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Emergency contact'),
+      content: SingleChildScrollView(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: name,
+              controller: _name,
               textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(labelText: 'Name'),
             ),
             const SizedBox(height: 8),
             TextField(
-              controller: phone,
+              controller: _phone,
               keyboardType: TextInputType.phone,
               decoration: const InputDecoration(labelText: 'Phone'),
             ),
             const SizedBox(height: 8),
             TextField(
-              controller: relation,
-              decoration: const InputDecoration(
-                labelText: 'Relationship (optional)',
-              ),
+              controller: _relation,
+              decoration: const InputDecoration(labelText: 'Relationship (optional)'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
-          ),
-        ],
       ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: _save, child: const Text('Save')),
+      ],
     );
-    if (ok == true && name.text.trim().isNotEmpty && phone.text.trim().isNotEmpty) {
-      final repository = await ref.read(profileRepositoryProvider.future);
-      await repository.addEmergencyContact(
-        personId,
-        EmergencyContact(
-          name: name.text.trim(),
-          phone: phone.text.trim(),
-          relationship: relation.text.trim().isEmpty ? null : relation.text.trim(),
-        ),
-      );
-    }
-    name.dispose();
-    phone.dispose();
-    relation.dispose();
   }
 }
 
