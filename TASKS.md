@@ -5,7 +5,7 @@ Design decisions and the review findings behind them are in [concepts_brief.md](
 
 Last updated overnight, 2026-11-01. The phone was disconnected, so **nothing below marked "not run on a phone" has been seen working on a device.**
 
-## Built and tested (unit and widget tests; 204 pass)
+## Built and tested (unit and widget tests; 218 pass)
 
 - Edit and delete for profiles, medicines and schedule phases, readings, history, expenses (and receipt), records, allergies and family history.
 - Public backup format with a semantic `schemaVersion`, one reader per major version, and a test that fails if the document's shape changes without a bump (`docs/backup-format.md`, `docs/backup-schema.json`).
@@ -28,8 +28,6 @@ Last updated overnight, 2026-11-01. The phone was disconnected, so **nothing bel
 
 ### Small follow-ups
 - [ ] Doctor page: clinic days and notes (needs a schema change, `schemaVersion` 1.1.0 and a Realm migration). "Linked to" picker so visits and spending match a saved doctor, not just by name.
-- [ ] Emergency card screen lists a medicine twice when two courses share its name (the widget already de-duplicates).
-- [ ] Remove the temporary "card sized" log line in `plugins/amrutham_widgets`.
 - [ ] Update Doop 13b and 13e to say "Not taken", not "Skip", once the status wording is settled.
 - [ ] Vault-ready screen (Doop 0e) and a progress screen while restoring (0g) were not checked against the app.
 - [ ] "Right away" lock timeout will lock when you return from the camera or a file picker. Consider ignoring those.
