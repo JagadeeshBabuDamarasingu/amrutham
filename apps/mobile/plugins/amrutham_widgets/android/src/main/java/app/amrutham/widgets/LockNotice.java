@@ -8,7 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
-import android.os.Build;
+import android.view.View;
+import android.widget.RemoteViews;
 
 import java.util.List;
 import java.util.Map;
@@ -79,7 +80,6 @@ final class LockNotice {
                 .setSmallIcon(icon)
                 .setContentTitle(title)
                 .setContentText(body.split("\n")[0])
-                .setStyle(new Notification.BigTextStyle().bigText(body))
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setCategory(Notification.CATEGORY_STATUS)
                 .setOngoing(true)
@@ -95,16 +95,36 @@ final class LockNotice {
             builder.setContentIntent(PendingIntent.getActivity(
                     context, id, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT));
         }
+        // Coloured buttons in our own layout (plain action buttons are text only).
+        // The dialer is opened with the number filled in; a person still presses call.
+        RemoteViews small = new RemoteViews(context.getPackageName(), R.layout.amrutham_notice_small);
+        RemoteViews big = new RemoteViews(context.getPackageName(), R.layout.amrutham_notice_big);
+        small.setTextViewText(R.id.amrutham_notice_title, title);
+        big.setTextViewText(R.id.amrutham_notice_title, title);
+        big.setTextViewText(R.id.amrutham_notice_body, body);
+        int[] slots = {R.id.amrutham_notice_btn1, R.id.amrutham_notice_btn2, R.id.amrutham_notice_btn3};
         int n = 0;
         for (Map<String, String> d : dials) {
             String number = d.get("number");
-            if (number == null || n == 3) continue; // Android shows at most three buttons
+            if (number == null || n == slots.length) continue;
             Intent dial = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(number)));
             PendingIntent pending = PendingIntent.getActivity(
                     context, id + 1 + n, dial, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-            builder.addAction(new Notification.Action.Builder(null, d.get("label"), pending).build());
+            boolean emergency = "112".equals(number);
+            for (RemoteViews v : new RemoteViews[] {small, big}) {
+                v.setViewVisibility(slots[n], View.VISIBLE);
+                v.setTextViewText(slots[n], d.get("label"));
+                v.setInt(slots[n], "setBackgroundResource", emergency ? R.drawable.amrutham_notice_sos : R.drawable.amrutham_widget_button);
+                v.setTextColor(slots[n], emergency ? 0xFFFFFFFF : 0xFF2A1D00);
+                v.setTextViewCompoundDrawablesRelative(slots[n],
+                        emergency ? R.drawable.amrutham_ic_phone_white : R.drawable.amrutham_ic_phone, 0, 0, 0);
+                v.setOnClickPendingIntent(slots[n], pending);
+            }
             n++;
         }
+        builder.setStyle(new Notification.DecoratedCustomViewStyle())
+                .setCustomContentView(small)
+                .setCustomBigContentView(big);
         manager.notify(id, builder.build());
     }
 

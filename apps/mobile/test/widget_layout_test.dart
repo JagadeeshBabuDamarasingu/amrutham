@@ -22,6 +22,8 @@ void main() {
       'amrutham_emergency_widget_wide',
       'amrutham_dial_widget',
       'amrutham_blood_widget',
+      'amrutham_notice_small',
+      'amrutham_notice_big',
     ]) {
       final xml = File(
         'plugins/amrutham_widgets/android/src/main/res/layout/$name.xml',
