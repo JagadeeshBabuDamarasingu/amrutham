@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../backup/auto_backup.dart';
 import '../crypto/recovery_code.dart';
 import '../providers/app_providers.dart';
 import '../lock/ask_lock.dart';
@@ -59,8 +60,12 @@ class _RecoveryFlowScreenState extends ConsumerState<RecoveryFlowScreen> {
   Future<void> _finish() async {
     setState(() => _saving = true);
     final record = await RecoveryRecord.create(_code);
-    await ref.read(onboardingStoreProvider).saveRecovery(record);
+    final store = ref.read(onboardingStoreProvider);
+    await store.saveRecovery(record);
+    // A replaced code must also become the key for automatic backups.
+    if ((await AutoBackupSettings.load(store)).enabled) await enableAutoBackup(store, _code);
     ref.invalidate(recoverySetProvider);
+    ref.invalidate(autoBackupSettingsProvider);
     if (mounted) Navigator.of(context).pop(true);
   }
 

@@ -6,6 +6,7 @@ import '../backup/backup_flow.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
 import 'auto_backup_screen.dart';
+import 'recovery_cases_screen.dart';
 import 'recovery_code_dialog.dart';
 import 'restore_screen.dart';
 import 'storage_screens.dart';
@@ -153,12 +154,39 @@ class BackupRecoveryScreen extends ConsumerWidget {
               recoverySet ? () => _check(context, ref) : null,
             ),
           ),
+          if (recoverySet)
+            Card(
+              child: Column(
+                children: [
+                  tile(
+                    'Where did you keep it?',
+                    ref.watch(codeKeptProvider).valueOrNull ?? 'Tap to note it, so you know where to look',
+                    () => askWhereCodeKept(context, ref),
+                  ),
+                  const Divider(height: 1),
+                  tile(
+                    'Make a new recovery code',
+                    'If you lost it, or think someone saw it',
+                    () => makeNewRecoveryCode(context, ref),
+                  ),
+                ],
+              ),
+            ),
           const SectionLabel('Get your records back'),
           Card(
             child: tile(
               'Restore from a backup',
               'Replaces what is on this phone.',
               () => open(const RestoreVaultScreen(replacing: true)),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            color: const Color(0xFFFBEFD2),
+            child: tile(
+              'I lost my phone, my code, or both',
+              'See every way to get your records back',
+              () => open(const RecoveryCasesScreen()),
             ),
           ),
         ],
