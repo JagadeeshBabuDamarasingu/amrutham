@@ -82,7 +82,7 @@ void main() {
 
     test('nothing added is said out loud, never left blank', () {
       final s = _build(person: _person(blood: null, contacts: const []));
-      expect(s['allergies'], 'No allergies added to Amrutham');
+      expect(s.containsKey('allergies'), isFalse);
       expect(s['bloodNote'], 'Blood group not added');
       expect(s.containsKey('blood'), isFalse);
       expect(s['dial'], isNull);

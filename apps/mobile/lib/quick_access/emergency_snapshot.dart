@@ -14,8 +14,7 @@ String shortBlood(String? group) {
 /// What the home screen widget is allowed to show for one person, as JSON the
 /// native widget renders as it is. The redaction happens here, in one place:
 /// a field the person turned off is simply not in the output, so it never
-/// reaches the phone's preferences file. The wording for "nothing added" is
-/// explicit, so a blank can't be mistaken for "no allergies".
+/// reaches the phone's preferences file. Nothing to show means no line.
 class EmergencySnapshot {
   static const version = 1;
 
@@ -36,9 +35,7 @@ class EmergencySnapshot {
     }
     if (options.allergies) {
       final names = [for (final a in allergies) a.substance];
-      out['allergies'] = names.isEmpty
-          ? 'No allergies added to Amrutham'
-          : 'Allergic to ${names.join(', ')}';
+      if (names.isNotEmpty) out['allergies'] = 'Allergic to ${names.join(', ')}';
     }
     if (options.medicines) {
       // The same medicine can have more than one course: say it once.
