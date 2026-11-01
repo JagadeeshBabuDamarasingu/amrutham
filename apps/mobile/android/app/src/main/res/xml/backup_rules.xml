@@ -2,4 +2,5 @@
 <!-- Android 11 and older: same exclusion as data_extraction_rules.xml. -->
 <full-backup-content>
     <exclude domain="sharedpref" path="amrutham_widgets.xml"/>
+    <exclude domain="sharedpref" path="amrutham_lock_notice.xml"/>
 </full-backup-content>

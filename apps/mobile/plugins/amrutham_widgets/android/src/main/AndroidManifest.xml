@@ -33,6 +33,9 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/amrutham_blood_widget_info"/>
         </receiver>
+        <receiver
+            android:name="app.amrutham.widgets.LockNoticeReceiver"
+            android:exported="false"/>
         <activity
             android:name="app.amrutham.widgets.CardConfigActivity"
             android:exported="true"
