@@ -91,3 +91,5 @@ New Doop frames 16a-16c, 17a-17b and "Map · Navigation, simplified". Decisions 
 **?** Should the setup card on Today be dismissible?
 
 **Settings search (frames 16a, 16d):** a search field at the top of Settings. It searches a fixed list of settings and guide titles, including ones inside other pages, and shows each with its path ("Settings › Emergency cards"). It never searches health records and stores nothing. Build it from one list of entries (title, keywords, path, route) so new settings are added in one place. **?** Worth it with only ~10 top-level rows? It earns its place once the deep items are indexed.
+
+**Setup card (decided: nice to have):** shown on Today in the slot above the tab bar (where the daily tip sits) until the 5 steps are done, with a close button; the daily tip returns after. Tapping opens Settings > Help > Using Amrutham. Designed in frame 1 (Today). The Today gear now opens the new Settings (16a).
