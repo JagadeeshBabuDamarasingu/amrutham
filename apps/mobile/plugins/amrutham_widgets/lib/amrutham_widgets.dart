@@ -50,6 +50,7 @@ class AmruthamWidgets {
   static Future<void> showLockNotice({
     required int id,
     required String title,
+    required String short,
     required String body,
     required List<({String label, String number})> dials,
   }) async {
@@ -57,6 +58,7 @@ class AmruthamWidgets {
       await _channel.invokeMethod<void>('showLockNotice', {
         'id': id,
         'title': title,
+        'short': short,
         'body': body,
         'dials': [for (final d in dials) {'label': d.label, 'number': d.number}],
       });
