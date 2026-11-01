@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/ids.dart';
 import '../model/person.dart';
 import '../providers/app_providers.dart';
+import '../quick_access/emergency_snapshot.dart' show shortBlood;
 import '../ui/app_style.dart';
 import '../ui/emergency_card_screen.dart';
 import 'lock_controller.dart';
@@ -153,45 +154,7 @@ class LockScreen extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                InkWell(
-                  borderRadius: BorderRadius.circular(18),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => LockedEmergencyCard(personId: living.first.id)),
-                  ),
-                  child: Ink(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-                    ),
-                    child: Row(
-                      children: [
-                        const CircleAvatar(
-                          radius: 21,
-                          backgroundColor: Color(0x2EF0A91E),
-                          child: Icon(Icons.favorite_border, color: onboardAmber, size: 22),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Emergency card', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700)),
-                              const SizedBox(height: 2),
-                              Text(
-                                failed
-                                    ? 'Still open for anyone who needs it.'
-                                    : 'Anyone can open this. It shows only what you chose to put on it.',
-                                style: const TextStyle(color: Color(0xFFBBD3C8), fontSize: 12.5, height: 1.4),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                _EmergencySummary(people: [for (final p in living) p], failed: failed),
               ],
               const SizedBox(height: 22),
               Text(
@@ -295,6 +258,113 @@ class _LockedEmergencyCardState extends ConsumerState<LockedEmergencyCard> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The emergency details right on the lock screen: blood group, allergies,
+/// medicines and who to call, for whoever needs them without unlocking. Tap
+/// for the full card. With several people, pick whose.
+class _EmergencySummary extends ConsumerStatefulWidget {
+  const _EmergencySummary({required this.people, required this.failed});
+
+  final List<PersonProfile> people;
+  final bool failed;
+
+  @override
+  ConsumerState<_EmergencySummary> createState() => _EmergencySummaryState();
+}
+
+class _EmergencySummaryState extends ConsumerState<_EmergencySummary> {
+  PersonId? _picked;
+
+  @override
+  Widget build(BuildContext context) {
+    final person = widget.people.where((p) => p.id == _picked).firstOrNull ?? widget.people.first;
+    final allergies = ref.watch(allergiesProvider(person.id)).valueOrNull ?? [];
+    final medicines = EmergencyCardScreen.distinctMedicines(
+      ref.watch(activeCoursesProvider(person.id)).valueOrNull ?? [],
+    );
+    const muted = TextStyle(color: Color(0xFF9FC0B2), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1);
+    const body = TextStyle(color: Colors.white, fontSize: 15, height: 1.4);
+    Widget block(String label, List<String> lines) => Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: muted),
+          const SizedBox(height: 3),
+          for (final l in lines) Text(l, style: body),
+        ],
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.people.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Wrap(
+              spacing: 8,
+              children: [
+                for (final p in widget.people)
+                  ChoiceChip(
+                    label: Text(p.displayName),
+                    selected: p.id == person.id,
+                    onSelected: (_) => setState(() => _picked = p.id),
+                  ),
+              ],
+            ),
+          ),
+        InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => LockedEmergencyCard(personId: person.id)),
+          ),
+          child: Ink(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        person.displayName,
+                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(color: onboardAmber, borderRadius: BorderRadius.circular(12)),
+                      child: Text(
+                        'Blood ${shortBlood(person.bloodGroup)}',
+                        style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF2A1D00)),
+                      ),
+                    ),
+                  ],
+                ),
+                block('ALLERGIES', allergies.isEmpty ? ['None recorded'] : [for (final a in allergies) EmergencyCardScreen.allergyLine(a)]),
+                block('TAKING NOW', medicines.isEmpty ? ['No active medicines'] : [for (final m in medicines) m.medicationName]),
+                block('CALL', person.emergencyContacts.isEmpty
+                    ? ['No contacts added']
+                    : [for (final c in person.emergencyContacts) '${c.name}${c.relationship == null ? '' : ' (${c.relationship})'}  ${c.phone}']),
+                const SizedBox(height: 10),
+                Text(
+                  widget.failed ? 'Open for anyone who needs it. Tap for the full card.' : 'Anyone can see this. Tap for the full card.',
+                  style: const TextStyle(color: Color(0xFFBBD3C8), fontSize: 12.5),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

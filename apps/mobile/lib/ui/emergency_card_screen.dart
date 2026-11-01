@@ -114,7 +114,7 @@ class EmergencyCardScreen extends ConsumerWidget {
                     'Allergies',
                     allergies.isEmpty
                         ? [const Text('None recorded')]
-                        : [for (final a in allergies) Text(_allergyLine(a))],
+                        : [for (final a in allergies) Text(allergyLine(a))],
                   ),
                   _Block(
                     'Taking now',
@@ -190,7 +190,7 @@ class EmergencyCardScreen extends ConsumerWidget {
     return [for (final c in courses) if (seen.add(c.medicationName.trim().toLowerCase())) c];
   }
 
-  static String _allergyLine(AllergyRecord a) =>
+  static String allergyLine(AllergyRecord a) =>
       '${a.substance} · ${a.reaction}'
       '${a.certainty == Certainty.confirmed ? '' : ' · as ${a.certainty.name}'}';
 
@@ -211,7 +211,7 @@ class EmergencyCardScreen extends ConsumerWidget {
     return '<html><body style="font-family:sans-serif;font-size:20px">'
         '<h1>Emergency card: ${_esc(p.displayName)}</h1>'
         '${row('Blood group', p.bloodGroup ?? 'not recorded')}'
-        '${row('Allergies', allergies.isEmpty ? 'none recorded' : allergies.map(_allergyLine).join('; '))}'
+        '${row('Allergies', allergies.isEmpty ? 'none recorded' : allergies.map(allergyLine).join('; '))}'
         '${row('Taking now', courses.isEmpty ? 'none' : courses.map((c) => c.medicationName).join(', '))}'
         '${row('Call', p.emergencyContacts.isEmpty ? 'no contacts added' : p.emergencyContacts.map((c) => '${c.name} ${c.phone}').join('; '))}'
         '<p style="font-size:14px">Entries marked "as reported" are not verified.</p>'
@@ -226,7 +226,7 @@ class EmergencyCardScreen extends ConsumerWidget {
     final b = StringBuffer('EMERGENCY CARD: ${p.displayName}\n');
     b.writeln('Blood group: ${p.bloodGroup ?? 'not recorded'}');
     b.writeln(
-      'Allergies: ${allergies.isEmpty ? 'none recorded' : allergies.map(_allergyLine).join('; ')}',
+      'Allergies: ${allergies.isEmpty ? 'none recorded' : allergies.map(allergyLine).join('; ')}',
     );
     b.writeln(
       'Taking now: ${courses.isEmpty ? 'none' : courses.map((c) => c.medicationName).join(', ')}',

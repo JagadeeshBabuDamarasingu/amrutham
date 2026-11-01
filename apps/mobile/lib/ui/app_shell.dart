@@ -35,8 +35,12 @@ const dailyTips = [
 String tipForDay(DateTime d) =>
     dailyTips[d.difference(DateTime(d.year)).inDays % dailyTips.length];
 
+/// Which tab is showing, so a shortcut can bring Today to the front.
+final shellTabProvider = StateProvider<int>((ref) => 0);
+
 class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver {
-  int _index = 0;
+  int get _index => ref.watch(shellTabProvider);
+  set _index(int i) => ref.read(shellTabProvider.notifier).state = i;
   bool _backingUp = false;
 
   @override
@@ -104,7 +108,7 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
           children: [
             if (_index == 0 && !(ref.watch(tipsHiddenProvider).valueOrNull ?? false))
               GestureDetector(
-                onTap: () => setState(() => _index = 3),
+                onTap: () => _index = 3,
                 child: Container(
                   margin: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

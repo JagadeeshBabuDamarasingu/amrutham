@@ -88,7 +88,11 @@ void main() {
 
   testWidgets('the emergency card opens while locked, without Print or Share, and Back returns to the lock', (tester) async {
     await _pumpGated(tester, results: [AuthResult.failed]);
-    await tester.tap(find.text('Emergency card'));
+    // The details are on the lock screen itself, before anything is tapped.
+    expect(find.textContaining('+91 98765 43210'), findsOneWidget);
+    expect(find.text('ALLERGIES'), findsOneWidget);
+    await tester.ensureVisible(find.textContaining('Tap for the full card'));
+    await tester.tap(find.textContaining('Tap for the full card'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Only this card is open'), findsOneWidget);
     expect(find.text('Appa'), findsWidgets);
@@ -113,7 +117,8 @@ void main() {
 
   testWidgets('unlocking from the locked card opens the app', (tester) async {
     await _pumpGated(tester, results: [AuthResult.failed, AuthResult.success]);
-    await tester.tap(find.text('Emergency card'));
+    await tester.ensureVisible(find.textContaining('Tap for the full card'));
+    await tester.tap(find.textContaining('Tap for the full card'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Unlock'));
     await tester.pumpAndSettle();

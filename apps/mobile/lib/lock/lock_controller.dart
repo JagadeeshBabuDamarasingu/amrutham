@@ -139,26 +139,50 @@ class LockController extends Notifier<AppLockState> {
 
   Future<void> returnedToApp() async {
     final left = _leftAt;
-    _leftAt = null;
-    if (_prompting) return;
-    final settings = await ref.read(lockSettingsProvider.future);
-    if (!settings.enabled) {
-      if (state.locked) state = state.copyWith(locked: false, failed: false);
+    if (_prompting) {
+      _leftAt = null;
       return;
     }
-    if (state.locked) {
-      // Only ask again if the app really went away. Dismissing the prompt also
-      // resumes the app, and asking then would trap the person in a loop.
-      if (left != null) await unlock();
-      return;
+    // _leftAt stays set until the decision is made, so a shortcut arriving at
+    // the same time can ask [lockIfDue] about the same absence.
+    try {
+      final settings = await ref.read(lockSettingsProvider.future);
+      if (!settings.enabled) {
+        if (state.locked) state = state.copyWith(locked: false, failed: false);
+        return;
+      }
+      if (state.locked) {
+        // Only ask again if the app really went away. Dismissing the prompt also
+        // resumes the app, and asking then would trap the person in a loop.
+        if (left != null) await unlock();
+        return;
+      }
+      if (_isDue(left, settings)) {
+        state = state.copyWith(locked: true, failed: false);
+        _leftAt = null;
+        await unlock();
+      }
+    } finally {
+      _leftAt = null;
     }
+  }
+
+  bool _isDue(Duration? left, LockSettings settings) {
+    if (left == null) return false;
     final now = ref.read(monotonicProvider)();
     final unlockedAt = _unlockedAt;
-    if (unlockedAt != null && now - unlockedAt < _grace) return;
-    if (left == null) return;
-    if (now - left >= settings.timeout.after) {
+    if (unlockedAt != null && now - unlockedAt < _grace) return false;
+    return now - left >= settings.timeout.after;
+  }
+
+  /// For a shortcut that arrives with the app: lock first if the time away is
+  /// up, without asking yet, so the shortcut sees the right state. The prompt
+  /// itself still comes from [returnedToApp].
+  Future<void> lockIfDue() async {
+    if (state.locked) return;
+    final settings = await ref.read(lockSettingsProvider.future);
+    if (settings.enabled && _isDue(_leftAt, settings)) {
       state = state.copyWith(locked: true, failed: false);
-      await unlock();
     }
   }
 

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/medication.dart';
 import '../providers/app_providers.dart';
 import '../ui/add_record_screen.dart';
+import '../ui/app_shell.dart';
 import '../ui/emergency_card_screen.dart';
 import '../ui/log_measurement_screen.dart';
 import '../lock/lock_controller.dart';
@@ -57,6 +58,7 @@ class _State extends ConsumerState<WidgetSyncHost> {
     // The emergency card is open to anyone; everything else needs the lock opened.
     final lock = ref.read(lockProvider.notifier);
     await lock.whenReady;
+    await lock.lockIfDue();
     if (!mounted) return;
     final id = target.personId;
     if (target.kind == LaunchKind.emergencyCard && ref.read(lockProvider).locked) {
@@ -70,6 +72,7 @@ class _State extends ConsumerState<WidgetSyncHost> {
       case LaunchKind.nextDose:
         // Today is the first tab: close whatever is open on top of it.
         navigator.popUntil((route) => route.isFirst);
+        ref.read(shellTabProvider.notifier).state = 0;
       case LaunchKind.emergencyCard:
         navigator.push(MaterialPageRoute(builder: (_) => EmergencyCardScreen(personId: id!)));
       case LaunchKind.logReading:
