@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_providers.dart';
 import 'app_style.dart';
+import 'language_screen.dart';
 import 'restore_screen.dart';
+import 'strings.dart';
 
 /// First launch only. The recovery code is deliberately not asked for here —
 /// it comes right before the first record is saved (recovery_flow_screen.dart).
@@ -12,6 +14,8 @@ class WelcomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final code = ref.watch(languageProvider);
+    final native = languages.where((l) => l.$1 == code).firstOrNull?.$2 ?? 'English';
     return Scaffold(
       backgroundColor: const Color(0xFF223D33),
       body: SafeArea(
@@ -20,6 +24,18 @@ class WelcomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: ActionChip(
+                  avatar: const Icon(Icons.language, size: 18, color: Color(0xFFB8D0C5)),
+                  label: Text(native, style: const TextStyle(color: Colors.white)),
+                  backgroundColor: const Color(0x22FFFFFF),
+                  side: BorderSide.none,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const LanguageScreen()),
+                  ),
+                ),
+              ),
               const Spacer(),
               const Text(
                 'Amrutham',
