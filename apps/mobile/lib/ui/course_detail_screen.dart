@@ -158,7 +158,7 @@ class CourseDetailScreen extends ConsumerWidget {
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
                   error: (error, stackTrace) =>
-                      Text('Something went wrong: $error'),
+                      Text('Something went wrong. Please try again.'),
                 ),
               ],
             ),

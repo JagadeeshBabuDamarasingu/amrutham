@@ -22,7 +22,7 @@ class LanguageScreen extends ConsumerWidget {
         trailing: code == current
             ? const Icon(Icons.check, color: onboardInk)
             : Text(
-                ready ? 'App only' : 'Not yet',
+                ready ? 'App only' : 'Coming later',
                 style: const TextStyle(color: onboardMuted, fontSize: 12),
               ),
         onTap: ready ? () => ref.read(languageProvider.notifier).choose(code) : null,

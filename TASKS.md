@@ -3,9 +3,9 @@
 Engineering work on Amrutham. Things that need the owner's decision or action are in [TODO.md](TODO.md).
 Design decisions and the review findings behind them are in [concepts_brief.md](concepts_brief.md).
 
-Last updated overnight, 2026-11-01. The phone was disconnected, so **nothing below marked "not run on a phone" has been seen working on a device.**
+Last updated 2026-11-01 (second pass, while you were away). The phone was disconnected, so **nothing below marked "not run on a phone" has been seen working on a device.**
 
-## Built and tested (unit and widget tests; 218 pass)
+## Built and tested (unit and widget tests; 231 pass)
 
 - Edit and delete for profiles, medicines and schedule phases, readings, history, expenses (and receipt), records, allergies and family history.
 - Public backup format with a semantic `schemaVersion`, one reader per major version, and a test that fails if the document's shape changes without a bump (`docs/backup-format.md`, `docs/backup-schema.json`).
@@ -15,7 +15,11 @@ Last updated overnight, 2026-11-01. The phone was disconnected, so **nothing bel
 - Expenses: year view now has Export PDF as well as CSV (a real `.csv` file).
 - Care team: doctor and hospital detail pages (call, message, directions, workplace link, visits and spending matched by name).
 - Today greeting keeps "Good afternoon," on one line with the name below.
-- A 130%-text sweep over 25 screens (found and fixed three overflows, including the lock screen).
+- A 130%-text sweep over 28 screens (found and fixed three overflows, including the lock screen).
+- Lock screen: emergency details (blood group, who to call with numbers, allergies, medicines) shown on the app's own lock screen, and an opt-in notification on the phone's lock screen (per person, off by default) with name, blood group and the first contact's number, plus coloured call buttons when unlocked. The notice comes back when swiped away and after a restart. A row opens Android's Medical info. **Seen on the phone in the notification shade, not yet on a locked phone.**
+- About Amrutham (vision, mission, promises), Credits and licences (a test fails if a dependency is missing from it), Contact us, reached from Settings > Help (Doop 15a-15d). **Not yet seen on a phone.**
+- Plain-language pass over the app's own wording: raw error text, developer jargon ("PRN", "ceiling", "hang off a person"), roadmap notes ("Not built yet") and stale claims removed.
+- Fixed: the lock appeared behind the home screen at start; the prompt re-opened itself after being dismissed; shortcuts arriving during the start-up prompt were dropped; Next dose did not switch to Today; Recents showed several Amrutham entries.
 
 ## Not built yet
 
@@ -25,6 +29,11 @@ Last updated overnight, 2026-11-01. The phone was disconnected, so **nothing bel
 - [ ] **More languages** (Doop 9a-9m). Only English, Hindi and Telugu exist, and the Hindi and Telugu strings are unreviewed. The lock, widgets, shortcuts and new screens are English only.
 - [ ] **Add-member wizard** (Doop 2a-2d): the design is three steps (basics, allergies and surgeries, medicines); the app has one screen and separate add screens.
 - [ ] **Recovery-code changes** from the brief: manual backups reusing the stored key, a monthly "do you still have it?" card on Today, "where I kept it" choices, and a replace-the-code flow. Needs the three open decisions in TODO.md. Includes fixing the stale key after a restore.
+
+### Still to do from the wording pass
+- [ ] The Learn guides (`lib/learn/learn_content.dart`) were not part of the wording pass. They are reviewed separately and all say Draft.
+- [ ] "Vault" is used for your records in several places (welcome, restore, splash). Decide whether the word stays or becomes "your records".
+- [ ] The app is written for India in places (TeleManas helpline, mohfw.gov.in, Rupee amounts, Hindi and Telugu only). See "Positioning" in TODO.md.
 
 ### Small follow-ups
 - [ ] Doctor page: clinic days and notes (needs a schema change, `schemaVersion` 1.1.0 and a Realm migration). "Linked to" picker so visits and spending match a saved doctor, not just by name.

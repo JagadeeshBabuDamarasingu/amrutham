@@ -20,7 +20,7 @@ class FamilyScreen extends ConsumerWidget {
         children: [
           people.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Something went wrong: $e')),
+            error: (e, _) => Center(child: Text('Something went wrong. Please try again.')),
             data: (list) => ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               children: [

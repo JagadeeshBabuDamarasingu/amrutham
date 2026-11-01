@@ -18,6 +18,7 @@ import 'package:amrutham/model/person.dart';
 import 'package:amrutham/providers/app_providers.dart';
 import 'package:amrutham/model/health_record.dart';
 import 'package:amrutham/model/measurement.dart';
+import 'package:amrutham/ui/about_screen.dart';
 import 'package:amrutham/ui/add_allergy_screen.dart';
 import 'package:amrutham/ui/add_care_provider_screen.dart';
 import 'package:amrutham/ui/add_expense_screen.dart';
@@ -106,6 +107,9 @@ void main() {
     'Locked emergency card': () => const LockedEmergencyCard(personId: PersonId('appa')),
     'Lock screen': () => const LockScreen(),
     'App lock settings': () => const AppLockScreen(),
+    'About': () => const AboutScreen(),
+    'Credits': () => const CreditsScreen(),
+    'Contact': () => const ContactScreen(),
     'Widget settings': () => const WidgetsSettingsScreen(),
     'Doctor page': () => const CareProviderDetailScreen(providerId: CareProviderId('rao'), personId: PersonId('appa')),
     'Year of expenses': () => const YearViewScreen(),

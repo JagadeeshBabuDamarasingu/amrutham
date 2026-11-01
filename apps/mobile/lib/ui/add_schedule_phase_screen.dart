@@ -235,15 +235,15 @@ class _AddSchedulePhaseScreenState
                 labelText: 'Dose each time',
               ),
               validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Dose is required'
+                  ? 'Enter the dose'
                   : null,
             ),
             const SizedBox(height: 16),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('PRN (as-needed)'),
+              title: const Text('Only when needed'),
               subtitle: const Text(
-                'No fixed times — just a maximum-frequency ceiling',
+                'No fixed times. You set the most times it can be taken in a day.',
               ),
               value: _isPrn,
               onChanged: (value) => setState(() => _isPrn = value),

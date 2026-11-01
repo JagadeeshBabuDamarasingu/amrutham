@@ -74,7 +74,7 @@ class _MetricsScreenState extends ConsumerState<MetricsScreen> {
       ),
       body: readings.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Something went wrong: $e')),
+        error: (e, _) => Center(child: Text('Something went wrong. Please try again.')),
         data: (all) {
           final ofKind = all.where((m) => m.kind == _kind).toList();
           final since = DateTime.now().subtract(Duration(days: _days));

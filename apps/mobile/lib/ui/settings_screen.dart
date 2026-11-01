@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../backup/backup_flow.dart';
 import '../providers/app_providers.dart';
+import 'about_screen.dart';
 import 'app_style.dart';
 import '../lock/lock_controller.dart';
 import '../lock/lock_settings.dart';
@@ -193,6 +194,21 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: const Text('See what crashed, then choose whether to send it.'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => showProblemReport(context),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              leading: const CircleAvatar(
+                radius: 18,
+                backgroundColor: onboardInk,
+                child: Icon(Icons.favorite, size: 18, color: onboardAmber),
+              ),
+              title: const Text('About Amrutham', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: const Text('Our vision, credits and how to reach us'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AboutScreen())),
             ),
           ),
           const SectionLabel('Home'),

@@ -230,7 +230,7 @@ class ProfileDetailScreen extends ConsumerWidget {
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stackTrace) =>
-                Text('Something went wrong: $error'),
+                Text('Something went wrong. Please try again.'),
           ),
           _SectionHeader(
             title: 'Family history',
@@ -279,7 +279,7 @@ class ProfileDetailScreen extends ConsumerWidget {
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stackTrace) =>
-                Text('Something went wrong: $error'),
+                Text('Something went wrong. Please try again.'),
           ),
           _SectionHeader(
             title: 'Allergies',
@@ -326,7 +326,7 @@ class ProfileDetailScreen extends ConsumerWidget {
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stackTrace) =>
-                Text('Something went wrong: $error'),
+                Text('Something went wrong. Please try again.'),
           ),
         ],
       ),
@@ -588,7 +588,7 @@ class _MemorialView extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Text(
-                    'Remembered · read-only',
+                    'In memory · view only',
                     style: TextStyle(color: Colors.white, fontSize: 13),
                   ),
                 ),

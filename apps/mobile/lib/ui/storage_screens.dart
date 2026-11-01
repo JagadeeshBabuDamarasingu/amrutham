@@ -42,7 +42,7 @@ class StorageChoiceScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
           const Text(
-            'Where records sync',
+            'Where backups go',
             style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -0.8),
           ),
           const SizedBox(height: 6),
@@ -76,15 +76,14 @@ class StorageChoiceScreen extends ConsumerWidget {
                     ref.invalidate(backupFolderProvider);
                   },
           ),
-          option(Icons.shield_outlined, 'Tailscale', 'Phone to phone. Not built yet.', null),
-          const SectionLabel('Not yet'),
-          option(Icons.cloud_queue, 'OneDrive, Dropbox', 'Planned after Drive is solid', null),
+          option(Icons.shield_outlined, 'Tailscale', 'Phone to phone. Coming later.', null),
+          const SectionLabel('Coming later'),
+          option(Icons.cloud_queue, 'OneDrive, Dropbox', 'Not available yet', null),
           const SizedBox(height: 8),
           const Text(
-            'Whatever you pick, records are encrypted on this phone first. The '
-            'storage provider only ever holds scrambled files. You choose when to '
-            'back up: Amrutham keeps only a check of your recovery code, not the '
-            'code, so it cannot encrypt in the background.',
+            'Whatever you pick, your records are encrypted on this phone first. '
+            'The place you store them only ever holds scrambled files that nobody '
+            'can read without your recovery code.',
             style: _fine,
           ),
         ],

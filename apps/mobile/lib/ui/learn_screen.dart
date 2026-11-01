@@ -590,7 +590,7 @@ class BlockView extends StatelessWidget {
                       Text(label, style: const TextStyle(color: Color(0xFFB8D0C5), fontSize: 11, letterSpacing: 1)),
                       Text(host, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
                       const Text(
-                        'Official source · link not yet verified',
+                        'Official source · link not checked yet',
                         style: TextStyle(color: Color(0xFFB8D0C5), fontSize: 12),
                       ),
                     ],
@@ -760,9 +760,8 @@ class HelpNowScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           const Text(
-            'Numbers are listed on mohfw.gov.in. They have not yet been verified '
-            'by the Amrutham maintainers, so check them there. This page works '
-            'without an internet connection.',
+            'Please confirm these numbers on mohfw.gov.in before you rely on '
+            'them. This page works without an internet connection.',
             style: TextStyle(color: onboardMuted, fontSize: 13, height: 1.4),
           ),
         ],

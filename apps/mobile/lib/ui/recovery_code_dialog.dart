@@ -45,7 +45,7 @@ class _RecoveryCodeDialogState extends State<RecoveryCodeDialog> {
   Future<void> _submit() async {
     final code = RecoveryCode.parse(_input.text);
     if (code == null) {
-      setState(() => _message = 'That is not 24 characters of a code.');
+      setState(() => _message = 'A recovery code has 24 letters and numbers. Check what you typed.');
       return;
     }
     setState(() => _working = true);

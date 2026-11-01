@@ -149,7 +149,7 @@ class _RestoreState extends ConsumerState<RestoreVaultScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Checked on this phone only. There is no lockout server and no way for us to reset it.',
+            'Checked on this phone only. Nobody, including us, can reset or recover it.',
             style: TextStyle(fontSize: 13, color: onboardMuted, height: 1.4),
           ),
           if (_error != null) ...[

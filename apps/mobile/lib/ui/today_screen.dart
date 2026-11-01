@@ -411,7 +411,7 @@ class _EmptyToday extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Doses, measurements and history all hang off a person.',
+              'Everything you record belongs to a person.',
               style: TextStyle(color: onboardMuted),
             ),
             const SizedBox(height: 16),

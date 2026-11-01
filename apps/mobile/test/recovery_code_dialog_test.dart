@@ -64,7 +64,7 @@ void main() {
     await tester.tap(find.text('Back up'));
     await tester.pumpAndSettle();
 
-    expect(find.text('That is not 24 characters of a code.'), findsOneWidget);
+    expect(find.text('A recovery code has 24 letters and numbers. Check what you typed.'), findsOneWidget);
     expect(checked, isFalse);
     expect(find.byType(AlertDialog), findsOneWidget);
   });
