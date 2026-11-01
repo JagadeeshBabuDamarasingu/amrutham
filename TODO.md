@@ -71,3 +71,21 @@ Before you start: connect the phone, check it has **at least 1 GB free** (a full
 - [ ] Send a test email to hello@amrutham.app to confirm the mailbox works.
 - [ ] Play Console account, listing, privacy policy URL and data-safety answers; final wording check ("free forever", "open source GPL-3.0", "not medical advice").
 - [ ] Decide when to post the "I'm working on Amrutham" announcements.
+
+## Design review (1 Nov 2026): to build in Flutter later
+
+New Doop frames 16a-16c, 17a-17b and "Map · Navigation, simplified". Decisions needed are marked **?**.
+
+**Drift found and fixed in Doop:** 13f (empty allergies line is now omitted, not "none added"), 3d and 0f (Tailscale marked "Coming later"), frame 3 (old Settings, marked OLD).
+**Still drifting, not yet fixed:** the 9a-9m language frames (still "All Indian languages"; need a region-neutral set), Learn India-only content (7e-7h), "vault" wording (0e, 0f: keep or "your records"? **?**), frame 15d is a partial Settings.
+
+**Build from the designs:**
+1. Settings regrouped into four groups (16a). Backup and recovery becomes a hub with a status card (16b).
+2. Recovery guide, every case (16c). New things it assumes, none built yet:
+   - "Check my backup" (decrypts the latest backup with the typed code, restores nothing).
+   - "Make a new recovery code" when the phone still has the data, then back up again.
+   - "Where I kept it" and the printable recovery sheet (no health data).
+   - Reminder when the folder backup is over a week old.
+3. Learn tab split into Health | Using Amrutham (17a), with a "Finish setting up" card on Today (5 steps) and step-by-step guides, starting with the emergency card (17b).
+**?** Should a readable export (unencrypted CSV/PDF plus documents, with a warning) be offered as a last-resort copy? It helps in the worst case but is readable by anyone who finds it.
+**?** Should the setup card on Today be dismissible?
