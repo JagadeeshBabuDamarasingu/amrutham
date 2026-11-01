@@ -32,6 +32,11 @@ Before you start: connect the phone, check it has **at least 1 GB free** (a full
 - Where should its data live: the same plain preferences file as the emergency card?
 - It would need a way for a widget tap to write to the encrypted database, which I have not proven works. Do you want a read-only widget first ("2 medicines due", tap to open)?
 
+**SOS button (asked for on the lock screen notification; not built):**
+- "Ring the other family phones over Tailscale or a private mesh" needs the family-devices pairing below. Without pairing, Amrutham has no way to find the other phones. Is SOS reason enough to build pairing first, and should it be Tailscale only, or also same Wi-Fi?
+- "Inform an ambulance service or call centre": an app cannot silently alert 112 or 108. What it can do is open the dialer with the number filled in (the notification now has an "Emergency 112" button). Do you want 108 as well, and is 112 right for every state? Please check against a source.
+- Automatic SMS to family needs the SEND_SMS permission, which Google Play restricts. Prefilled SMS (one tap to send) is the Play-safe version. Which do you want?
+
 **Family devices (sync):** this is a large feature and I did not want to guess.
 - How should phones find each other: same Wi-Fi, Tailscale, or a relay you run? ("No server of ours" rules out a relay we host.)
 - What syncs: everything, or only what a person chooses to share?

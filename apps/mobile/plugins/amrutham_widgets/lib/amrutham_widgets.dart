@@ -45,6 +45,34 @@ class AmruthamWidgets {
     }
   }
 
+  /// Pins a notification on the lock screen. [dials] become buttons that open
+  /// the dialer with the number filled in.
+  static Future<void> showLockNotice({
+    required int id,
+    required String title,
+    required String body,
+    required List<({String label, String number})> dials,
+  }) async {
+    try {
+      await _channel.invokeMethod<void>('showLockNotice', {
+        'id': id,
+        'title': title,
+        'body': body,
+        'dials': [for (final d in dials) {'label': d.label, 'number': d.number}],
+      });
+    } on MissingPluginException {
+      // Not Android (or a test).
+    }
+  }
+
+  static Future<void> hideLockNotice(int id) async {
+    try {
+      await _channel.invokeMethod<void>('hideLockNotice', {'id': id});
+    } on MissingPluginException {
+      // Not Android (or a test).
+    }
+  }
+
   /// Opens Android's own Medical info screen (the one the lock screen's
   /// Emergency button shows). False if this phone has no such screen.
   static Future<bool> openMedicalInfo() async {

@@ -113,6 +113,19 @@ public class WidgetsPlugin
                     result.success(null);
                     break;
                 }
+                case "showLockNotice": {
+                    Integer id = call.argument("id");
+                    List<Map<String, String>> dials = call.argument("dials");
+                    LockNotice.show(context, id, call.<String>argument("title"), call.<String>argument("body"),
+                            dials == null ? new java.util.ArrayList<Map<String, String>>() : dials);
+                    result.success(null);
+                    break;
+                }
+                case "hideLockNotice": {
+                    LockNotice.hide(context, call.<Integer>argument("id"));
+                    result.success(null);
+                    break;
+                }
                 case "openMedicalInfo": {
                     // Android's own Medical info screen, which the phone shows on its
                     // lock screen. Tried in turn: not every phone has the first.

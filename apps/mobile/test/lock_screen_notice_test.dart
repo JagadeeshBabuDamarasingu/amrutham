@@ -30,6 +30,13 @@ void main() {
     expect(none, isNull);
   });
 
+  test('the buttons are the chosen contacts then 112, and 112 is always there', () {
+    final person = samplePerson();
+    final d = LockScreenNotice.dials(person, const CardOptions());
+    expect(d.map((x) => x.number).toList(), ['+919876543210', '112']);
+    expect(LockScreenNotice.dials(person, const CardOptions(dial: false)).map((x) => x.number), ['112']);
+  });
+
   test('the setting survives being saved and read back', () {
     final s = const WidgetSettings(enabled: true).withOptions('a', const CardOptions(lockScreen: true));
     expect(WidgetSettings.decode(s.encode()).optionsFor('a').lockScreen, isTrue);

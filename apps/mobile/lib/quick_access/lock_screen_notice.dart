@@ -1,4 +1,4 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:amrutham_widgets/amrutham_widgets.dart';
 
 import '../model/allergy.dart';
 import '../model/medication.dart';
@@ -10,8 +10,6 @@ import 'widget_settings.dart';
 /// lock screen, for the people who turned it on. What it says follows the same
 /// choices as the home screen card; a detail turned off is not in the text.
 class LockScreenNotice {
-  static const _channelId = 'amrutham_emergency_info';
-
   /// Title and body, or null when the person turned everything off.
   static ({String title, String body})? text({
     required PersonProfile person,
@@ -50,28 +48,17 @@ class LockScreenNotice {
     return 0x40000000 | (hash & 0x3fffffff);
   }
 
-  static Future<void> show(FlutterLocalNotificationsPlugin plugin, String personId, ({String title, String body}) t) {
-    return plugin.show(
-      id: idFor(personId),
-      title: t.title,
-      body: t.body,
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          'Emergency details on lock screen',
-          channelDescription: 'Shows emergency details on the lock screen, for the people you chose',
-          importance: Importance.low,
-          priority: Priority.low,
-          ongoing: true,
-          autoCancel: false,
-          showWhen: false,
-          visibility: NotificationVisibility.public,
-          styleInformation: BigTextStyleInformation(t.body),
-        ),
-      ),
-    );
-  }
+  /// The buttons: the contacts the person chose to show (two at most, so the
+  /// emergency number always fits in the three Android allows), then 112.
+  static List<({String label, String number})> dials(PersonProfile person, CardOptions options) => [
+    if (options.dial)
+      for (final c in person.emergencyContacts.take(2))
+        if (EmergencySnapshot.dialable(c.phone) != null) (label: 'Call ${c.name}', number: EmergencySnapshot.dialable(c.phone)!),
+    (label: 'Emergency 112', number: '112'),
+  ];
 
-  static Future<void> hide(FlutterLocalNotificationsPlugin plugin, String personId) =>
-      plugin.cancel(id: idFor(personId));
+  static Future<void> show(String personId, PersonProfile person, CardOptions options, ({String title, String body}) t) =>
+      AmruthamWidgets.showLockNotice(id: idFor(personId), title: t.title, body: t.body, dials: dials(person, options));
+
+  static Future<void> hide(String personId) => AmruthamWidgets.hideLockNotice(idFor(personId));
 }
