@@ -21,8 +21,11 @@ class LockHost extends ConsumerStatefulWidget {
   ConsumerState<LockHost> createState() => _LockHostState();
 }
 
+/// The lock's own navigator (the emergency card opens inside it).
+final lockNavigator = GlobalKey<NavigatorState>();
+
 class _LockHostState extends ConsumerState<LockHost> {
-  final _nested = GlobalKey<NavigatorState>();
+  final _nested = lockNavigator;
 
   @override
   void initState() {
@@ -46,9 +49,12 @@ class _LockHostState extends ConsumerState<LockHost> {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _nested.currentState?.maybePop();
       },
-      child: Navigator(
-        key: _nested,
-        onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const LockScreen()),
+      // Beside the app's navigator now, so it must not share its hero controller.
+      child: HeroControllerScope.none(
+        child: Navigator(
+          key: _nested,
+          onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const LockScreen()),
+        ),
       ),
     );
   }

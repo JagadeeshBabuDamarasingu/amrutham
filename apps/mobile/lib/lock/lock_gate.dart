@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'app_navigator.dart';
 import 'lock_controller.dart';
 import 'lock_screen.dart';
 import 'secure_screen.dart';
@@ -20,8 +19,6 @@ class LockGate extends ConsumerStatefulWidget {
 }
 
 class _LockGateState extends ConsumerState<LockGate> with WidgetsBindingObserver {
-  Route<void>? _route;
-
   @override
   void initState() {
     super.initState();
@@ -42,37 +39,18 @@ class _LockGateState extends ConsumerState<LockGate> with WidgetsBindingObserver
     if (state == AppLifecycleState.resumed) lock.returnedToApp();
   }
 
-  void _sync(AppLockState lock) {
-    if (lock.locked && _route == null) _show();
-    if (!lock.locked && _route != null) _hide();
-  }
-
-  void _show() {
-    final navigator = appNavigatorKey.currentState;
-    if (navigator == null) {
-      // The navigator is built a frame after the gate: try again then.
-      WidgetsBinding.instance.addPostFrameCallback((_) => _sync(ref.read(lockProvider)));
-      return;
-    }
-    final route = PageRouteBuilder<void>(
-      opaque: true,
-      transitionDuration: Duration.zero,
-      reverseTransitionDuration: Duration.zero,
-      pageBuilder: (_, _, _) => const LockHost(),
-    );
-    _route = route;
-    navigator.push(route);
-  }
-
-  void _hide() {
-    final route = _route;
-    _route = null;
-    if (route != null && route.navigator != null) route.navigator!.removeRoute(route);
+  /// Back must never reach the app underneath. The lock is not a route (a
+  /// route can be replaced by the app's own navigation, e.g. the splash
+  /// screen), so back is caught here and passed to the lock's own navigator.
+  @override
+  Future<bool> didPopRoute() async {
+    if (!ref.read(lockProvider).locked) return false;
+    await lockNavigator.currentState?.maybePop();
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(lockProvider, (_, next) => _sync(next));
     ref.listen(lockSettingsProvider, (_, next) {
       next.whenData((s) {
         SecureScreen.hideContent(s.enabled && s.hideInRecents);
@@ -80,9 +58,14 @@ class _LockGateState extends ConsumerState<LockGate> with WidgetsBindingObserver
       });
     });
     final checking = ref.watch(lockProvider.select((s) => s.checking));
+    final locked = ref.watch(lockProvider.select((s) => s.locked));
     return Stack(
       children: [
-        widget.child,
+        ExcludeFocus(
+          excluding: locked,
+          child: Offstage(offstage: locked, child: widget.child),
+        ),
+        if (locked) const Positioned.fill(child: LockHost()),
         if (checking) const Positioned.fill(child: ColoredBox(color: Color(0xFF17302A))),
       ],
     );

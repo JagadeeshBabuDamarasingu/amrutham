@@ -77,6 +77,15 @@ void main() {
     expect(find.text('Not unlocked'), findsNothing);
   });
 
+  testWidgets('the app replacing its own screen (the splash) does not remove the lock', (tester) async {
+    await _pumpGated(tester, results: [AuthResult.failed]);
+    final navigator = appNavigatorKey.currentState!;
+    navigator.pushReplacement(MaterialPageRoute(builder: (_) => const Scaffold(body: Text('after splash'))));
+    await tester.pumpAndSettle();
+    expect(find.text('Not unlocked'), findsOneWidget);
+    expect(find.text('after splash'), findsNothing);
+  });
+
   testWidgets('the emergency card opens while locked, without Print or Share, and Back returns to the lock', (tester) async {
     await _pumpGated(tester, results: [AuthResult.failed]);
     await tester.tap(find.text('Emergency card'));
