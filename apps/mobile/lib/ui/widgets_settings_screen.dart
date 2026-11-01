@@ -226,7 +226,7 @@ class CardOptionsScreen extends ConsumerWidget {
               children: [
                 toggle(
                   'Notification',
-                  'Shows the details above on the lock screen, readable without unlocking. Off unless you turn it on.',
+                  'Shows the details above, with phone numbers, on the lock screen. Anyone can read it without unlocking, and dial from their own phone. Off unless you turn it on.',
                   o.lockScreen,
                   (v) async {
                     if (v && !await _askLockScreen(context, ref)) return;
@@ -238,8 +238,8 @@ class CardOptionsScreen extends ConsumerWidget {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
                   title: const Text('Android Medical info', style: TextStyle(fontWeight: FontWeight.w800)),
                   subtitle: const Text(
-                    "Your phone's own emergency screen, which the lock screen's Emergency button shows. "
-                    'Copy the details in once; Amrutham cannot fill it in for you.',
+                    "Your phone's own emergency screen. Anyone can tap an emergency contact there to call, "
+                    'even on a locked phone. Add the same contacts there once; Amrutham cannot fill it in for you.',
                   ),
                   trailing: const Icon(Icons.open_in_new),
                   onTap: () async {

@@ -23,7 +23,9 @@ void main() {
     expect(all.title, contains(person.displayName));
     expect(all.body, contains('Blood group'));
     expect(all.body, isNot(contains('No medicines')), reason: 'nothing is said when there are none');
-    expect(all.short, 'Appa\nBlood O+');
+    expect(all.short, 'Appa · Blood O+');
+    expect(all.body, contains('+91 98765 43210'), reason: 'numbers are written out');
+    expect(all.shortBody, contains('Anita'));
     final none = LockScreenNotice.text(
       person: person, allergies: const [], medicines: const [],
       options: const CardOptions(bloodGroup: false, allergies: false, dial: false),

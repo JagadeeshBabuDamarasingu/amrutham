@@ -11,7 +11,7 @@ import 'widget_settings.dart';
 /// choices as the home screen card; a detail turned off is not in the text.
 class LockScreenNotice {
   /// Title and body, or null when the person turned everything off.
-  static ({String title, String short, String body})? text({
+  static ({String title, String short, String shortBody, String body})? text({
     required PersonProfile person,
     required List<AllergyRecord> allergies,
     required List<MedicationCourse> medicines,
@@ -30,12 +30,19 @@ class LockScreenNotice {
       final names = <String>{for (final m in medicines) m.medicationName}.toList();
       if (names.isNotEmpty) lines.add('Takes ${names.join(', ')}');
     }
-    // The buttons carry the contacts, so a person who only turned on dialling still gets a notice.
-    if (lines.isEmpty && options.dial) lines.add('Call for help');
+    // Numbers are written out: a notification button can't place a call from a
+    // locked phone, so a helper reads the number and dials from their own phone.
+    final contacts = <String>[];
+    if (options.dial) {
+      for (final c in person.emergencyContacts) {
+        contacts.add('${c.name}${c.relationship == null ? '' : ' (${c.relationship})'}  ${c.phone}');
+      }
+    }
+    lines.addAll(contacts);
     if (lines.isEmpty) return null;
     // The collapsed notice is all that shows on some lock screens: name and blood group.
-    final blood = options.bloodGroup && person.bloodGroup != null ? '\nBlood ${shortBlood(person.bloodGroup)}' : '';
-    return (title: 'Emergency: ${person.displayName}', short: '${person.displayName}$blood', body: lines.join('\n'));
+    final blood = options.bloodGroup && person.bloodGroup != null ? ' · Blood ${shortBlood(person.bloodGroup)}' : '';
+    return (title: 'Emergency: ${person.displayName}', short: '${person.displayName}$blood', shortBody: [for (final c in person.emergencyContacts.take(options.dial ? 1 : 0)) '${c.name}  ${c.phone}${person.emergencyContacts.length > 1 ? '  +${person.emergencyContacts.length - 1} more' : ''}'].join('\n'), body: lines.join('\n'));
   }
 
   /// A stable id per person, in a range reminders do not use.
@@ -53,12 +60,12 @@ class LockScreenNotice {
   static List<({String label, String number})> dials(PersonProfile person, CardOptions options) => [
     if (options.dial)
       for (final c in person.emergencyContacts.take(2))
-        if (EmergencySnapshot.dialable(c.phone) != null) (label: 'Call ${c.name}', number: EmergencySnapshot.dialable(c.phone)!),
-    (label: 'Emergency 112', number: '112'),
+        if (EmergencySnapshot.dialable(c.phone) != null) (label: c.name.split(' ').first, number: EmergencySnapshot.dialable(c.phone)!),
+    (label: '112', number: '112'),
   ];
 
-  static Future<void> show(String personId, PersonProfile person, CardOptions options, ({String title, String short, String body}) t) =>
-      AmruthamWidgets.showLockNotice(id: idFor(personId), title: t.title, short: t.short, body: t.body, dials: dials(person, options));
+  static Future<void> show(String personId, PersonProfile person, CardOptions options, ({String title, String short, String shortBody, String body}) t) =>
+      AmruthamWidgets.showLockNotice(id: idFor(personId), title: t.title, short: t.short, shortBody: t.shortBody, body: t.body, dials: dials(person, options));
 
   static Future<void> hide(String personId) => AmruthamWidgets.hideLockNotice(idFor(personId));
 }

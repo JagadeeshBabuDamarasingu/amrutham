@@ -51,6 +51,7 @@ class AmruthamWidgets {
     required int id,
     required String title,
     required String short,
+    required String shortBody,
     required String body,
     required List<({String label, String number})> dials,
   }) async {
@@ -59,6 +60,7 @@ class AmruthamWidgets {
         'id': id,
         'title': title,
         'short': short,
+        'shortBody': shortBody,
         'body': body,
         'dials': [for (final d in dials) {'label': d.label, 'number': d.number}],
       });

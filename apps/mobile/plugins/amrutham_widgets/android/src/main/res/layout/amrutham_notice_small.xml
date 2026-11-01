@@ -1,49 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Lock screen notice, collapsed: the name, then the buttons. -->
+<!-- Lock screen notice, collapsed: name and blood group, then who to call and their numbers. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:paddingTop="4dp"
-    android:paddingBottom="4dp">
+    android:orientation="vertical"
+    android:paddingTop="2dp"
+    android:paddingBottom="2dp">
     <TextView
         android:id="@+id/amrutham_notice_title"
         style="@android:style/TextAppearance.Material.Notification.Title"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:singleLine="true"
+        android:textSize="13sp"/>
+    <TextView
+        android:id="@+id/amrutham_notice_body"
+        style="@android:style/TextAppearance.Material.Notification"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
         android:maxLines="2"
         android:ellipsize="end"
-        android:textSize="14sp"/>
-        <TextView
-            android:id="@+id/amrutham_notice_btn1"
-            android:layout_width="40dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
-            android:gravity="center"
-            android:singleLine="true"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:visibility="gone"/>
-        <TextView
-            android:id="@+id/amrutham_notice_btn2"
-            android:layout_width="40dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
-            android:gravity="center"
-            android:singleLine="true"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:visibility="gone"/>
-        <TextView
-            android:id="@+id/amrutham_notice_btn3"
-            android:layout_width="46dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
-            android:gravity="center"
-            android:singleLine="true"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:visibility="gone"/>
+        android:textSize="12sp"/>
 </LinearLayout>

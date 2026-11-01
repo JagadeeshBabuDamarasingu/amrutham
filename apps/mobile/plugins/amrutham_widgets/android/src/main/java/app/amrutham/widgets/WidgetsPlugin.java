@@ -116,7 +116,7 @@ public class WidgetsPlugin
                 case "showLockNotice": {
                     Integer id = call.argument("id");
                     List<Map<String, String>> dials = call.argument("dials");
-                    LockNotice.show(context, id, call.<String>argument("title"), call.<String>argument("short"), call.<String>argument("body"),
+                    LockNotice.show(context, id, call.<String>argument("title"), call.<String>argument("short"), call.<String>argument("shortBody"), call.<String>argument("body"),
                             dials == null ? new java.util.ArrayList<Map<String, String>>() : dials);
                     result.success(null);
                     break;

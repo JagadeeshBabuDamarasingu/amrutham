@@ -27,17 +27,17 @@ final class LockNotice {
 
     private LockNotice() {}
 
-    static void show(Context context, int id, String title, String shortTitle, String body, List<Map<String, String>> dials) {
+    static void show(Context context, int id, String title, String shortTitle, String shortBody, String body, List<Map<String, String>> dials) {
         try {
             org.json.JSONArray list = new org.json.JSONArray();
             for (Map<String, String> d : dials) list.put(new org.json.JSONObject(d));
             org.json.JSONObject saved = new org.json.JSONObject();
-            saved.put("title", title).put("short", shortTitle).put("body", body).put("dials", list);
+            saved.put("title", title).put("short", shortTitle).put("shortBody", shortBody).put("body", body).put("dials", list);
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("n" + id, saved.toString()).apply();
         } catch (org.json.JSONException ignored) {
             // Not saved: it just can't come back after being swiped away.
         }
-        post(context, id, title, shortTitle, body, dials);
+        post(context, id, title, shortTitle, shortBody, body, dials);
     }
 
     /** Posts it again after it was swiped away (Android 14 allows that for pinned ones). */
@@ -54,13 +54,13 @@ final class LockNotice {
                 d.put("number", list.getJSONObject(i).getString("number"));
                 dials.add(d);
             }
-            post(context, id, saved.getString("title"), saved.optString("short", saved.getString("title")), saved.getString("body"), dials);
+            post(context, id, saved.getString("title"), saved.optString("short", saved.getString("title")), saved.optString("shortBody", ""), saved.getString("body"), dials);
         } catch (org.json.JSONException ignored) {
             // Damaged copy: leave it gone.
         }
     }
 
-    private static void post(Context context, int id, String title, String shortTitle, String body, List<Map<String, String>> dials) {
+    private static void post(Context context, int id, String title, String shortTitle, String shortBody, String body, List<Map<String, String>> dials) {
         NotificationManager manager = context.getSystemService(NotificationManager.class);
         if (manager == null) return;
         // Default importance, not low: low ones go under "Silent" and many phones
@@ -100,6 +100,8 @@ final class LockNotice {
         RemoteViews small = new RemoteViews(context.getPackageName(), R.layout.amrutham_notice_small);
         RemoteViews big = new RemoteViews(context.getPackageName(), R.layout.amrutham_notice_big);
         small.setTextViewText(R.id.amrutham_notice_title, shortTitle);
+        small.setTextViewText(R.id.amrutham_notice_body, shortBody);
+        small.setViewVisibility(R.id.amrutham_notice_body, shortBody.isEmpty() ? View.GONE : View.VISIBLE);
         big.setTextViewText(R.id.amrutham_notice_title, title);
         big.setTextViewText(R.id.amrutham_notice_body, body);
         int[] slots = {R.id.amrutham_notice_btn1, R.id.amrutham_notice_btn2, R.id.amrutham_notice_btn3};
@@ -111,16 +113,16 @@ final class LockNotice {
             PendingIntent pending = PendingIntent.getActivity(
                     context, id + 1 + n, dial, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
             boolean emergency = "112".equals(number);
-            for (RemoteViews v : new RemoteViews[] {small, big}) {
+            // Buttons are only in the expanded view: from a locked phone Android
+            // makes you unlock before they act, so the collapsed view shows the numbers.
+            for (RemoteViews v : new RemoteViews[] {big}) {
                 v.setViewVisibility(slots[n], View.VISIBLE);
                 // The collapsed row is narrow: an icon for a contact, "112" for the emergency number.
-                v.setTextViewText(slots[n], v == small ? (emergency ? "112" : "") : d.get("label"));
+                v.setTextViewText(slots[n], d.get("label"));
                 v.setInt(slots[n], "setBackgroundResource", emergency ? R.drawable.amrutham_notice_sos : R.drawable.amrutham_widget_button);
                 v.setTextColor(slots[n], emergency ? 0xFFFFFFFF : 0xFF2A1D00);
-                if (!(v == small && emergency)) { // "112" is text only in the narrow row
-                    v.setTextViewCompoundDrawablesRelative(slots[n],
-                            emergency ? R.drawable.amrutham_ic_phone_white : R.drawable.amrutham_ic_phone, 0, 0, 0);
-                }
+                v.setTextViewCompoundDrawablesRelative(slots[n],
+                        emergency ? R.drawable.amrutham_ic_phone_white : R.drawable.amrutham_ic_phone, 0, 0, 0);
                 v.setOnClickPendingIntent(slots[n], pending);
             }
             n++;

@@ -32,6 +32,11 @@ Before you start: connect the phone, check it has **at least 1 GB free** (a full
 - Where should its data live: the same plain preferences file as the emergency card?
 - It would need a way for a widget tap to write to the encrypted database, which I have not proven works. Do you want a read-only widget first ("2 medicines due", tap to open)?
 
+**Positioning: for everyone in the world, not only India (you said so; about 3 hours ago):** the new About screen already says it. These still say India, and need your go-ahead because the first two are public:
+- Website headline "Family health records for India" (`apps/web/app/page.tsx:116`) and its FAQ line about "more Indian languages". README line 7. Play listing wording.
+- Emergency number: the lock screen button says 112, which GSM phones recognise in most countries, but it is the local number (911, 999, 000…) people expect. Should it follow the phone's region?
+- In-app content that is India-specific: government schemes and helplines in Learn, Rupee formatting and "Ayushman"-style wording in Expenses, the language list (English, Hindi, Telugu), doctor and hospital fields, and the Doop frames for languages (9a-9m). Which of these should become region-aware, and which stay as an "India" section of Learn?
+
 **SOS button (asked for on the lock screen notification; not built):**
 - "Ring the other family phones over Tailscale or a private mesh" needs the family-devices pairing below. Without pairing, Amrutham has no way to find the other phones. Is SOS reason enough to build pairing first, and should it be Tailscale only, or also same Wi-Fi?
 - "Inform an ambulance service or call centre": an app cannot silently alert 112 or 108. What it can do is open the dialer with the number filled in (the notification now has an "Emergency 112" button). Do you want 108 as well, and is 112 right for every state? Please check against a source.
