@@ -143,7 +143,12 @@ class LockController extends Notifier<AppLockState> {
       if (state.locked) state = state.copyWith(locked: false, failed: false);
       return;
     }
-    if (state.locked) return unlock();
+    if (state.locked) {
+      // Only ask again if the app really went away. Dismissing the prompt also
+      // resumes the app, and asking then would trap the person in a loop.
+      if (left != null) await unlock();
+      return;
+    }
     final now = ref.read(monotonicProvider)();
     final unlockedAt = _unlockedAt;
     if (unlockedAt != null && now - unlockedAt < _grace) return;

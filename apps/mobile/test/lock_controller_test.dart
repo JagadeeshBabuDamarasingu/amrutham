@@ -104,6 +104,16 @@ void main() {
       return lock;
     }
 
+    test('dismissing the prompt does not bring it straight back', () async {
+      final t = await _make(settings: _on, results: [AuthResult.failed]);
+      final lock = t.c.read(lockProvider.notifier);
+      await lock.start();
+      expect(t.auth.calls, 1);
+      await lock.returnedToApp(); // the app resumes when the prompt closes
+      expect(t.auth.calls, 1);
+      expect(t.c.read(lockProvider).locked, isTrue);
+    });
+
     test('back within the chosen time stays open', () async {
       final t = await _make(settings: _on);
       final lock = await opened(t);
