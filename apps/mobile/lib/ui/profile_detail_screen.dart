@@ -425,6 +425,16 @@ class _Tile extends StatelessWidget {
   }
 }
 
+/// "3 days left" when the end is close, otherwise the date.
+String _endsText(DateTime end) {
+  final now = DateTime.now();
+  final days = DateTime(end.year, end.month, end.day).difference(DateTime(now.year, now.month, now.day)).inDays;
+  if (days == 0) return 'Last day';
+  if (days == 1) return '1 day left';
+  if (days > 1 && days <= 14) return '$days days left';
+  return 'Ends ${end.day} ${monthNames[end.month - 1]}';
+}
+
 /// Medicine card: name, a status pill (Ongoing / Ends 2 Nov / Stopped...) and
 /// the dose times as chips.
 class _CourseCard extends ConsumerWidget {
@@ -446,7 +456,7 @@ class _CourseCard extends ConsumerWidget {
         ? course.status.name
         : end == null
         ? 'Ongoing'
-        : 'Ends ${end.day} ${monthNames[end.month - 1]}';
+        : _endsText(end);
 
     return Card(
       child: InkWell(

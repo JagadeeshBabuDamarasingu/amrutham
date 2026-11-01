@@ -187,7 +187,7 @@ class CardOptionsScreen extends ConsumerWidget {
               children: [
                 toggle('Blood group', 'Shown large.', o.bloodGroup, (v) => change(o.copyWith(bloodGroup: v))),
                 const Divider(height: 1),
-                toggle('Allergies', 'Names only. If none are added, it says so.', o.allergies, (v) => change(o.copyWith(allergies: v))),
+                toggle('Allergies', 'Names only. If there are none, the line is left out.', o.allergies, (v) => change(o.copyWith(allergies: v))),
                 const Divider(height: 1),
                 toggle('Medicines', 'Current medicines. Off unless you turn it on.', o.medicines, (v) => change(o.copyWith(medicines: v))),
                 const Divider(height: 1),
