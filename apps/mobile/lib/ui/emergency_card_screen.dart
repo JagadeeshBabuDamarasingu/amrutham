@@ -184,7 +184,6 @@ class EmergencyCardScreen extends ConsumerWidget {
 
   /// One entry per medicine name: two courses of the same medicine are one
   /// line on a card someone has to read quickly.
-  @visibleForTesting
   static List<MedicationCourse> distinctMedicines(List<MedicationCourse> courses) {
     final seen = <String>{};
     return [for (final c in courses) if (seen.add(c.medicationName.trim().toLowerCase())) c];

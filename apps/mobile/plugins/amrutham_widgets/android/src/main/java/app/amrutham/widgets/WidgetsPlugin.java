@@ -113,6 +113,23 @@ public class WidgetsPlugin
                     result.success(null);
                     break;
                 }
+                case "openMedicalInfo": {
+                    // Android's own Medical info screen, which the phone shows on its
+                    // lock screen. Tried in turn: not every phone has the first.
+                    String[] actions = {"android.settings.EDIT_EMERGENCY_INFO", "android.settings.EMERGENCY_INFO_SETTINGS"};
+                    boolean opened = false;
+                    for (String action : actions) {
+                        try {
+                            context.startActivity(new Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                            opened = true;
+                            break;
+                        } catch (Exception ignored) {
+                            // Try the next one.
+                        }
+                    }
+                    result.success(opened);
+                    break;
+                }
                 case "cardCounts": {
                     AppWidgetManager manager = AppWidgetManager.getInstance(context);
                     Map<String, Integer> counts = new HashMap<>();

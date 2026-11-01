@@ -10,6 +10,7 @@ class CardOptions {
     this.medicines = false,
     this.dial = true,
     this.dialContact = 0,
+    this.lockScreen = false,
   });
 
   final bool bloodGroup;
@@ -20,18 +21,24 @@ class CardOptions {
   /// Index into the person's emergency contacts.
   final int dialContact;
 
+  /// Also show these details in a notification on the phone's lock screen.
+  /// Off until the person turns it on: anyone holding the phone can read it.
+  final bool lockScreen;
+
   CardOptions copyWith({
     bool? bloodGroup,
     bool? allergies,
     bool? medicines,
     bool? dial,
     int? dialContact,
+    bool? lockScreen,
   }) => CardOptions(
     bloodGroup: bloodGroup ?? this.bloodGroup,
     allergies: allergies ?? this.allergies,
     medicines: medicines ?? this.medicines,
     dial: dial ?? this.dial,
     dialContact: dialContact ?? this.dialContact,
+    lockScreen: lockScreen ?? this.lockScreen,
   );
 
   Map<String, Object> toJson() => {
@@ -40,6 +47,7 @@ class CardOptions {
     'medicines': medicines,
     'dial': dial,
     'dialContact': dialContact,
+    'lockScreen': lockScreen,
   };
 
   factory CardOptions.fromJson(Map<String, dynamic> j) => CardOptions(
@@ -48,6 +56,7 @@ class CardOptions {
     medicines: j['medicines'] as bool? ?? false,
     dial: j['dial'] as bool? ?? true,
     dialContact: j['dialContact'] as int? ?? 0,
+    lockScreen: j['lockScreen'] as bool? ?? false,
   );
 }
 

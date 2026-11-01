@@ -45,6 +45,16 @@ class AmruthamWidgets {
     }
   }
 
+  /// Opens Android's own Medical info screen (the one the lock screen's
+  /// Emergency button shows). False if this phone has no such screen.
+  static Future<bool> openMedicalInfo() async {
+    try {
+      return await _channel.invokeMethod<bool>('openMedicalInfo') ?? false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
   /// What launched the app, once: `{'action': 'emergency', 'personId': ...}`.
   static Future<Map<String, String>?> initialAction() async {
     try {

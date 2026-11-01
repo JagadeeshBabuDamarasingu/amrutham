@@ -1,5 +1,6 @@
 import 'package:amrutham_widgets/amrutham_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/person.dart';
@@ -123,6 +124,31 @@ class WidgetsSettingsScreen extends ConsumerWidget {
   };
 }
 
+/// Turning the lock screen notice on: say who can read it, then ask the phone
+/// for permission to show notifications. Nothing is turned on unless both pass.
+Future<bool> _askLockScreen(BuildContext context, WidgetRef ref) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (dialog) => AlertDialog(
+      title: const Text('Show on the lock screen?'),
+      content: const Text(
+        'A notification with the details you chose stays on your lock screen. '
+        'Anyone who picks up your phone can read it without unlocking. '
+        'Turn it off here any time.',
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Not now')),
+        TextButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Show it')),
+      ],
+    ),
+  );
+  if (ok != true) return false;
+  final android = ref
+      .read(notificationsPluginProvider)
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+  return await android?.requestNotificationsPermission() ?? true;
+}
+
 /// What one person's cards show, and the button that adds one.
 class CardOptionsScreen extends ConsumerWidget {
   const CardOptionsScreen({super.key, required this.person});
@@ -194,6 +220,44 @@ class CardOptionsScreen extends ConsumerWidget {
                 ),
               ),
           ],
+          const SectionLabel("On the phone's lock screen"),
+          Card(
+            child: Column(
+              children: [
+                toggle(
+                  'Notification',
+                  'Shows the details above on the lock screen, readable without unlocking. Off unless you turn it on.',
+                  o.lockScreen,
+                  (v) async {
+                    if (v && !await _askLockScreen(context, ref)) return;
+                    change(o.copyWith(lockScreen: v));
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                  title: const Text('Android Medical info', style: TextStyle(fontWeight: FontWeight.w800)),
+                  subtitle: const Text(
+                    "Your phone's own emergency screen, which the lock screen's Emergency button shows. "
+                    'Copy the details in once; Amrutham cannot fill it in for you.',
+                  ),
+                  trailing: const Icon(Icons.open_in_new),
+                  onTap: () async {
+                    final opened = await AmruthamWidgets.openMedicalInfo();
+                    if (!context.mounted || opened) return;
+                    await showDialog<void>(
+                      context: context,
+                      builder: (dialog) => AlertDialog(
+                        title: const Text('Open it from Settings'),
+                        content: const Text('This phone would not open it from here. Look in Settings for "Safety & emergency", then "Medical information".'),
+                        actions: [TextButton(onPressed: () => Navigator.pop(dialog), child: const Text('OK'))],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
           const SectionLabel('Add to home screen'),
           for (final (kind, title, sub) in const [
             ('card', 'Emergency card', 'Name, blood group, allergies and a dial button. The full card.'),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:amrutham_widgets/amrutham_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/medication.dart';
@@ -13,6 +14,7 @@ import '../ui/log_measurement_screen.dart';
 import '../lock/lock_controller.dart';
 import 'emergency_snapshot.dart';
 import 'launch_action.dart';
+import 'lock_screen_notice.dart';
 
 /// Keeps the home screen cards in step with the app, and opens the emergency
 /// card when one is tapped. It copies to the widgets only while the person has
@@ -90,7 +92,17 @@ class _State extends ConsumerState<WidgetSyncHost> {
 
   Future<void> _sync() async {
     final settings = await ref.read(widgetSettingsProvider.future);
+    // Not set up in some tests; the widgets must still sync without it.
+    FlutterLocalNotificationsPlugin? notifications;
+    try {
+      notifications = ref.read(notificationsPluginProvider);
+    } on Object {
+      notifications = null;
+    }
     if (!settings.enabled) {
+      for (final p in await ref.read(profilesProvider.future)) {
+        if (notifications != null) await LockScreenNotice.hide(notifications, p.id.value);
+      }
       await AmruthamWidgets.sync(enabled: false, people: const [], snapshots: const {});
       return;
     }
@@ -99,6 +111,17 @@ class _State extends ConsumerState<WidgetSyncHost> {
     for (final p in people) {
       final allergies = await ref.read(allergiesProvider(p.id).future);
       final courses = await ref.read(medicationCoursesProvider(p.id).future);
+      final options = settings.optionsFor(p.id.value);
+      final notice = options.lockScreen
+          ? LockScreenNotice.text(person: p, allergies: allergies, medicines: [for (final c in courses) if (c.status == CourseStatus.active) c], options: options)
+          : null;
+      if (notifications != null) {
+        if (notice == null) {
+          await LockScreenNotice.hide(notifications, p.id.value);
+        } else {
+          await LockScreenNotice.show(notifications, p.id.value, notice);
+        }
+      }
       snapshots[p.id.value] = EmergencySnapshot.build(
         person: p,
         allergies: allergies,
