@@ -86,8 +86,8 @@ New Doop frames 16a-16c, 17a-17b and "Map · Navigation, simplified". Decisions 
    - "Make a new recovery code" when the phone still has the data, then back up again.
    - "Where I kept it" and the printable recovery sheet (no health data).
    - Reminder when the folder backup is over a week old.
-3. Learn tab split into Health | Using Amrutham (17a), with a "Finish setting up" card on Today (5 steps) and step-by-step guides, starting with the emergency card (17b).
-**?** Should a readable export (unencrypted CSV/PDF plus documents, with a warning) be offered as a last-resort copy? It helps in the worst case but is readable by anyone who finds it.
+3. App guides live in Settings > Help > Using Amrutham (17a), not in the Learn tab, and are also linked from the feature they explain. A "Finish setting up" checklist card on Today (5 steps: add a person, add a contact, back up, save the recovery code, set up an emergency card). First guide: emergency card (17b).
+4. Readable copy (16e, decided): unprotected PDF/CSV/documents export, with a warning and a tick-box that the user takes responsibility, opened through the share sheet, with a reminder after a week to delete it.
 **?** Should the setup card on Today be dismissible?
 
 **Settings search (frames 16a, 16d):** a search field at the top of Settings. It searches a fixed list of settings and guide titles, including ones inside other pages, and shows each with its path ("Settings › Emergency cards"). It never searches health records and stores nothing. Build it from one list of entries (title, keywords, path, route) so new settings are added in one place. **?** Worth it with only ~10 top-level rows? It earns its place once the deep items are indexed.
