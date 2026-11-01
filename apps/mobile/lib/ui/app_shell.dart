@@ -7,6 +7,7 @@ import '../providers/app_providers.dart';
 import '../quick_access/widget_host.dart';
 
 import 'app_style.dart';
+import 'setup_card.dart';
 import 'strings.dart';
 import 'family_screen.dart';
 import 'learn_screen.dart';
@@ -106,7 +107,8 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_index == 0 && !(ref.watch(tipsHiddenProvider).valueOrNull ?? false))
+            if (_index == 0 && showSetupCard(ref)) const SetupCard(),
+            if (_index == 0 && !showSetupCard(ref) && !(ref.watch(tipsHiddenProvider).valueOrNull ?? false))
               GestureDetector(
                 onTap: () => _index = 3,
                 child: Container(

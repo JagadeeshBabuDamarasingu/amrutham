@@ -8,6 +8,7 @@ import 'about_screen.dart';
 import 'app_lock_screen.dart';
 import 'app_style.dart';
 import 'backup_recovery_screen.dart';
+import 'guide_screens.dart';
 import 'language_screen.dart';
 import 'problem_report.dart';
 import 'strings.dart';
@@ -95,6 +96,12 @@ class SettingsScreen extends ConsumerWidget {
           Card(
             child: Column(
               children: [
+                tile(
+                  'Using Amrutham',
+                  'Step-by-step guides, and what to do if something goes wrong',
+                  onTap: () => open(const UsingAmruthamScreen()),
+                ),
+                const Divider(height: 1),
                 tile(
                   'About, privacy and terms',
                   'Our vision, credits and how to reach us',
