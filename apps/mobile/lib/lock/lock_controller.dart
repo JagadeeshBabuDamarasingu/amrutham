@@ -73,7 +73,8 @@ final lockProvider = NotifierProvider<LockController, AppLockState>(LockControll
 class LockController extends Notifier<AppLockState> {
   Duration? _leftAt;
   Duration? _unlockedAt;
-  bool _prompting = false;
+  Future<void>? _attempt;
+  bool get _prompting => _attempt != null;
   bool _started = false;
   final _ready = Completer<void>();
 
@@ -99,23 +100,25 @@ class LockController extends Notifier<AppLockState> {
     if (state.locked) await unlock();
   }
 
-  Future<void> unlock() async {
-    if (_prompting || !state.locked) return;
-    _prompting = true;
-    try {
-      final result = await ref.read(deviceAuthProvider).authenticate('Open Amrutham');
-      switch (result) {
-        case AuthResult.success:
-          _unlockedAt = ref.read(monotonicProvider)();
-          _leftAt = null;
-          state = state.copyWith(locked: false, failed: false);
-        case AuthResult.unavailable:
-          state = state.copyWith(locked: false, failed: false, unavailable: true);
-        case AuthResult.failed:
-          state = state.copyWith(failed: true);
-      }
-    } finally {
-      _prompting = false;
+  /// Asks the phone to unlock. A second call while a prompt is already open
+  /// waits for that prompt instead of being ignored, so a shortcut that arrives
+  /// during the start-up prompt still gets its answer.
+  Future<void> unlock() {
+    if (!state.locked && _attempt == null) return Future.value();
+    return _attempt ??= _askPhone().whenComplete(() => _attempt = null);
+  }
+
+  Future<void> _askPhone() async {
+    final result = await ref.read(deviceAuthProvider).authenticate('Open Amrutham');
+    switch (result) {
+      case AuthResult.success:
+        _unlockedAt = ref.read(monotonicProvider)();
+        _leftAt = null;
+        state = state.copyWith(locked: false, failed: false);
+      case AuthResult.unavailable:
+        state = state.copyWith(locked: false, failed: false, unavailable: true);
+      case AuthResult.failed:
+        state = state.copyWith(failed: true);
     }
   }
 

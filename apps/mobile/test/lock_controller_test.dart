@@ -184,6 +184,15 @@ void main() {
       expect(t.auth.calls, 2); // already open: no prompt
     });
 
+    test('a shortcut arriving during the start-up prompt waits for it', () async {
+      final t = await _make(settings: _on, results: [AuthResult.success]);
+      final lock = t.c.read(lockProvider.notifier);
+      final starting = lock.start();
+      expect(await lock.ensureUnlocked(), isTrue);
+      await starting;
+      expect(t.auth.calls, 1); // one prompt, shared
+    });
+
     test('ensureUnlocked is false if the person does not unlock', () async {
       final t = await _make(settings: _on, results: [AuthResult.failed]);
       final lock = t.c.read(lockProvider.notifier);
