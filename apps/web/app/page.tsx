@@ -261,6 +261,7 @@ export default function Home() {
 							{site.licenseName}
 						</a>
 						<Link href="/privacy">Privacy</Link>
+						<Link href="/terms">Terms</Link>
 					</span>
 				</div>
 			</footer>

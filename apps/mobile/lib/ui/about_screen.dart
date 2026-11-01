@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../about/app_info.dart';
+import '../about/legal_text.dart';
 import 'app_style.dart';
+import 'legal_screen.dart';
 import 'problem_report.dart';
 
 Future<void> _open(BuildContext context, Uri uri) async {
@@ -125,7 +127,9 @@ class AboutScreen extends StatelessWidget {
                 const Divider(height: 1),
                 row('Source code', 'github.com/JagadeeshBabuDamarasingu/amrutham', () => _open(context, Uri.parse(sourceUrl)), trailing: Icons.north_east),
                 const Divider(height: 1),
-                row('Privacy policy', 'amrutham.app/privacy', () => _open(context, Uri.parse(privacyUrl)), trailing: Icons.north_east),
+                row('Privacy policy', 'What stays on your phone, and what does not', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LegalScreen(privacyDoc)))),
+                const Divider(height: 1),
+                row('Terms of use', 'The short version of the ground rules', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LegalScreen(termsDoc)))),
               ],
             ),
           ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:amrutham/about/app_info.dart';
+import 'package:amrutham/about/legal_text.dart';
 import 'package:amrutham/ui/about_screen.dart';
 
 Future<void> _show(WidgetTester tester, Widget screen) async {
@@ -51,6 +52,24 @@ void main() {
       final name = m[1]!;
       if (const {'flutter', 'flutter_localizations', 'cupertino_icons', 'amrutham_folder', 'amrutham_widgets', 'realm'}.contains(name)) continue;
       expect(credited, contains(name), reason: '$name is used but not on the Credits screen');
+    }
+  });
+
+  testWidgets('Privacy and Terms open inside the app', (tester) async {
+    await _show(tester, const AboutScreen());
+    await tester.tap(find.text('Privacy policy'));
+    await tester.pumpAndSettle();
+    expect(find.text('What we collect'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Terms of use'));
+    await tester.pumpAndSettle();
+    expect(find.text('Not medical advice, not an emergency service'), findsOneWidget);
+  });
+
+  test('the web pages carry the same dated text', () {
+    for (final page in ['privacy', 'terms']) {
+      expect(File('../web/app/$page/page.tsx').readAsStringSync(), contains(legalUpdated));
     }
   });
 }
