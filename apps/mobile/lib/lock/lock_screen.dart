@@ -87,18 +87,18 @@ class LockScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
             children: [
-              const SizedBox(height: 56),
+              const SizedBox(height: 20),
               Container(
-                width: 84,
-                height: 84,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withValues(alpha: 0.10),
                   border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
                 ),
-                child: Icon(failed ? Icons.lock_outline : Icons.favorite_border, size: 40, color: onboardAmber),
+                child: Icon(failed ? Icons.lock_outline : Icons.favorite_border, size: 28, color: onboardAmber),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 12),
               const Text(
                 'AMRUTHAM',
                 style: TextStyle(color: Color(0xFF9FC0B2), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2),
@@ -109,7 +109,7 @@ class LockScreen extends ConsumerWidget {
                 style: const TextStyle(
                   fontFamily: headingFont,
                   color: Colors.white,
-                  fontSize: 32,
+                  fontSize: 28,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.7,
                 ),
@@ -123,9 +123,10 @@ class LockScreen extends ConsumerWidget {
                 style: const TextStyle(color: Color(0xFFCFE0D8), fontSize: 16, height: 1.5),
               ),
               const Spacer(),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                height: 60,
+                height: 56,
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(
                     backgroundColor: onboardAmber,
@@ -139,7 +140,7 @@ class LockScreen extends ConsumerWidget {
                 ),
               ),
               if (living.isNotEmpty) ...[
-                const SizedBox(height: 26),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.18))),
@@ -351,10 +352,10 @@ class _EmergencySummaryState extends ConsumerState<_EmergencySummary> {
                   ],
                 ),
                 block('ALLERGIES', allergies.isEmpty ? ['None recorded'] : [for (final a in allergies) EmergencyCardScreen.allergyLine(a)]),
-                block('TAKING NOW', medicines.isEmpty ? ['No active medicines'] : [for (final m in medicines) m.medicationName]),
                 block('CALL', person.emergencyContacts.isEmpty
                     ? ['No contacts added']
                     : [for (final c in person.emergencyContacts) '${c.name}${c.relationship == null ? '' : ' (${c.relationship})'}  ${c.phone}']),
+                block('TAKING NOW', medicines.isEmpty ? ['No active medicines'] : [for (final m in medicines) m.medicationName]),
                 const SizedBox(height: 10),
                 Text(
                   widget.failed ? 'Open for anyone who needs it. Tap for the full card.' : 'Anyone can see this. Tap for the full card.',
