@@ -26,6 +26,7 @@ class LogMeasurementScreen extends ConsumerStatefulWidget {
 }
 
 class _LogMeasurementScreenState extends ConsumerState<LogMeasurementScreen> {
+  late PersonId _personId = widget.personId;
   late MeasurementKind _kind = widget.editing?.kind ?? widget.initialKind;
   late final _first = TextEditingController(
     text: widget.editing == null ? '' : _plain(widget.editing!.value),
@@ -94,7 +95,7 @@ class _LogMeasurementScreenState extends ConsumerState<LogMeasurementScreen> {
     final editing = widget.editing;
     if (editing == null) {
       await repository.addMeasurement(
-        personId: widget.personId,
+        personId: _personId,
         kind: _kind,
         value: _firstValue!,
         value2: _kind.hasSecondValue ? _secondValue : null,
@@ -115,9 +116,10 @@ class _LogMeasurementScreenState extends ConsumerState<LogMeasurementScreen> {
   @override
   Widget build(BuildContext context) {
     final readings =
-        ref.watch(measurementsProvider(widget.personId)).valueOrNull ?? [];
+        ref.watch(measurementsProvider(_personId)).valueOrNull ?? [];
     final last = readings.where((m) => m.kind == _kind).firstOrNull;
     final theme = Theme.of(context);
+    final people = (ref.watch(profilesProvider).valueOrNull ?? []).where((p) => !p.isDeceased).toList();
 
     return Scaffold(
       backgroundColor: onboardBg,
@@ -128,6 +130,23 @@ class _LogMeasurementScreenState extends ConsumerState<LogMeasurementScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
+          if (widget.editing == null && people.length > 1) ...[
+            Text('FOR', style: _label),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final p in people)
+                  ChoiceChip(
+                    label: Text(p.displayName),
+                    selected: p.id == _personId,
+                    onSelected: (_) => setState(() => _personId = p.id),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
           Text('WHAT', style: _label),
           const SizedBox(height: 8),
           Wrap(

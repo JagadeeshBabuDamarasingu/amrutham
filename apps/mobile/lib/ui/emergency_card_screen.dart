@@ -5,12 +5,14 @@ import 'package:share_plus/share_plus.dart';
 
 import '../model/allergy.dart';
 import '../model/certainty.dart';
+import '../model/history_event.dart';
 import '../model/ids.dart';
 import '../model/medication.dart';
 import '../model/person.dart';
 import '../providers/app_providers.dart';
 import '../quick_access/emergency_snapshot.dart' show shortBlood;
 import 'app_style.dart';
+import 'log_measurement_screen.dart' show monthNames;
 
 /// One page a stranger can read: blood group, allergies, what the person is
 /// taking, who to call. Built from what's already recorded; entries that
@@ -37,6 +39,7 @@ class EmergencyCardScreen extends ConsumerWidget {
     );
 
     if (person == null) return const Scaffold(body: SizedBox());
+    final recent = recentSurgeries(ref.watch(historyEventsProvider(personId)).valueOrNull ?? []);
 
     return Scaffold(
       appBar: locked ? null : AppBar(),
@@ -137,6 +140,7 @@ class EmergencyCardScreen extends ConsumerWidget {
                         child: const Text('+ Add contact'),
                       ),
                   ]),
+                  if (recent.isNotEmpty) _Block('Recent', [for (final r in recent) Text(r)]),
                 ],
               ),
             ),
@@ -148,7 +152,7 @@ class EmergencyCardScreen extends ConsumerWidget {
             onPressed: () => SharePlus.instance.share(
               ShareParams(
                 subject: 'Emergency card: ${person.displayName}',
-                text: _plainText(person, allergies, courses),
+                text: _plainText(person, allergies, courses, recent),
               ),
             ),
           ),
@@ -161,7 +165,7 @@ class EmergencyCardScreen extends ConsumerWidget {
               // fonts for Telugu, Hindi and Urdu names.
               onLayout: (format) => Printing.convertHtml(
                 format: format,
-                html: cardHtml(person, allergies, courses),
+                html: cardHtml(person, allergies, courses, recent),
               ),
             ),
             child: const Text('Print or save as PDF'),
@@ -189,6 +193,19 @@ class EmergencyCardScreen extends ConsumerWidget {
     return [for (final c in courses) if (seen.add(c.medicationName.trim().toLowerCase())) c];
   }
 
+  /// The latest surgery and the next planned one, as short lines.
+  static List<String> recentSurgeries(List<HistoryEvent> events) {
+    final surgeries = events.where((e) => e.kind == HistoryKind.procedure).toList()
+      ..sort((a, b) => a.eventDate.compareTo(b.eventDate));
+    final past = surgeries.where((e) => !e.isPlanned).lastOrNull;
+    final planned = surgeries.where((e) => e.isPlanned).firstOrNull;
+    return [
+      if (past != null) '${past.title}, ${monthNames[past.eventDate.month - 1]} ${past.eventDate.year}',
+      if (planned != null)
+        '${planned.title} planned ${planned.eventDate.day} ${monthNames[planned.eventDate.month - 1]} ${planned.eventDate.year}',
+    ];
+  }
+
   static String allergyLine(AllergyRecord a) =>
       '${a.substance} · ${a.reaction}'
       '${a.certainty == Certainty.confirmed ? '' : ' · as ${a.certainty.name}'}';
@@ -203,8 +220,9 @@ class EmergencyCardScreen extends ConsumerWidget {
   static String cardHtml(
     PersonProfile p,
     List<AllergyRecord> allergies,
-    List<MedicationCourse> courses,
-  ) {
+    List<MedicationCourse> courses, [
+    List<String> recent = const [],
+  ]) {
     String row(String label, String value) =>
         '<p><b>${_esc(label)}</b><br>${_esc(value)}</p>';
     return '<html><body style="font-family:sans-serif;font-size:20px">'
@@ -213,6 +231,7 @@ class EmergencyCardScreen extends ConsumerWidget {
         '${row('Allergies', allergies.isEmpty ? 'none recorded' : allergies.map(allergyLine).join('; '))}'
         '${row('Taking now', courses.isEmpty ? 'none' : courses.map((c) => c.medicationName).join(', '))}'
         '${row('Call', p.emergencyContacts.isEmpty ? 'no contacts added' : p.emergencyContacts.map((c) => '${c.name} ${c.phone}').join('; '))}'
+        '${recent.isEmpty ? '' : row('Recent', recent.join('; '))}'
         '<p style="font-size:14px">Entries marked "as reported" are not verified.</p>'
         '</body></html>';
   }
@@ -220,8 +239,9 @@ class EmergencyCardScreen extends ConsumerWidget {
   static String _plainText(
     PersonProfile p,
     List<AllergyRecord> allergies,
-    List<MedicationCourse> courses,
-  ) {
+    List<MedicationCourse> courses, [
+    List<String> recent = const [],
+  ]) {
     final b = StringBuffer('EMERGENCY CARD: ${p.displayName}\n');
     b.writeln('Blood group: ${p.bloodGroup ?? 'not recorded'}');
     b.writeln(
@@ -233,6 +253,7 @@ class EmergencyCardScreen extends ConsumerWidget {
     b.writeln(
       'Call: ${p.emergencyContacts.isEmpty ? 'no contacts added' : p.emergencyContacts.map((c) => '${c.name} ${c.phone}').join('; ')}',
     );
+    if (recent.isNotEmpty) b.writeln('Recent: ${recent.join('; ')}');
     return b.toString();
   }
 

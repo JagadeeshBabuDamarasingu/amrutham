@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/family_history.dart';
+import '../model/history_event.dart';
 import '../model/ids.dart';
 import '../model/medication.dart';
 import '../model/person.dart';
@@ -548,6 +549,8 @@ class _MemorialView extends ConsumerWidget {
     final courses = ref.watch(medicationCoursesProvider(person.id)).valueOrNull ?? [];
     final allergies = ref.watch(allergiesProvider(person.id)).valueOrNull ?? [];
     final events = ref.watch(historyEventsProvider(person.id)).valueOrNull ?? [];
+    final surgeries = events.where((e) => e.kind == HistoryKind.procedure).length;
+    final documents = (ref.watch(recordsProvider).valueOrNull ?? []).where((r) => r.personId == person.id).length;
     final years = [
       if (person.dateOfBirth != null) '${person.dateOfBirth!.year}',
       if (person.dateOfDeath != null) '${person.dateOfDeath!.year}',
@@ -623,6 +626,8 @@ class _MemorialView extends ConsumerWidget {
           const SectionLabel('On record'),
           row('Past medications', courses.isEmpty ? 'None' : '${courses.length}'),
           row('Allergies', allergies.isEmpty ? 'None recorded' : '${allergies.length}'),
+          row('Surgeries', surgeries == 0 ? 'None' : '$surgeries'),
+          row('Documents', documents == 0 ? 'None' : '$documents'),
           row(
             'History',
             events.isEmpty ? 'None' : '${events.length} ›',
