@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/ids.dart';
+import '../reminder/alarm_actions.dart' show alarmUp;
 import '../providers/app_providers.dart';
 import 'device_auth.dart';
 import 'lock_settings.dart';
@@ -97,7 +98,8 @@ class LockController extends Notifier<AppLockState> {
     } finally {
       if (!_ready.isCompleted) _ready.complete();
     }
-    if (state.locked) await unlock();
+    // A ringing alarm shows its own page; the prompt would cover it.
+    if (state.locked && !alarmUp) await unlock();
   }
 
   /// Asks the phone to unlock. A second call while a prompt is already open
@@ -139,6 +141,10 @@ class LockController extends Notifier<AppLockState> {
 
   Future<void> returnedToApp() async {
     final left = _leftAt;
+    if (alarmUp) {
+      _leftAt = null;
+      return;
+    }
     if (_prompting) {
       _leftAt = null;
       return;

@@ -14,7 +14,10 @@ import '../model/dose_log.dart';
 import '../model/ids.dart';
 import '../repository/dose_log_repository.dart';
 
-const alarmChannelId = 'meds_alarm_channel';
+// v2: a channel's sound cannot be changed once it exists, so the alarm sound
+// got a new channel. The old one is removed at start-up.
+const alarmChannelId = 'meds_alarm_v2';
+const oldAlarmChannelId = 'meds_alarm_channel';
 const actionTaken = 'taken';
 const actionSnooze = 'snooze';
 const snoozeMinutes = 10;
@@ -30,7 +33,12 @@ AndroidNotificationDetails alarmDetails() => AndroidNotificationDetails(
   priority: Priority.max,
   category: AndroidNotificationCategory.alarm,
   fullScreenIntent: true,
+  playSound: true,
+  // The phone's own alarm tone, played as an alarm (loud even when media is quiet).
+  sound: const UriAndroidNotificationSound('content://settings/system/alarm_alert'),
   audioAttributesUsage: AudioAttributesUsage.alarm,
+  enableVibration: true,
+  vibrationPattern: Int64List.fromList([0, 800, 500, 800, 500, 800]),
   additionalFlags: Int32List.fromList([4]), // FLAG_INSISTENT: keep ringing
   timeoutAfter: 10 * 60 * 1000,
   visibility: NotificationVisibility.public,
@@ -68,6 +76,11 @@ DateTime doseTimeFor(String hhmm, DateTime now) {
 }
 
 int snoozeIdFor(AlarmPayload p) => ((p.courseId + p.time).hashCode & 0x3fffffff) | 0x40000000;
+
+/// True while the alarm page is on screen, so the app lock does not cover it.
+final alarmShowing = ValueNotifier<bool>(false);
+
+bool get alarmUp => alarmShowing.value || pendingRing.value != null;
 
 /// An alarm that is ringing and should be shown full screen.
 class AlarmRing {

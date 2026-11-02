@@ -7,10 +7,29 @@ import 'app_style.dart';
 
 /// What opens over everything when a medicine alarm rings: the medicine, the
 /// time, and three big buttons.
-class AlarmScreen extends StatelessWidget {
+class AlarmScreen extends StatefulWidget {
   const AlarmScreen({super.key, required this.ring});
 
   final AlarmRing ring;
+
+  @override
+  State<AlarmScreen> createState() => _AlarmScreenState();
+}
+
+class _AlarmScreenState extends State<AlarmScreen> {
+  AlarmRing get ring => widget.ring;
+
+  @override
+  void initState() {
+    super.initState();
+    alarmShowing.value = true;
+  }
+
+  @override
+  void dispose() {
+    alarmShowing.value = false;
+    super.dispose();
+  }
 
   Future<void> _done(BuildContext context, Future<void> Function() answer) async {
     final id = ring.notificationId;

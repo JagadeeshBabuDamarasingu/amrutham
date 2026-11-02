@@ -104,6 +104,26 @@ void main() {
     expect(find.text('secret records'), findsNothing); // the app underneath stays hidden
   });
 
+  testWidgets('with an alarm up at start, the phone prompt does not cover it', (tester) async {
+    pendingRing.value = const AlarmRing(AlarmPayload('appa', 'c1', '08:00', 'Metformin', '500 mg'), 1);
+    final auth = FakeDeviceAuth(results: [AuthResult.failed]);
+    final store = MemoryOnboardingStore();
+    await store.putSetting(LockSettings.storeKey, const LockSettings(enabled: true).encode());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _overrides(store, auth),
+        child: MaterialApp(
+          navigatorKey: appNavigatorKey,
+          builder: (context, child) => LockGate(child: child!),
+          home: const Scaffold(body: Text('secret records')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Time to take'), findsOneWidget);
+    expect(auth.calls, 0);
+  });
+
   testWidgets('a refused prompt leaves the records hidden, and Try again opens them', (tester) async {
     await _pumpGated(tester, results: [AuthResult.failed, AuthResult.success]);
     expect(find.text('Not unlocked'), findsOneWidget);

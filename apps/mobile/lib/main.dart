@@ -14,6 +14,7 @@ import 'lock/lock_gate.dart';
 import 'lock/lock_screen.dart' show lockIntroPending;
 import 'providers/app_providers.dart';
 import 'ui/app_shell.dart';
+import 'ui/medicine_alarms_screen.dart' show alarmsRearmedProvider;
 import 'ui/app_style.dart';
 import 'ui/splash_screen.dart';
 import 'ui/welcome_screen.dart';
@@ -70,6 +71,9 @@ Future<void> _initNotifications() async {
     },
     onDidReceiveBackgroundNotificationResponse: alarmActionBackground,
   );
+  await _notificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.deleteNotificationChannel(channelId: oldAlarmChannelId);
   // The phone opened the app from a ringing alarm: show it, and skip the intro.
   final launch = await _notificationsPlugin.getNotificationAppLaunchDetails();
   final opened = launch?.didNotificationLaunchApp == true ? launch!.notificationResponse : null;
@@ -85,6 +89,7 @@ class AmruthamApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(alarmsRearmedProvider);
     return MaterialApp(
       navigatorKey: appNavigatorKey,
       builder: (context, child) => LockGate(child: child ?? const SizedBox.shrink()),

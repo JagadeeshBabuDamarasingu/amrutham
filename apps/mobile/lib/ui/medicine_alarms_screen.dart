@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_providers.dart';
+import '../reminder/alarm_actions.dart' show alarmChannelId;
 import 'app_style.dart';
 
 class AlarmRow {
@@ -29,6 +30,16 @@ final alarmRowsProvider = FutureProvider<List<AlarmRow>>((ref) async {
   }
   rows.sort((a, b) => a.time.compareTo(b.time));
   return rows;
+});
+
+/// After the alarm sound changed, alarms armed earlier still use the old
+/// channel: arm them all again, once.
+final alarmsRearmedProvider = FutureProvider<void>((ref) async {
+  final store = ref.watch(onboardingStoreProvider);
+  if (await store.setting('alarm_channel') == alarmChannelId) return;
+  final people = await ref.watch(profilesProvider.future);
+  await (await ref.watch(reminderRepositoryProvider.future)).rearm([for (final p in people) if (!p.isDeceased) p.id]);
+  await store.putSetting('alarm_channel', alarmChannelId);
 });
 
 final _healthProvider = FutureProvider.autoDispose<({bool notifications, bool exact})>((ref) async {
