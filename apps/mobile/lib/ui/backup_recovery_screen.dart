@@ -6,6 +6,7 @@ import '../backup/backup_flow.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
 import 'auto_backup_screen.dart';
+import 'backup_checks.dart';
 import 'recovery_cases_screen.dart';
 import 'readable_copy_screen.dart';
 import 'recovery_code_dialog.dart';
@@ -163,6 +164,18 @@ class BackupRecoveryScreen extends ConsumerWidget {
                     'Where did you keep it?',
                     ref.watch(codeKeptProvider).valueOrNull ?? 'Tap to note it, so you know where to look',
                     () => askWhereCodeKept(context, ref),
+                  ),
+                  const Divider(height: 1),
+                  tile(
+                    'Check my backup',
+                    'Opens your latest backup with the code. Restores nothing',
+                    () => checkMyBackup(context, driveOn: driveOn),
+                  ),
+                  const Divider(height: 1),
+                  tile(
+                    'Print a recovery sheet',
+                    'A page to fill in and keep. No health data',
+                    printRecoverySheet,
                   ),
                   const Divider(height: 1),
                   tile(
