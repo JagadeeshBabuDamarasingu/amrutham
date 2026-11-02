@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:amrutham/lock/app_navigator.dart';
+import 'package:amrutham/reminder/alarm_actions.dart';
 import 'package:amrutham/lock/ask_lock.dart';
 import 'package:amrutham/lock/device_auth.dart';
 import 'package:amrutham/lock/lock_controller.dart';
@@ -89,6 +90,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Not unlocked'), findsOneWidget);
     expect(lockIntroPending, isFalse);
+  });
+
+  testWidgets('a ringing alarm opens its page over the lock screen, with Taken and Snooze', (tester) async {
+    await _pumpGated(tester, results: [AuthResult.failed]);
+    pendingRing.value = const AlarmRing(AlarmPayload('appa', 'c1', '08:00', 'Metformin', '500 mg'), 1);
+    await tester.pumpAndSettle();
+    expect(find.text('Time to take'), findsOneWidget);
+    expect(find.text('Metformin'), findsOneWidget);
+    expect(find.text('Taken'), findsOneWidget);
+    expect(find.text('Snooze 10 min'), findsOneWidget);
+    expect(pendingRing.value, isNull);
+    expect(find.text('secret records'), findsNothing); // the app underneath stays hidden
   });
 
   testWidgets('a refused prompt leaves the records hidden, and Try again opens them', (tester) async {

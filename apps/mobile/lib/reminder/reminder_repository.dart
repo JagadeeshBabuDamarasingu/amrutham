@@ -61,10 +61,12 @@ class ReminderRepository {
   }
 
   /// Lets an alarm come up over the lock screen (Android 14+ may ask).
-  Future<void> requestFullScreenAlarms() async {
+  /// True when it is already allowed (nothing opens); otherwise the phone's
+  /// own settings page opens.
+  Future<bool> requestFullScreenAlarms() async {
     final android = _notifications
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    await android?.requestFullScreenIntentPermission();
+    return await android?.requestFullScreenIntentPermission() ?? true;
   }
 
   /// Rings one alarm in ten seconds, so the person can hear what it does.

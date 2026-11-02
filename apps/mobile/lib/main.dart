@@ -18,6 +18,8 @@ import 'ui/app_style.dart';
 import 'ui/splash_screen.dart';
 import 'ui/welcome_screen.dart';
 
+bool skipIntro = false;
+
 final FlutterLocalNotificationsPlugin _notificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
@@ -28,7 +30,7 @@ Future<void> main() async {
   await _initNotifications();
   await AutoBackupScheduler.init();
 
-  lockIntroPending = true;
+  lockIntroPending = !skipIntro;
   runApp(
     ProviderScope(
       overrides: [
@@ -59,10 +61,23 @@ Future<void> _initNotifications() async {
       iOS: iosSettings,
     ),
     onDidReceiveNotificationResponse: (r) {
-      if (r.actionId != null) handleAlarmAction(r);
+      if (r.actionId != null) {
+        handleAlarmAction(r);
+        return;
+      }
+      final p = AlarmPayload.parse(r.payload);
+      if (p != null) pendingRing.value = AlarmRing(p, r.id);
     },
     onDidReceiveBackgroundNotificationResponse: alarmActionBackground,
   );
+  // The phone opened the app from a ringing alarm: show it, and skip the intro.
+  final launch = await _notificationsPlugin.getNotificationAppLaunchDetails();
+  final opened = launch?.didNotificationLaunchApp == true ? launch!.notificationResponse : null;
+  final p = AlarmPayload.parse(opened?.payload);
+  if (p != null) {
+    pendingRing.value = AlarmRing(p, opened!.id);
+    skipIntro = true;
+  }
 }
 
 class AmruthamApp extends ConsumerWidget {

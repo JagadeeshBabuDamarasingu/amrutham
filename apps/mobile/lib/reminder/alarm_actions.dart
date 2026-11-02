@@ -69,6 +69,45 @@ DateTime doseTimeFor(String hhmm, DateTime now) {
 
 int snoozeIdFor(AlarmPayload p) => ((p.courseId + p.time).hashCode & 0x3fffffff) | 0x40000000;
 
+/// An alarm that is ringing and should be shown full screen.
+class AlarmRing {
+  const AlarmRing(this.payload, this.notificationId);
+  final AlarmPayload payload;
+  final int? notificationId;
+}
+
+/// Set when the person opens an alarm (or the phone opens it over the lock
+/// screen); the lock gate shows the alarm page for it.
+final pendingRing = ValueNotifier<AlarmRing?>(null);
+
+Future<void> answerDose(AlarmPayload payload, DoseStatus status) async {
+  final realm = await openRealm(await const SecureStorageDbKeyProvider().getOrCreateDbKey());
+  try {
+    await DoseLogRepository(realm).logDose(
+      personId: PersonId(payload.personId),
+      courseId: MedicationCourseId(payload.courseId),
+      scheduledAt: doseTimeFor(payload.time, DateTime.now()),
+      status: status,
+    );
+  } finally {
+    realm.close();
+  }
+}
+
+Future<void> snoozeAlarm(AlarmPayload payload) async {
+  tz_data.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation((await FlutterTimezone.getLocalTimezone()).identifier));
+  await FlutterLocalNotificationsPlugin().zonedSchedule(
+    id: snoozeIdFor(payload),
+    title: 'Take ${payload.name}',
+    body: payload.dose,
+    scheduledDate: tz.TZDateTime.now(tz.local).add(const Duration(minutes: snoozeMinutes)),
+    notificationDetails: NotificationDetails(android: alarmDetails()),
+    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    payload: payload.encode(),
+  );
+}
+
 /// Runs from a notification button, with the app open or closed.
 @pragma('vm:entry-point')
 Future<void> alarmActionBackground(NotificationResponse response) => handleAlarmAction(response);
@@ -78,31 +117,10 @@ Future<void> handleAlarmAction(NotificationResponse response) async {
   if (payload == null) return;
   DartPluginRegistrant.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
-  final plugin = FlutterLocalNotificationsPlugin();
   switch (response.actionId) {
     case actionTaken:
-      final realm = await openRealm(await const SecureStorageDbKeyProvider().getOrCreateDbKey());
-      try {
-        await DoseLogRepository(realm).logDose(
-          personId: PersonId(payload.personId),
-          courseId: MedicationCourseId(payload.courseId),
-          scheduledAt: doseTimeFor(payload.time, DateTime.now()),
-          status: DoseStatus.taken,
-        );
-      } finally {
-        realm.close();
-      }
+      await answerDose(payload, DoseStatus.taken);
     case actionSnooze:
-      tz_data.initializeTimeZones();
-      tz.setLocalLocation(tz.getLocation((await FlutterTimezone.getLocalTimezone()).identifier));
-      await plugin.zonedSchedule(
-        id: snoozeIdFor(payload),
-        title: 'Take ${payload.name}',
-        body: payload.dose,
-        scheduledDate: tz.TZDateTime.now(tz.local).add(const Duration(minutes: snoozeMinutes)),
-        notificationDetails: NotificationDetails(android: alarmDetails()),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        payload: payload.encode(),
-      );
+      await snoozeAlarm(payload);
   }
 }

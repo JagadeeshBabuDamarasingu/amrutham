@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../reminder/alarm_actions.dart';
+import '../ui/alarm_screen.dart';
+import 'app_navigator.dart';
 import 'lock_controller.dart';
 import 'lock_screen.dart';
 import 'secure_screen.dart';
@@ -24,10 +27,28 @@ class _LockGateState extends ConsumerState<LockGate> with WidgetsBindingObserver
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(lockProvider.notifier).start());
+    pendingRing.addListener(_showRing);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showRing());
+  }
+
+  /// A ringing alarm opens its page: over the lock screen when locked (it
+  /// only shows the medicine and three buttons), otherwise over the app.
+  void _showRing() {
+    final ring = pendingRing.value;
+    if (ring == null || !mounted || ref.read(lockProvider).checking) return;
+    final state = ref.read(lockProvider);
+    final nav = state.locked ? lockNavigator.currentState : appNavigatorKey.currentState;
+    if (nav == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showRing());
+      return;
+    }
+    pendingRing.value = null;
+    nav.push(MaterialPageRoute<void>(builder: (_) => AlarmScreen(ring: ring)));
   }
 
   @override
   void dispose() {
+    pendingRing.removeListener(_showRing);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -56,6 +77,9 @@ class _LockGateState extends ConsumerState<LockGate> with WidgetsBindingObserver
         SecureScreen.hideContent(s.enabled && s.hideInRecents);
         ref.read(lockProvider.notifier).settingsChanged();
       });
+    });
+    ref.listen(lockProvider.select((s) => s.checking), (_, now) {
+      if (!now) WidgetsBinding.instance.addPostFrameCallback((_) => _showRing());
     });
     final checking = ref.watch(lockProvider.select((s) => s.checking));
     final locked = ref.watch(lockProvider.select((s) => s.locked));

@@ -97,8 +97,15 @@ class MedicineAlarmsScreen extends ConsumerWidget {
                   title: const Text('Over the lock screen', style: TextStyle(fontWeight: FontWeight.w700)),
                   subtitle: const Text('Let an alarm light up the screen when the phone is locked'),
                   trailing: TextButton(
-                    onPressed: () async => (await ref.read(reminderRepositoryProvider.future)).requestFullScreenAlarms(),
-                    child: const Text('Allow'),
+                    onPressed: () async {
+                      final already = await (await ref.read(reminderRepositoryProvider.future)).requestFullScreenAlarms();
+                      if (already && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Already allowed on this phone. Nothing more to do here.')),
+                        );
+                      }
+                    },
+                    child: const Text('Check'),
                   ),
                 ),
               ],
