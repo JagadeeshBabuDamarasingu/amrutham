@@ -34,6 +34,7 @@ Map<String, String> readableCopy(List<PersonData> people, List<Expense> expenses
     if (person.dateOfBirth != null) b.writeln('Born: ${_d(person.dateOfBirth!)}');
     if (person.sex != null) b.writeln('Sex: ${person.sex}');
     if (person.bloodGroup != null) b.writeln('Blood group: ${person.bloodGroup}');
+    if (person.pregnancyLine != null) b.writeln(person.pregnancyLine);
     b.writeln('\nEmergency contacts');
     for (final c in person.emergencyContacts) {
       b.writeln('- ${c.name}${c.relationship == null ? '' : ' (${c.relationship})'}: ${c.phone}');

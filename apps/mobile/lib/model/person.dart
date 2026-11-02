@@ -39,6 +39,10 @@ class PersonProfile {
   final DateTime? dateOfBirth;
   final String? sex;
   final String? bloodGroup;
+
+  /// Shown on the emergency card while true; the due date is optional.
+  final bool pregnant;
+  final DateTime? pregnancyDue;
   final List<EmergencyContact> emergencyContacts;
   final DateTime createdAt;
   final bool isDeceased;
@@ -54,6 +58,8 @@ class PersonProfile {
     this.dateOfBirth,
     this.sex,
     this.bloodGroup,
+    this.pregnant = false,
+    this.pregnancyDue,
     this.emergencyContacts = const [],
     required this.createdAt,
     this.isDeceased = false,
@@ -78,12 +84,25 @@ class PersonProfile {
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       sex: sex ?? this.sex,
       bloodGroup: bloodGroup ?? this.bloodGroup,
+      pregnant: pregnant,
+      pregnancyDue: pregnancyDue,
       emergencyContacts: emergencyContacts ?? this.emergencyContacts,
       createdAt: createdAt,
       isDeceased: isDeceased,
       dateOfDeath: dateOfDeath,
       causeOfDeath: causeOfDeath,
     );
+  }
+}
+
+const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+extension PregnancyText on PersonProfile {
+  /// "Pregnant, due 14 Mar 2027", or null when not pregnant.
+  String? get pregnancyLine {
+    if (!pregnant) return null;
+    final d = pregnancyDue;
+    return d == null ? 'Pregnant' : 'Pregnant, due ${d.day} ${_months[d.month - 1]} ${d.year}';
   }
 }
 

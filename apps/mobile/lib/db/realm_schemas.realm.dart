@@ -108,6 +108,8 @@ class PersonRow extends _PersonRow
     DateTime? dateOfBirth,
     String? sex,
     String? bloodGroup,
+    bool pregnant = false,
+    DateTime? pregnancyDue,
     Iterable<EmergencyContactRow> emergencyContacts = const [],
     bool isDeceased = false,
     DateTime? dateOfDeath,
@@ -115,6 +117,7 @@ class PersonRow extends _PersonRow
   }) {
     if (!_defaultsSet) {
       _defaultsSet = RealmObjectBase.setDefaults<PersonRow>({
+        'pregnant': false,
         'isDeceased': false,
       });
     }
@@ -126,6 +129,8 @@ class PersonRow extends _PersonRow
     RealmObjectBase.set(this, 'dateOfBirth', dateOfBirth);
     RealmObjectBase.set(this, 'sex', sex);
     RealmObjectBase.set(this, 'bloodGroup', bloodGroup);
+    RealmObjectBase.set(this, 'pregnant', pregnant);
+    RealmObjectBase.set(this, 'pregnancyDue', pregnancyDue);
     RealmObjectBase.set<RealmList<EmergencyContactRow>>(
       this,
       'emergencyContacts',
@@ -190,6 +195,18 @@ class PersonRow extends _PersonRow
       RealmObjectBase.set(this, 'bloodGroup', value);
 
   @override
+  bool get pregnant => RealmObjectBase.get<bool>(this, 'pregnant') as bool;
+  @override
+  set pregnant(bool value) => RealmObjectBase.set(this, 'pregnant', value);
+
+  @override
+  DateTime? get pregnancyDue =>
+      RealmObjectBase.get<DateTime>(this, 'pregnancyDue') as DateTime?;
+  @override
+  set pregnancyDue(DateTime? value) =>
+      RealmObjectBase.set(this, 'pregnancyDue', value);
+
+  @override
   RealmList<EmergencyContactRow> get emergencyContacts =>
       RealmObjectBase.get<EmergencyContactRow>(this, 'emergencyContacts')
           as RealmList<EmergencyContactRow>;
@@ -244,6 +261,8 @@ class PersonRow extends _PersonRow
       'dateOfBirth': dateOfBirth.toEJson(),
       'sex': sex.toEJson(),
       'bloodGroup': bloodGroup.toEJson(),
+      'pregnant': pregnant.toEJson(),
+      'pregnancyDue': pregnancyDue.toEJson(),
       'emergencyContacts': emergencyContacts.toEJson(),
       'createdAt': createdAt.toEJson(),
       'isDeceased': isDeceased.toEJson(),
@@ -272,6 +291,8 @@ class PersonRow extends _PersonRow
           dateOfBirth: fromEJson(ejson['dateOfBirth']),
           sex: fromEJson(ejson['sex']),
           bloodGroup: fromEJson(ejson['bloodGroup']),
+          pregnant: fromEJson(ejson['pregnant'], defaultValue: false),
+          pregnancyDue: fromEJson(ejson['pregnancyDue']),
           emergencyContacts: fromEJson(ejson['emergencyContacts']),
           isDeceased: fromEJson(ejson['isDeceased'], defaultValue: false),
           dateOfDeath: fromEJson(ejson['dateOfDeath']),
@@ -297,6 +318,12 @@ class PersonRow extends _PersonRow
       ),
       SchemaProperty('sex', RealmPropertyType.string, optional: true),
       SchemaProperty('bloodGroup', RealmPropertyType.string, optional: true),
+      SchemaProperty('pregnant', RealmPropertyType.bool),
+      SchemaProperty(
+        'pregnancyDue',
+        RealmPropertyType.timestamp,
+        optional: true,
+      ),
       SchemaProperty(
         'emergencyContacts',
         RealmPropertyType.object,

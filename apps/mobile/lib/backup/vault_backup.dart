@@ -38,7 +38,7 @@ class VaultBackup {
   /// - MINOR: a new optional field or table. Readers of the same major ignore
   ///   what they don't know, so they still open it.
   /// - PATCH: wording or clarification only; the data is unchanged.
-  static const schemaVersion = '1.0.0';
+  static const schemaVersion = '1.1.0';
 
   /// One reader per MAJOR version ever written. Never delete one.
   static const _readers = <int, _Reader>{1: _restoreV1};
@@ -86,6 +86,7 @@ class VaultBackup {
             'id': x.id, 'displayName': x.displayName,
             'givenName': x.givenName, 'surname': x.surname, 'relationship': x.relationship,
             'dateOfBirth': d(x.dateOfBirth), 'sex': x.sex, 'bloodGroup': x.bloodGroup,
+            'pregnant': x.pregnant, 'pregnancyDue': d(x.pregnancyDue),
             'createdAt': d(x.createdAt), 'isDeceased': x.isDeceased,
             'dateOfDeath': d(x.dateOfDeath), 'causeOfDeath': x.causeOfDeath,
             'emergencyContacts': [
@@ -258,6 +259,7 @@ class VaultBackup {
           givenName: x['givenName'] as String?, surname: x['surname'] as String?,
           dateOfBirth: to(x['dateOfBirth']), sex: x['sex'] as String?,
           bloodGroup: x['bloodGroup'] as String?,
+          pregnant: x['pregnant'] as bool? ?? false, pregnancyDue: to(x['pregnancyDue']),
           isDeceased: x['isDeceased'] as bool? ?? false,
           dateOfDeath: to(x['dateOfDeath']), causeOfDeath: x['causeOfDeath'] as String?,
           emergencyContacts: [

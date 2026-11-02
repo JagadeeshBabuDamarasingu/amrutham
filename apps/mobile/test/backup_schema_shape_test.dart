@@ -73,11 +73,17 @@ const _shapeOf_1_0_0 = <String, List<String>>{
   'receipts': ['data', 'path'],
 };
 
+/// 1.1.0 added `pregnant` and `pregnancyDue` to each person.
+final _shapeOf_1_1_0 = <String, List<String>>{
+  ..._shapeOf_1_0_0,
+  'people': [..._shapeOf_1_0_0['people']!, 'pregnancyDue', 'pregnant']..sort(),
+};
+
 void main() {
   test('the backup document still has the shape published for its schemaVersion', () async {
     expect(
       VaultBackup.schemaVersion,
-      '1.0.0',
+      '1.1.0',
       reason: 'schemaVersion changed: add its shape here as a new constant and '
           'compare against that one (keep the old one for the old version).',
     );
@@ -151,9 +157,9 @@ void main() {
       'receipts': keys(first('receipts')),
     };
 
-    expect(actual.keys, _shapeOf_1_0_0.keys);
-    for (final part in _shapeOf_1_0_0.keys) {
-      expect(actual[part], _shapeOf_1_0_0[part], reason: 'shape of "$part" changed; bump schemaVersion');
+    expect(actual.keys, _shapeOf_1_1_0.keys);
+    for (final part in _shapeOf_1_1_0.keys) {
+      expect(actual[part], _shapeOf_1_1_0[part], reason: 'shape of "$part" changed; bump schemaVersion');
     }
   });
 }

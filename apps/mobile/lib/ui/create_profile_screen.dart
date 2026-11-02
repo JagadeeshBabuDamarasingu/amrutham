@@ -36,6 +36,8 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
   late RelationshipType? _relationship = widget.editing?.relationship;
   late String? _sex = widget.editing?.sex;
   late String? _bloodGroup = widget.editing?.bloodGroup;
+  late bool _pregnant = widget.editing?.pregnant ?? false;
+  late DateTime? _due = widget.editing?.pregnancyDue;
   late DateTime? _dateOfBirth = widget.editing?.dateOfBirth;
   late bool _deceased = widget.editing?.isDeceased ?? false;
   late DateTime? _dateOfDeath = widget.editing?.dateOfDeath;
@@ -64,6 +66,8 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       dateOfBirth: _dateOfBirth,
       sex: _sex == 'Not stated' ? null : _sex,
       bloodGroup: _bloodGroup,
+      pregnant: _pregnant && _sex != 'Male',
+      pregnancyDue: _due,
       isDeceased: _deceased,
       dateOfDeath: _deceased ? _dateOfDeath : null,
       causeOfDeath: _deceased && _cause.text.trim().isNotEmpty
@@ -90,6 +94,8 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       dateOfBirth: _dateOfBirth,
       sex: _sex == 'Not stated' ? null : _sex,
       bloodGroup: _bloodGroup,
+      pregnant: _pregnant && _sex != 'Male',
+      pregnancyDue: _due,
       isDeceased: _deceased,
       dateOfDeath: _deceased ? _dateOfDeath : null,
       causeOfDeath: _deceased && _cause.text.trim().isNotEmpty
@@ -207,6 +213,30 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
                   : '${dob.day} ${monthNames[dob.month - 1]} ${dob.year}',
             ),
           ),
+          if (_sex != 'Male' && !_deceased) ...[
+            const SectionLabel('Pregnancy'),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Pregnant now'),
+              subtitle: const Text('Shown on the emergency card, so a doctor knows before any scan or medicine'),
+              value: _pregnant,
+              onChanged: (v) => setState(() => _pregnant = v),
+            ),
+            if (_pregnant)
+              OutlinedButton(
+                onPressed: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                    lastDate: DateTime.now().add(const Duration(days: 330)),
+                    initialDate: _due ?? DateTime.now().add(const Duration(days: 150)),
+                  );
+                  if (picked != null) setState(() => _due = picked);
+                },
+                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52), alignment: Alignment.centerLeft),
+                child: Text(_due == null ? 'Due date (optional)' : 'Due ${_due!.day} ${monthNames[_due!.month - 1]} ${_due!.year}'),
+              ),
+          ],
           const SectionLabel('Blood group'),
           Wrap(
             spacing: 8,

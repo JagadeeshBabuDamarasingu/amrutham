@@ -34,8 +34,8 @@ Future<Realm> openRealm(List<int> dbKey) async {
     encryptionKey: dbKey,
     // 1: added MeasurementRow. 2: added HistoryEventRow. 3: added DoseLogRow. 4: added CareProviderRow. 5: added ExpenseRow. 6: PersonRow gained isDeceased, dateOfDeath and
     // causeOfDeath. 7: added RecordRow. 8: PersonRow gained givenName and
-    // surname. All purely additive, so no migration callback.
-    schemaVersion: 8,
+    // surname. 9: PersonRow gained pregnant and pregnancyDue. All purely additive, so no migration callback.
+    schemaVersion: 9,
   );
   return Realm(config);
 }

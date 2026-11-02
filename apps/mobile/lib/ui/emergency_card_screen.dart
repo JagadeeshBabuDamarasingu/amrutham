@@ -113,6 +113,7 @@ class EmergencyCardScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  if (person.pregnancyLine != null) _Block('Pregnancy', [Text(person.pregnancyLine!)]),
                   _Block(
                     'Allergies',
                     allergies.isEmpty
@@ -228,6 +229,7 @@ class EmergencyCardScreen extends ConsumerWidget {
     return '<html><body style="font-family:sans-serif;font-size:20px">'
         '<h1>Emergency card: ${_esc(p.displayName)}</h1>'
         '${row('Blood group', p.bloodGroup ?? 'not recorded')}'
+        '${p.pregnancyLine == null ? '' : row('Pregnancy', p.pregnancyLine!)}'
         '${row('Allergies', allergies.isEmpty ? 'none recorded' : allergies.map(allergyLine).join('; '))}'
         '${row('Taking now', courses.isEmpty ? 'none' : courses.map((c) => c.medicationName).join(', '))}'
         '${row('Call', p.emergencyContacts.isEmpty ? 'no contacts added' : p.emergencyContacts.map((c) => '${c.name} ${c.phone}').join('; '))}'
@@ -244,6 +246,7 @@ class EmergencyCardScreen extends ConsumerWidget {
   ]) {
     final b = StringBuffer('EMERGENCY CARD: ${p.displayName}\n');
     b.writeln('Blood group: ${p.bloodGroup ?? 'not recorded'}');
+    if (p.pregnancyLine != null) b.writeln('Pregnancy: ${p.pregnancyLine}');
     b.writeln(
       'Allergies: ${allergies.isEmpty ? 'none recorded' : allergies.map(allergyLine).join('; ')}',
     );

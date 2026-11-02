@@ -31,6 +31,9 @@ class _PersonRow {
   DateTime? dateOfBirth;
   String? sex;
   String? bloodGroup;
+  // Shown on the emergency card while true. The due date is optional.
+  bool pregnant = false;
+  DateTime? pregnancyDue;
   late List<_EmergencyContactRow> emergencyContacts;
   late DateTime createdAt;
   // A remembered family member: read-only, no reminders. The date can be

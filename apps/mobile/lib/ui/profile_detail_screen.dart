@@ -82,6 +82,7 @@ class ProfileDetailScreen extends ConsumerWidget {
                           if (person.dateOfBirth != null)
                             'b. ${person.dateOfBirth!.year}',
                           ?person.bloodGroup,
+                          ?person.pregnancyLine,
                         ].join(' · '),
                         style: const TextStyle(color: onboardMuted),
                       ),

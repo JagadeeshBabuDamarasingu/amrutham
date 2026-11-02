@@ -36,6 +36,8 @@ class ProfileRepository {
       dateOfBirth: row.dateOfBirth?.toLocal(),
       sex: row.sex,
       bloodGroup: row.bloodGroup,
+      pregnant: row.pregnant,
+      pregnancyDue: row.pregnancyDue?.toLocal(),
       emergencyContacts: row.emergencyContacts
           .map(
             (c) => EmergencyContact(
@@ -60,6 +62,8 @@ class ProfileRepository {
     DateTime? dateOfBirth,
     String? sex,
     String? bloodGroup,
+    bool pregnant = false,
+    DateTime? pregnancyDue,
     List<EmergencyContact> emergencyContacts = const [],
     bool isDeceased = false,
     DateTime? dateOfDeath,
@@ -80,6 +84,8 @@ class ProfileRepository {
           dateOfBirth: dateOfBirth,
           sex: sex,
           bloodGroup: bloodGroup,
+          pregnant: pregnant,
+          pregnancyDue: pregnancyDue,
           isDeceased: isDeceased,
           dateOfDeath: dateOfDeath,
           causeOfDeath: causeOfDeath,
@@ -105,6 +111,8 @@ class ProfileRepository {
       dateOfBirth: dateOfBirth,
       sex: sex,
       bloodGroup: bloodGroup,
+      pregnant: pregnant,
+      pregnancyDue: pregnancyDue,
       emergencyContacts: emergencyContacts,
       createdAt: createdAt,
       isDeceased: isDeceased,
@@ -123,6 +131,8 @@ class ProfileRepository {
     DateTime? dateOfBirth,
     String? sex,
     String? bloodGroup,
+    bool pregnant = false,
+    DateTime? pregnancyDue,
     bool isDeceased = false,
     DateTime? dateOfDeath,
     String? causeOfDeath,
@@ -138,6 +148,8 @@ class ProfileRepository {
         ..dateOfBirth = dateOfBirth
         ..sex = sex
         ..bloodGroup = bloodGroup
+        ..pregnant = pregnant
+        ..pregnancyDue = pregnant ? pregnancyDue : null
         ..isDeceased = isDeceased
         ..dateOfDeath = dateOfDeath
         ..causeOfDeath = causeOfDeath;

@@ -380,6 +380,7 @@ class _EmergencySummaryState extends ConsumerState<_EmergencySummary> {
                     ),
                   ],
                 ),
+                if (person.pregnancyLine != null) block('PREGNANCY', [person.pregnancyLine!]),
                 block('ALLERGIES', allergies.isEmpty ? ['None recorded'] : [for (final a in allergies) EmergencyCardScreen.allergyLine(a)]),
                 block('CALL', person.emergencyContacts.isEmpty
                     ? ['No contacts added']

@@ -2,7 +2,7 @@
 
 Your backup is yours, so the format is public. Anyone can write a tool that reads one, as long as they hold the recovery code. This page is the specification; the reference implementation is [`apps/mobile/lib/backup/vault_backup.dart`](../apps/mobile/lib/backup/vault_backup.dart), and the JSON layout is also given as a [JSON Schema](backup-schema.json).
 
-Schema version: **1.0.0** (see [section 6](#6-versioning)). Licence: GPL-3.0, like the rest of the repository.
+Schema version: **1.1.0** (see [section 6](#6-versioning)). Licence: GPL-3.0, like the rest of the repository.
 
 ## 1. Envelope
 
@@ -48,10 +48,10 @@ The top level is an object. Dates are ISO 8601 strings in UTC (for example `2026
 
 | Key | Content |
 | --- | --- |
-| `schemaVersion` | Semantic version of this document, for example `"1.0.0"`. See section 6. |
+| `schemaVersion` | Semantic version of this document, for example `"1.1.0"`. See section 6. |
 | `version` | The major number of `schemaVersion` as an integer (`1`). Kept so older app builds, which only know this key, still open the file. Files made before `schemaVersion` existed have only this key; read that as `<version>.0.0`. |
 | `createdAt` | When the backup was made. |
-| `people` | Family members: name parts, relationship, date of birth, sex, blood group, deceased flag and details, emergency contacts. |
+| `people` | Family members: name parts, relationship, date of birth, sex, blood group, pregnancy, deceased flag and details, emergency contacts. |
 | `familyHistory` | Conditions in relatives, per person. |
 | `allergies` | Allergies, per person. |
 | `courses` | Medicine courses, per person. |
@@ -104,6 +104,7 @@ History:
 | Schema | Changes |
 | --- | --- |
 | 1.0.0 | Everything described above, including the given name and surname, care team, expenses with receipts and dose logs (all optional when reading, so the earliest files, which lack them, are still 1.x). |
+| 1.1.0 | Each person gained `pregnant` (true or false) and `pregnancyDue` (a date or null). Older files lack both and read as not pregnant. |
 
 ## 7. Known limits
 
