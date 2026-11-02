@@ -10,6 +10,7 @@ import 'auto_backup_screen.dart';
 import 'backup_recovery_screen.dart';
 import 'guide_screens.dart';
 import 'language_screen.dart';
+import 'medicine_alarms_screen.dart';
 import 'legal_screen.dart';
 import 'problem_report.dart';
 import 'recovery_cases_screen.dart';
@@ -100,6 +101,12 @@ final List<SettingsEntry> settingsEntries = [
     'Settings › Emergency cards',
     'lock screen notification stranger medical info',
     (c) => _push(c, const WidgetsSettingsScreen()),
+  ),
+  SettingsEntry(
+    'Medicine alarms',
+    'Settings › On this phone',
+    'alarm reminder medicine tablet dose ring snooze time schedule notification',
+    (c) => _push(c, const MedicineAlarmsScreen()),
   ),
   SettingsEntry(
     'Language',

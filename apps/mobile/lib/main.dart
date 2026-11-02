@@ -9,6 +9,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'backup/auto_backup_scheduler.dart';
 import 'crash/crash_log.dart';
 import 'lock/app_navigator.dart';
+import 'reminder/alarm_actions.dart';
 import 'lock/lock_gate.dart';
 import 'lock/lock_screen.dart' show lockIntroPending;
 import 'providers/app_providers.dart';
@@ -57,6 +58,10 @@ Future<void> _initNotifications() async {
       android: androidSettings,
       iOS: iosSettings,
     ),
+    onDidReceiveNotificationResponse: (r) {
+      if (r.actionId != null) handleAlarmAction(r);
+    },
+    onDidReceiveBackgroundNotificationResponse: alarmActionBackground,
   );
 }
 

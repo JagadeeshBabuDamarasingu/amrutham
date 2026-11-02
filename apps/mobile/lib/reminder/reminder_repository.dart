@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../model/ids.dart';
+import 'alarm_actions.dart';
 import '../model/schedule_phase.dart';
 import '../repository/medication_repository.dart';
 
@@ -53,6 +54,38 @@ class ReminderRepository {
     return await android.canScheduleExactNotifications() ?? false;
   }
 
+  Future<bool> notificationsAllowed() async {
+    final android = _notifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    return await android?.areNotificationsEnabled() ?? true;
+  }
+
+  /// Lets an alarm come up over the lock screen (Android 14+ may ask).
+  Future<void> requestFullScreenAlarms() async {
+    final android = _notifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    await android?.requestFullScreenIntentPermission();
+  }
+
+  /// Rings one alarm in ten seconds, so the person can hear what it does.
+  Future<void> testAlarm() async {
+    await _scheduleOne(
+      notificationId: 0x3fffffff,
+      title: 'Take Test medicine',
+      body: 'This is a test alarm',
+      scheduledDate: tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10)),
+      matchComponents: null,
+      exactAllowed: await canScheduleExactReminders(),
+    );
+  }
+
+  /// Re-arms every living person's alarms, e.g. after the phone's settings changed.
+  Future<void> rearm(Iterable<PersonId> people) async {
+    for (final id in people) {
+      await armRemindersForPerson(id);
+    }
+  }
+
   /// Opens the OS's "allow exact alarms" flow. Returns whether it ended up
   /// granted.
   Future<bool> requestExactAlarmPermission() async {
@@ -88,6 +121,7 @@ class ReminderRepository {
       final course = await _medicationRepository.courseById(phase.courseId);
       final medicationName = course?.medicationName ?? 'medication';
       await _scheduleInstances(
+        personId: personId,
         phase: phase,
         medicationName: medicationName,
         exactAllowed: exactAllowed,
@@ -96,6 +130,7 @@ class ReminderRepository {
   }
 
   Future<void> _scheduleInstances({
+    required PersonId personId,
     required SchedulePhase phase,
     required String medicationName,
     required bool exactAllowed,
@@ -103,6 +138,7 @@ class ReminderRepository {
     final days = phase.daysOfWeek;
     var slot = 0;
     for (final time in phase.timesOfDay) {
+      final payload = AlarmPayload(personId.value, phase.courseId.value, time, medicationName, phase.doseAmount).encode();
       if (days == null || days.isEmpty) {
         await _scheduleOne(
           notificationId: _notificationId(phase.id, slot++),
@@ -111,6 +147,7 @@ class ReminderRepository {
           scheduledDate: _nextInstanceOfTime(time),
           matchComponents: DateTimeComponents.time,
           exactAllowed: exactAllowed,
+          alarm: payload,
         );
       } else {
         for (final isoWeekday in days) {
@@ -121,6 +158,7 @@ class ReminderRepository {
             scheduledDate: _nextInstanceOfWeekdayAndTime(isoWeekday, time),
             matchComponents: DateTimeComponents.dayOfWeekAndTime,
             exactAllowed: exactAllowed,
+            alarm: payload,
           );
         }
       }
@@ -134,21 +172,25 @@ class ReminderRepository {
     required tz.TZDateTime scheduledDate,
     required DateTimeComponents? matchComponents,
     required bool exactAllowed,
+    String? alarm, // the payload of a medicine alarm; null for a plain reminder
   }) async {
     await _notifications.zonedSchedule(
       id: notificationId,
       title: title,
       body: body,
       scheduledDate: scheduledDate,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription: 'Scheduled medication dose reminders',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(),
+      payload: alarm,
+      notificationDetails: NotificationDetails(
+        android: alarm != null
+            ? alarmDetails()
+            : const AndroidNotificationDetails(
+                _channelId,
+                _channelName,
+                channelDescription: 'Scheduled reminders',
+                importance: Importance.high,
+                priority: Priority.high,
+              ),
+        iOS: const DarwinNotificationDetails(),
       ),
       androidScheduleMode: exactAllowed
           ? AndroidScheduleMode.exactAllowWhileIdle

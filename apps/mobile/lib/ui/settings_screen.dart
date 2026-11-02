@@ -10,6 +10,7 @@ import 'app_style.dart';
 import 'backup_recovery_screen.dart';
 import 'guide_screens.dart';
 import 'language_screen.dart';
+import 'medicine_alarms_screen.dart';
 import 'problem_report.dart';
 import 'settings_search.dart';
 import 'strings.dart';
@@ -99,6 +100,12 @@ class SettingsScreen extends ConsumerWidget {
                 Card(
                   child: Column(
                     children: [
+                      tile(
+                        'Medicine alarms',
+                        'See every alarm, check it can ring, try one.',
+                        onTap: () => open(const MedicineAlarmsScreen()),
+                      ),
+                      const Divider(height: 1),
                       tile(
                         tr(context, 'Language'),
                         'Set on this phone only.',
