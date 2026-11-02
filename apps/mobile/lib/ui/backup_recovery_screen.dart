@@ -7,6 +7,7 @@ import '../providers/app_providers.dart';
 import 'app_style.dart';
 import 'auto_backup_screen.dart';
 import 'recovery_cases_screen.dart';
+import 'readable_copy_screen.dart';
 import 'recovery_code_dialog.dart';
 import 'restore_screen.dart';
 import 'storage_screens.dart';
@@ -178,6 +179,14 @@ class BackupRecoveryScreen extends ConsumerWidget {
               'Restore from a backup',
               'Replaces what is on this phone.',
               () => open(const RestoreVaultScreen(replacing: true)),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: tile(
+              'Save a readable copy',
+              'Last resort. Not protected, you choose where it goes',
+              () => open(const ReadableCopyScreen()),
             ),
           ),
           const SizedBox(height: 8),
