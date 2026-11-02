@@ -3,6 +3,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../model/ids.dart';
 import 'alarm_actions.dart';
+import 'alarm_settings.dart';
 import '../model/schedule_phase.dart';
 import '../repository/medication_repository.dart';
 
@@ -26,7 +27,11 @@ class ReminderRepository {
   final FlutterLocalNotificationsPlugin _notifications;
   final MedicationRepository _medicationRepository;
 
-  ReminderRepository(this._notifications, this._medicationRepository);
+  /// Reads how alarms should ring each time they are armed.
+  final Future<AlarmSettings> Function() _loadSettings;
+
+  ReminderRepository(this._notifications, this._medicationRepository, [Future<AlarmSettings> Function()? loadSettings])
+    : _loadSettings = loadSettings ?? (() async => const AlarmSettings());
 
   Future<void> requestNotificationPermission() async {
     final android = _notifications
@@ -78,7 +83,18 @@ class ReminderRepository {
       scheduledDate: tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10)),
       matchComponents: null,
       exactAllowed: await canScheduleExactReminders(),
+      alarm: const AlarmPayload('test', 'test', '00:00', 'Test medicine', 'This is a test alarm').encode(),
+      alarmSettings: await _loadSettings(),
     );
+  }
+
+  /// Removes the sound channels the current choice no longer uses.
+  Future<void> removeUnusedAlarmChannels(AlarmSettings current) async {
+    final android = _notifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    for (final id in [...AlarmSettings.allChannelIds, 'meds_alarm_v2', 'meds_alarm_channel']) {
+      if (id != current.channelId) await android?.deleteNotificationChannel(channelId: id);
+    }
   }
 
   /// Re-arms every living person's alarms, e.g. after the phone's settings changed.
@@ -118,6 +134,7 @@ class ReminderRepository {
     final activePhases = await _medicationRepository
         .activeNonConflictedPhasesForPerson(personId);
     final exactAllowed = await canScheduleExactReminders();
+    final alarmSettings = await _loadSettings();
 
     for (final phase in activePhases) {
       final course = await _medicationRepository.courseById(phase.courseId);
@@ -127,6 +144,7 @@ class ReminderRepository {
         phase: phase,
         medicationName: medicationName,
         exactAllowed: exactAllowed,
+        alarmSettings: alarmSettings,
       );
     }
   }
@@ -136,6 +154,7 @@ class ReminderRepository {
     required SchedulePhase phase,
     required String medicationName,
     required bool exactAllowed,
+    required AlarmSettings alarmSettings,
   }) async {
     final days = phase.daysOfWeek;
     var slot = 0;
@@ -150,6 +169,7 @@ class ReminderRepository {
           matchComponents: DateTimeComponents.time,
           exactAllowed: exactAllowed,
           alarm: payload,
+          alarmSettings: alarmSettings,
         );
       } else {
         for (final isoWeekday in days) {
@@ -161,6 +181,7 @@ class ReminderRepository {
             matchComponents: DateTimeComponents.dayOfWeekAndTime,
             exactAllowed: exactAllowed,
             alarm: payload,
+          alarmSettings: alarmSettings,
           );
         }
       }
@@ -175,6 +196,7 @@ class ReminderRepository {
     required DateTimeComponents? matchComponents,
     required bool exactAllowed,
     String? alarm, // the payload of a medicine alarm; null for a plain reminder
+    AlarmSettings? alarmSettings,
   }) async {
     await _notifications.zonedSchedule(
       id: notificationId,
@@ -184,7 +206,7 @@ class ReminderRepository {
       payload: alarm,
       notificationDetails: NotificationDetails(
         android: alarm != null
-            ? alarmDetails()
+            ? alarmDetails(alarmSettings ?? const AlarmSettings())
             : const AndroidNotificationDetails(
                 _channelId,
                 _channelName,

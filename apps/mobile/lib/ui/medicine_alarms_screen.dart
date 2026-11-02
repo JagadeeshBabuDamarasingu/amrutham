@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_providers.dart';
-import '../reminder/alarm_actions.dart' show alarmChannelId;
+import '../reminder/alarm_settings.dart';
 import 'app_style.dart';
 
 class AlarmRow {
@@ -36,11 +36,16 @@ final alarmRowsProvider = FutureProvider<List<AlarmRow>>((ref) async {
 /// channel: arm them all again, once.
 final alarmsRearmedProvider = FutureProvider<void>((ref) async {
   final store = ref.watch(onboardingStoreProvider);
-  if (await store.setting('alarm_channel') == alarmChannelId) return;
+  if (await store.setting('alarm_channel') == AlarmSettings.version) return;
   final people = await ref.watch(profilesProvider.future);
   await (await ref.watch(reminderRepositoryProvider.future)).rearm([for (final p in people) if (!p.isDeceased) p.id]);
-  await store.putSetting('alarm_channel', alarmChannelId);
+  await (await ref.watch(reminderRepositoryProvider.future)).removeUnusedAlarmChannels(await AlarmSettings.load(store));
+  await store.putSetting('alarm_channel', AlarmSettings.version);
 });
+
+final alarmSettingsProvider = FutureProvider<AlarmSettings>(
+  (ref) => AlarmSettings.load(ref.watch(onboardingStoreProvider)),
+);
 
 final _healthProvider = FutureProvider.autoDispose<({bool notifications, bool exact})>((ref) async {
   final r = await ref.watch(reminderRepositoryProvider.future);
@@ -56,6 +61,17 @@ class MedicineAlarmsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final rows = ref.watch(alarmRowsProvider).valueOrNull ?? const <AlarmRow>[];
     final health = ref.watch(_healthProvider).valueOrNull;
+    final settings = ref.watch(alarmSettingsProvider).valueOrNull ?? const AlarmSettings();
+
+    // A new sound makes a new channel, so alarms already set are armed again.
+    Future<void> change(AlarmSettings next) async {
+      await next.save(ref.read(onboardingStoreProvider));
+      ref.invalidate(alarmSettingsProvider);
+      final reminders = await ref.read(reminderRepositoryProvider.future);
+      final people = await ref.read(profilesProvider.future);
+      await reminders.rearm([for (final p in people) if (!p.isDeceased) p.id]);
+      await reminders.removeUnusedAlarmChannels(next);
+    }
 
     Widget check(String title, String ok, String bad, bool? good, Future<void> Function() fix) => ListTile(
       leading: Icon(good == false ? Icons.error_outline : Icons.check_circle_outline,
@@ -126,6 +142,59 @@ class MedicineAlarmsScreen extends ConsumerWidget {
           const Text(
             "If alarms are late or missing, also check your phone's Do Not Disturb and battery saver settings: some phones stop apps that are closed.",
             style: TextStyle(color: onboardMuted, fontSize: 12.5, height: 1.4),
+          ),
+          const SectionLabel('Sound'),
+          Card(
+            child: Column(
+              children: [
+                for (final s in AlarmSound.values)
+                  RadioListTile<AlarmSound>(
+                    value: s,
+                    groupValue: settings.sound,
+                    title: Text(s.label, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(s.hint),
+                    onChanged: (v) => change(settings.copyWith(sound: v)),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: SwitchListTile(
+              title: const Text('Vibrate', style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('Three long pulses, repeating'),
+              value: settings.vibrate,
+              onChanged: (v) => change(settings.copyWith(vibrate: v)),
+            ),
+          ),
+          const SectionLabel('When it rings'),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Snooze for', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 8, children: [
+                    for (final m in snoozeChoices)
+                      ChoiceChip(label: Text('$m min'), selected: settings.snoozeMinutes == m, onSelected: (_) => change(settings.copyWith(snoozeMinutes: m))),
+                  ]),
+                  const SizedBox(height: 16),
+                  const Text('Stop ringing after', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 8, children: [
+                    for (final m in ringChoices)
+                      ChoiceChip(label: Text('$m min'), selected: settings.ringMinutes == m, onSelected: (_) => change(settings.copyWith(ringMinutes: m))),
+                  ]),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'If you do nothing, the dose stays unanswered on Today so you can still log it.',
+                    style: TextStyle(color: onboardMuted, fontSize: 12.5, height: 1.4),
+                  ),
+                ],
+              ),
+            ),
           ),
           SectionLabel(rows.isEmpty ? 'Your alarms' : 'Your alarms (${rows.length})'),
           if (rows.isEmpty)

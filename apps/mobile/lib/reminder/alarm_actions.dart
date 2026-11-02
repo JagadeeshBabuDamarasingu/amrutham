@@ -12,39 +12,36 @@ import '../crypto/key_manager.dart';
 import '../db/connection.dart';
 import '../model/dose_log.dart';
 import '../model/ids.dart';
+import '../crypto/onboarding_store.dart';
 import '../repository/dose_log_repository.dart';
+import 'alarm_settings.dart';
 
-// v2: a channel's sound cannot be changed once it exists, so the alarm sound
-// got a new channel. The old one is removed at start-up.
-const alarmChannelId = 'meds_alarm_v2';
-const oldAlarmChannelId = 'meds_alarm_channel';
 const actionTaken = 'taken';
 const actionSnooze = 'snooze';
-const snoozeMinutes = 10;
 
 /// A medicine alarm rings like an alarm clock: loud, repeating, over the lock
 /// screen, with Taken and Snooze on the notification itself. It stops by
-/// itself after ten minutes so it never rings forever in an empty room.
-AndroidNotificationDetails alarmDetails() => AndroidNotificationDetails(
-  alarmChannelId,
+/// itself after the chosen minutes so it never rings forever in an empty room.
+AndroidNotificationDetails alarmDetails(AlarmSettings s) => AndroidNotificationDetails(
+  s.channelId,
   'Medicine alarms',
   channelDescription: 'Rings at the times you set to take a medicine',
   importance: Importance.max,
   priority: Priority.max,
   category: AndroidNotificationCategory.alarm,
   fullScreenIntent: true,
-  playSound: true,
-  // The phone's own alarm tone, played as an alarm (loud even when media is quiet).
-  sound: const UriAndroidNotificationSound('content://settings/system/alarm_alert'),
+  playSound: s.sound.uri != null,
+  sound: s.sound.uri == null ? null : UriAndroidNotificationSound(s.sound.uri!),
+  // Played as an alarm, so it is loud even when media is quiet.
   audioAttributesUsage: AudioAttributesUsage.alarm,
-  enableVibration: true,
-  vibrationPattern: Int64List.fromList([0, 800, 500, 800, 500, 800]),
+  enableVibration: s.vibrate,
+  vibrationPattern: s.vibrate ? Int64List.fromList([0, 800, 500, 800, 500, 800]) : null,
   additionalFlags: Int32List.fromList([4]), // FLAG_INSISTENT: keep ringing
-  timeoutAfter: 10 * 60 * 1000,
+  timeoutAfter: s.ringMinutes * 60 * 1000,
   visibility: NotificationVisibility.public,
-  actions: const [
-    AndroidNotificationAction(actionTaken, 'Taken', cancelNotification: true),
-    AndroidNotificationAction(actionSnooze, 'Snooze $snoozeMinutes min', cancelNotification: true),
+  actions: [
+    const AndroidNotificationAction(actionTaken, 'Taken', cancelNotification: true),
+    AndroidNotificationAction(actionSnooze, 'Snooze ${s.snoozeMinutes} min', cancelNotification: true),
   ],
 );
 
@@ -94,6 +91,7 @@ class AlarmRing {
 final pendingRing = ValueNotifier<AlarmRing?>(null);
 
 Future<void> answerDose(AlarmPayload payload, DoseStatus status) async {
+  if (payload.courseId == 'test') return; // the test alarm has no dose to log
   final realm = await openRealm(await const SecureStorageDbKeyProvider().getOrCreateDbKey());
   try {
     await DoseLogRepository(realm).logDose(
@@ -108,14 +106,15 @@ Future<void> answerDose(AlarmPayload payload, DoseStatus status) async {
 }
 
 Future<void> snoozeAlarm(AlarmPayload payload) async {
+  final settings = await AlarmSettings.load(const SecureStorageOnboardingStore());
   tz_data.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation((await FlutterTimezone.getLocalTimezone()).identifier));
   await FlutterLocalNotificationsPlugin().zonedSchedule(
     id: snoozeIdFor(payload),
     title: 'Take ${payload.name}',
     body: payload.dose,
-    scheduledDate: tz.TZDateTime.now(tz.local).add(const Duration(minutes: snoozeMinutes)),
-    notificationDetails: NotificationDetails(android: alarmDetails()),
+    scheduledDate: tz.TZDateTime.now(tz.local).add(Duration(minutes: settings.snoozeMinutes)),
+    notificationDetails: NotificationDetails(android: alarmDetails(settings)),
     androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     payload: payload.encode(),
   );

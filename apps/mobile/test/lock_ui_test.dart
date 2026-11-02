@@ -96,7 +96,7 @@ void main() {
     await _pumpGated(tester, results: [AuthResult.failed]);
     pendingRing.value = const AlarmRing(AlarmPayload('appa', 'c1', '08:00', 'Metformin', '500 mg'), 1);
     await tester.pumpAndSettle();
-    expect(find.text('Time to take'), findsOneWidget);
+    expect(find.text('TIME TO TAKE'), findsOneWidget);
     expect(find.text('Metformin'), findsOneWidget);
     expect(find.text('Taken'), findsOneWidget);
     expect(find.text('Snooze 10 min'), findsOneWidget);
@@ -120,7 +120,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Time to take'), findsOneWidget);
+    expect(find.text('TIME TO TAKE'), findsOneWidget);
     expect(auth.calls, 0);
   });
 

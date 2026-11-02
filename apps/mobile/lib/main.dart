@@ -71,9 +71,6 @@ Future<void> _initNotifications() async {
     },
     onDidReceiveBackgroundNotificationResponse: alarmActionBackground,
   );
-  await _notificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-      ?.deleteNotificationChannel(channelId: oldAlarmChannelId);
   // The phone opened the app from a ringing alarm: show it, and skip the intro.
   final launch = await _notificationsPlugin.getNotificationAppLaunchDetails();
   final opened = launch?.didNotificationLaunchApp == true ? launch!.notificationResponse : null;

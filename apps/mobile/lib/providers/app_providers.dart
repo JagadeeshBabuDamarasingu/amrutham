@@ -25,6 +25,7 @@ import '../model/medication.dart';
 import '../model/person.dart';
 import '../model/schedule_phase.dart';
 import '../reminder/reminder_repository.dart';
+import '../reminder/alarm_settings.dart';
 import '../repository/care_team_repository.dart';
 import '../repository/dose_log_repository.dart';
 import '../repository/expense_repository.dart';
@@ -124,7 +125,8 @@ final reminderRepositoryProvider = FutureProvider<ReminderRepository>((
     medicationRepositoryProvider.future,
   );
   final notifications = ref.watch(notificationsPluginProvider);
-  return ReminderRepository(notifications, medicationRepository);
+  final store = ref.watch(onboardingStoreProvider);
+  return ReminderRepository(notifications, medicationRepository, () => AlarmSettings.load(store));
 });
 
 final medicationCoursesProvider =

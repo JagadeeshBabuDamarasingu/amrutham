@@ -38,7 +38,7 @@ class VaultBackup {
   /// - MINOR: a new optional field or table. Readers of the same major ignore
   ///   what they don't know, so they still open it.
   /// - PATCH: wording or clarification only; the data is unchanged.
-  static const schemaVersion = '1.1.0';
+  static const schemaVersion = '1.2.0';
 
   /// One reader per MAJOR version ever written. Never delete one.
   static const _readers = <int, _Reader>{1: _restoreV1};
@@ -69,6 +69,18 @@ class VaultBackup {
         if (f is File) {
           receipts.add({
             'path': p.join('receipts', p.basename(f.path)),
+            'data': base64Encode(await f.readAsBytes()),
+          });
+        }
+      }
+    }
+    final medicinePhotos = <Map<String, String>>[];
+    final photoDir = Directory(p.join(vault.path, 'medicine'));
+    if (await photoDir.exists()) {
+      await for (final f in photoDir.list()) {
+        if (f is File) {
+          medicinePhotos.add({
+            'courseId': p.basenameWithoutExtension(f.path),
             'data': base64Encode(await f.readAsBytes()),
           });
         }
@@ -171,6 +183,7 @@ class VaultBackup {
       ],
       'records': records,
       'receipts': receipts,
+      'medicinePhotos': medicinePhotos,
     };
   }
 
@@ -234,6 +247,14 @@ class VaultBackup {
 
     for (final f in list('receipts')) {
       final file = File(p.join(vault.path, f['path'] as String));
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(base64Decode(f['data'] as String));
+    }
+
+    for (final f in list('medicinePhotos')) {
+      final id = f['courseId'] as String;
+      if (id.contains('/') || id.contains(r'\') || id.contains('..')) continue; // never write outside the vault
+      final file = File(p.join(vault.path, 'medicine', '${f['courseId']}.jpg'));
       await file.parent.create(recursive: true);
       await file.writeAsBytes(base64Decode(f['data'] as String));
     }

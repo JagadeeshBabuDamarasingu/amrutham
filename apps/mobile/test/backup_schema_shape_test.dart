@@ -79,11 +79,18 @@ final _shapeOf_1_1_0 = <String, List<String>>{
   'people': [..._shapeOf_1_0_0['people']!, 'pregnancyDue', 'pregnant']..sort(),
 };
 
+/// 1.2.0 added `medicinePhotos` (a photo of a medicine, by course id).
+final _shapeOf_1_2_0 = <String, List<String>>{
+  ..._shapeOf_1_1_0,
+  '(top level)': [..._shapeOf_1_1_0['(top level)']!, 'medicinePhotos']..sort(),
+  'medicine photos': ['courseId', 'data'],
+};
+
 void main() {
   test('the backup document still has the shape published for its schemaVersion', () async {
     expect(
       VaultBackup.schemaVersion,
-      '1.1.0',
+      '1.2.0',
       reason: 'schemaVersion changed: add its shape here as a new constant and '
           'compare against that one (keep the old one for the old version).',
     );
@@ -135,6 +142,10 @@ void main() {
       personId: who.id, type: RecordType.bill, title: 'R', recordDate: DateTime(2025), sources: [photo],
     );
 
+    File('${vault.path}/medicine/${course.id.value}.jpg')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync([1]);
+
     final data = await VaultBackup.snapshot(realm, vault);
 
     List<String> keys(Object? m) => ((m as Map).keys.cast<String>().toList())..sort();
@@ -155,11 +166,12 @@ void main() {
       'records': keys(first('records')),
       'record files': keys(((first('records') as Map)['files'] as List).single),
       'receipts': keys(first('receipts')),
+      'medicine photos': keys(first('medicinePhotos')),
     };
 
-    expect(actual.keys, _shapeOf_1_1_0.keys);
-    for (final part in _shapeOf_1_1_0.keys) {
-      expect(actual[part], _shapeOf_1_1_0[part], reason: 'shape of "$part" changed; bump schemaVersion');
+    expect(actual.keys, _shapeOf_1_2_0.keys);
+    for (final part in _shapeOf_1_2_0.keys) {
+      expect(actual[part], _shapeOf_1_2_0[part], reason: 'shape of "$part" changed; bump schemaVersion');
     }
   });
 }
