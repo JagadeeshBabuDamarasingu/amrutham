@@ -95,7 +95,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             children: [
               // Takes all the room the text block below leaves, so the artwork
               // is cropped as little as possible; it shrinks on short screens.
-              const Expanded(child: SizedBox.expand(child: _Artwork())),
+              const Expanded(child: SizedBox.expand(child: SplashArtwork())),
               const Text(
                 'ధన్వంతరి · धन्वन्तरि',
                 style: TextStyle(
@@ -105,15 +105,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Amrutham',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 44,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.9,
-                ),
-              ),
+              const SplashWordmark(),
               const SizedBox(height: 6),
               const Text(
                 "Your family's health, in files you own",
@@ -134,8 +126,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 }
 
 /// The deity artwork, faded into the background along its bottom edge.
-class _Artwork extends StatelessWidget {
-  const _Artwork();
+class SplashArtwork extends StatelessWidget {
+  const SplashArtwork({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -214,4 +206,78 @@ class _OpenFailed extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Flies from the opening picture to the lock screen's header.
+const wordmarkHeroTag = 'amrutham-wordmark';
+
+class SplashWordmark extends StatelessWidget {
+  const SplashWordmark({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Hero(
+    tag: wordmarkHeroTag,
+    child: Material(
+      type: MaterialType.transparency,
+      child: Text(
+        'Amrutham',
+        style: TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.w700, letterSpacing: -0.9),
+      ),
+    ),
+  );
+}
+
+/// The opening picture shown for two seconds when the app starts locked; then
+/// [onDone] swaps in the lock screen and the wordmark flies up to it.
+class LockIntro extends StatefulWidget {
+  const LockIntro({super.key, required this.onDone, this.duration = const Duration(seconds: 2)});
+
+  final VoidCallback onDone;
+  final Duration duration;
+
+  @override
+  State<LockIntro> createState() => _LockIntroState();
+}
+
+class _LockIntroState extends State<LockIntro> {
+  late final Timer _t = Timer(widget.duration, widget.onDone);
+
+  @override
+  void initState() {
+    super.initState();
+    _t; // starts the timer
+  }
+
+  @override
+  void dispose() {
+    _t.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: _bgBottom,
+    body: DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [_bgTop, _bgMid, _bgBottom],
+          stops: [0, 0.55, 1],
+        ),
+      ),
+      child: const SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            Expanded(child: SizedBox.expand(child: SplashArtwork())),
+            Text('ధన్వంతరి · धन्वन्तरि', style: TextStyle(color: _gold, fontSize: 14, fontWeight: FontWeight.w500)),
+            SizedBox(height: 20),
+            SplashWordmark(),
+            SizedBox(height: 56),
+          ],
+        ),
+      ),
+    ),
+  );
 }

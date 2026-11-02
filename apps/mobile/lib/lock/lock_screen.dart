@@ -7,9 +7,13 @@ import '../providers/app_providers.dart';
 import '../quick_access/emergency_snapshot.dart' show shortBlood;
 import '../ui/app_style.dart';
 import '../ui/emergency_card_screen.dart';
+import '../ui/splash_screen.dart';
 import 'lock_controller.dart';
 
 const _pine = Color(0xFF17302A);
+
+/// Set once at a cold start: the first lock screen opens with the picture.
+bool lockIntroPending = false;
 
 /// Everything shown while the app is locked: the lock screen, and the emergency
 /// card, which anyone may open. It is one route over the whole app with a small
@@ -27,6 +31,7 @@ final lockNavigator = GlobalKey<NavigatorState>();
 
 class _LockHostState extends ConsumerState<LockHost> {
   final _nested = lockNavigator;
+  final _hero = MaterialApp.createMaterialHeroController();
 
   @override
   void initState() {
@@ -50,11 +55,29 @@ class _LockHostState extends ConsumerState<LockHost> {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _nested.currentState?.maybePop();
       },
-      // Beside the app's navigator now, so it must not share its hero controller.
-      child: HeroControllerScope.none(
+      // Its own hero controller: this navigator sits beside the app's.
+      child: HeroControllerScope(
+        controller: _hero,
         child: Navigator(
           key: _nested,
-          onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const LockScreen()),
+          onGenerateRoute: (_) {
+            if (!lockIntroPending) return MaterialPageRoute(builder: (_) => const LockScreen());
+            lockIntroPending = false;
+            return MaterialPageRoute(
+              builder: (context) => LockIntro(
+                onDone: () {
+                  if (!context.mounted) return;
+                  Navigator.of(context).pushReplacement(
+                    PageRouteBuilder<void>(
+                      transitionDuration: const Duration(milliseconds: 700),
+                      pageBuilder: (_, _, _) => const LockScreen(),
+                      transitionsBuilder: (_, a, _, child) => FadeTransition(opacity: a, child: child),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
         ),
       ),
     );
@@ -99,9 +122,15 @@ class LockScreen extends ConsumerWidget {
                 child: Icon(failed ? Icons.lock_outline : Icons.favorite_border, size: 28, color: onboardAmber),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'AMRUTHAM',
-                style: TextStyle(color: Color(0xFF9FC0B2), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2),
+              const Hero(
+                tag: wordmarkHeroTag,
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Text(
+                    'Amrutham',
+                    style: TextStyle(color: Color(0xFF9FC0B2), fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.6),
+                  ),
+                ),
               ),
               const SizedBox(height: 6),
               Text(

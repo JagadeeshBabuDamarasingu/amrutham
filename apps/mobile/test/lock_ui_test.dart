@@ -11,6 +11,7 @@ import 'package:amrutham/lock/ask_lock.dart';
 import 'package:amrutham/lock/device_auth.dart';
 import 'package:amrutham/lock/lock_controller.dart';
 import 'package:amrutham/lock/lock_gate.dart';
+import 'package:amrutham/lock/lock_screen.dart' show lockIntroPending;
 import 'package:amrutham/lock/lock_settings.dart';
 import 'package:amrutham/model/ids.dart';
 import 'package:amrutham/model/medication.dart';
@@ -65,6 +66,29 @@ void main() {
     await _pumpGated(tester, results: [AuthResult.success], enabled: false);
     expect(find.text('secret records'), findsOneWidget);
     expect(find.text('Amrutham is locked'), findsNothing);
+  });
+
+  testWidgets('a cold start shows the opening picture for two seconds, then the lock screen', (tester) async {
+    lockIntroPending = true;
+    final store = MemoryOnboardingStore();
+    await store.putSetting(LockSettings.storeKey, const LockSettings(enabled: true).encode());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _overrides(store, FakeDeviceAuth(results: [AuthResult.failed])),
+        child: MaterialApp(
+          navigatorKey: appNavigatorKey,
+          builder: (context, child) => LockGate(child: child!),
+          home: const Scaffold(body: Text('secret records')),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Amrutham'), findsOneWidget);
+    expect(find.text('Not unlocked'), findsNothing);
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(find.text('Not unlocked'), findsOneWidget);
+    expect(lockIntroPending, isFalse);
   });
 
   testWidgets('a refused prompt leaves the records hidden, and Try again opens them', (tester) async {

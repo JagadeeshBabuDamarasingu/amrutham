@@ -10,6 +10,7 @@ import 'backup/auto_backup_scheduler.dart';
 import 'crash/crash_log.dart';
 import 'lock/app_navigator.dart';
 import 'lock/lock_gate.dart';
+import 'lock/lock_screen.dart' show lockIntroPending;
 import 'providers/app_providers.dart';
 import 'ui/app_shell.dart';
 import 'ui/app_style.dart';
@@ -26,6 +27,7 @@ Future<void> main() async {
   await _initNotifications();
   await AutoBackupScheduler.init();
 
+  lockIntroPending = true;
   runApp(
     ProviderScope(
       overrides: [
