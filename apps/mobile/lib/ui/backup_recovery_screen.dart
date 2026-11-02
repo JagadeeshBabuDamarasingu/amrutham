@@ -38,6 +38,29 @@ String ago(DateTime? when, [DateTime? now]) {
   return ((drive?.$1 != null ? 1 : 0) + (folder != null ? 1 : 0), times.lastOrNull);
 }
 
+/// Days after which a reminder is shown: for a folder copy that has not been
+/// refreshed, and for a readable copy that is still lying around.
+const reminderAfterDays = 7;
+
+int _daysSince(DateTime when, DateTime now) =>
+    DateTime(now.year, now.month, now.day).difference(DateTime(when.year, when.month, when.day)).inDays;
+
+/// "Your folder copy is 9 days old", or null when it is fresh or there is no folder.
+String? staleFolderNote(bool hasFolder, DateTime? last, [DateTime? now]) {
+  if (!hasFolder || last == null) return null;
+  final days = _daysSince(last, now ?? DateTime.now());
+  return days >= reminderAfterDays ? 'Your folder copy is $days days old. Back up again to refresh it.' : null;
+}
+
+/// "You saved a readable copy 9 days ago", or null when it is recent or none was made.
+String? readableCopyNote(DateTime? savedAt, [DateTime? now]) {
+  if (savedAt == null) return null;
+  final days = _daysSince(savedAt, now ?? DateTime.now());
+  return days >= reminderAfterDays
+      ? 'You saved a readable copy $days days ago. It is not protected. Delete it from wherever you put it if you no longer need it.'
+      : null;
+}
+
 /// Frame 16b: one place for everything about keeping records safe, with the
 /// state first (is it backed up, where, when).
 class BackupRecoveryScreen extends ConsumerWidget {
@@ -112,6 +135,17 @@ class BackupRecoveryScreen extends ConsumerWidget {
                 'Make your recovery code first. It asks when you add your first person.',
                 style: TextStyle(color: onboardMuted),
               ),
+            ),
+          if (staleFolderNote(folder != null, folderLast) case final note?)
+            _Reminder(note, action: 'Back up now', onAction: () => runBackup(context, ref)),
+          if (readableCopyNote(ref.watch(readableCopyAtProvider).valueOrNull) case final note?)
+            _Reminder(
+              note,
+              action: 'I deleted it',
+              onAction: () async {
+                await ref.read(onboardingStoreProvider).putSetting(readableCopyAtKey, null);
+                ref.invalidate(readableCopyAtProvider);
+              },
             ),
           const SectionLabel('Where backups go'),
           Card(
@@ -231,4 +265,26 @@ class BackupRecoveryScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _Reminder extends StatelessWidget {
+  const _Reminder(this.text, {required this.action, required this.onAction});
+
+  final String text;
+  final String action;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(top: 12),
+    padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+    decoration: BoxDecoration(color: const Color(0xFFFBEFD2), borderRadius: BorderRadius.circular(18)),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(text, style: const TextStyle(color: Color(0xFF4A3300), height: 1.4)),
+        Align(alignment: Alignment.centerRight, child: TextButton(onPressed: onAction, child: Text(action))),
+      ],
+    ),
+  );
 }

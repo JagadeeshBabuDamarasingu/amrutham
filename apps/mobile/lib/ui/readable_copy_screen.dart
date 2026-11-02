@@ -10,6 +10,15 @@ import '../model/ids.dart';
 import '../providers/app_providers.dart';
 import 'app_style.dart';
 
+/// When the last readable copy was shared. Kept only so the hub can remind
+/// the person to delete it; cleared when they say they did.
+const readableCopyAtKey = 'readable_copy_at';
+
+final readableCopyAtProvider = FutureProvider<DateTime?>((ref) async {
+  final v = await ref.watch(onboardingStoreProvider).setting(readableCopyAtKey);
+  return v == null ? null : DateTime.tryParse(v);
+});
+
 /// Last resort: plain files with no code, shared through the phone's own
 /// share sheet. The person chooses where they go and accepts the risk.
 class ReadableCopyScreen extends ConsumerStatefulWidget {
@@ -51,6 +60,8 @@ class _ReadableCopyScreenState extends ConsumerState<ReadableCopyScreen> {
         shared.add(XFile(f.path, mimeType: e.key.endsWith('.csv') ? 'text/csv' : 'text/plain'));
       }
       await SharePlus.instance.share(ShareParams(files: shared, subject: 'Amrutham readable copy'));
+      await ref.read(onboardingStoreProvider).putSetting(readableCopyAtKey, DateTime.now().toIso8601String());
+      ref.invalidate(readableCopyAtProvider);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -113,7 +124,7 @@ class _ReadableCopyScreenState extends ConsumerState<ReadableCopyScreen> {
           ),
           const SizedBox(height: 12),
           const Text(
-            "Your phone's share sheet opens next: Files, Drive, email or a USB drive. Delete the copy when you no longer need it.",
+            "Your phone's share sheet opens next: Files, Drive, email or a USB drive. We will remind you in a week to delete the copy.",
             textAlign: TextAlign.center,
             style: TextStyle(color: onboardMuted, fontSize: 12.5),
           ),
