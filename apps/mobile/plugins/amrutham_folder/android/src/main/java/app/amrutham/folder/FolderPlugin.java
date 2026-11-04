@@ -68,6 +68,12 @@ public class FolderPlugin
                 write(call.<String>argument("tree"), call.<String>argument("name"),
                         call.<byte[]>argument("bytes"), result);
                 break;
+            case "list":
+                list(call.<String>argument("tree"), result);
+                break;
+            case "read":
+                read(call.<String>argument("tree"), call.<String>argument("name"), result);
+                break;
             default:
                 result.notImplemented();
         }
@@ -129,6 +135,57 @@ public class FolderPlugin
                 main.post(() -> result.success(true));
             } catch (Exception e) {
                 main.post(() -> result.error("write_failed", e.getMessage(), null));
+            }
+        });
+    }
+
+    /** File names in the picked folder (not sub-folders). */
+    private void list(String tree, MethodChannel.Result result) {
+        executor.execute(() -> {
+            try {
+                ContentResolver resolver = context.getContentResolver();
+                Uri treeUri = Uri.parse(tree);
+                String dirId = DocumentsContract.getTreeDocumentId(treeUri);
+                Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, dirId);
+                String[] columns = {
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                    DocumentsContract.Document.COLUMN_MIME_TYPE,
+                };
+                java.util.ArrayList<String> names = new java.util.ArrayList<>();
+                try (Cursor cursor = resolver.query(children, columns, null, null, null)) {
+                    while (cursor != null && cursor.moveToNext()) {
+                        if (!DocumentsContract.Document.MIME_TYPE_DIR.equals(cursor.getString(1))) {
+                            names.add(cursor.getString(0));
+                        }
+                    }
+                }
+                main.post(() -> result.success(names));
+            } catch (Exception e) {
+                main.post(() -> result.error("list_failed", e.getMessage(), null));
+            }
+        });
+    }
+
+    /** The bytes of [name] in the picked folder. */
+    private void read(String tree, String name, MethodChannel.Result result) {
+        executor.execute(() -> {
+            try {
+                ContentResolver resolver = context.getContentResolver();
+                Uri treeUri = Uri.parse(tree);
+                String dirId = DocumentsContract.getTreeDocumentId(treeUri);
+                Uri target = findChild(resolver, treeUri, dirId, name);
+                if (target == null) throw new IllegalStateException("No file " + name);
+                java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+                try (java.io.InputStream in = resolver.openInputStream(target)) {
+                    if (in == null) throw new IllegalStateException("Could not open " + name);
+                    byte[] chunk = new byte[16384];
+                    int n;
+                    while ((n = in.read(chunk)) > 0) buf.write(chunk, 0, n);
+                }
+                byte[] bytes = buf.toByteArray();
+                main.post(() -> result.success(bytes));
+            } catch (Exception e) {
+                main.post(() -> result.error("read_failed", e.getMessage(), null));
             }
         });
     }

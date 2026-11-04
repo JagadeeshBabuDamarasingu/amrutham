@@ -9,6 +9,8 @@ import 'package:realm/realm.dart';
 
 import '../crypto/recovery_code.dart';
 import '../db/realm_schemas.dart';
+import '../sync/row_codec.dart';
+import '../sync/sync_journal.dart';
 
 /// Thrown when a backup can't be read: wrong code, damaged file, or not an
 /// Amrutham backup. The wording is safe to show.
@@ -92,6 +94,20 @@ class VaultBackup {
       'version': 1,
       'schemaVersion': schemaVersion,
       'createdAt': d(DateTime.now()),
+      ...tableRows(realm),
+      'records': records,
+      'receipts': receipts,
+      'medicinePhotos': medicinePhotos,
+    };
+  }
+
+  static String? _d(DateTime? v) => v?.toUtc().toIso8601String();
+
+  /// Every row of every table that holds only data (no files), as plain JSON.
+  /// Also what family sync compares between runs.
+  static Map<String, dynamic> tableRows(Realm realm) {
+    String? d(DateTime? v) => _d(v);
+    return {
       'people': [
         for (final x in realm.all<PersonRow>())
           {
@@ -181,9 +197,6 @@ class VaultBackup {
             'payee': x.payee, 'paidBy': x.paidBy,
           },
       ],
-      'records': records,
-      'receipts': receipts,
-      'medicinePhotos': medicinePhotos,
     };
   }
 
@@ -230,7 +243,6 @@ class VaultBackup {
     Map<String, dynamic> data,
   ) async {
     DateTime t(Object? v) => DateTime.parse(v as String).toLocal();
-    DateTime? to(Object? v) => v == null ? null : t(v);
     List<Map<String, dynamic>> list(String k) =>
         ((data[k] as List?) ?? const []).cast<Map<String, dynamic>>();
 
@@ -273,95 +285,10 @@ class VaultBackup {
         ..deleteAll<ExpenseRow>()
         ..deleteAll<RecordRow>();
 
-      for (final x in list('people')) {
-        realm.add(PersonRow(
-          x['id'] as String, x['displayName'] as String, x['relationship'] as String,
-          t(x['createdAt']),
-          givenName: x['givenName'] as String?, surname: x['surname'] as String?,
-          dateOfBirth: to(x['dateOfBirth']), sex: x['sex'] as String?,
-          bloodGroup: x['bloodGroup'] as String?,
-          pregnant: x['pregnant'] as bool? ?? false, pregnancyDue: to(x['pregnancyDue']),
-          isDeceased: x['isDeceased'] as bool? ?? false,
-          dateOfDeath: to(x['dateOfDeath']), causeOfDeath: x['causeOfDeath'] as String?,
-          emergencyContacts: [
-            for (final c in (x['emergencyContacts'] as List).cast<Map<String, dynamic>>())
-              EmergencyContactRow(c['name'] as String, c['phone'] as String,
-                  relationship: c['relationship'] as String?),
-          ],
-        ));
-      }
-      for (final x in list('familyHistory')) {
-        realm.add(FamilyHistoryEntryRow(
-          x['id'] as String, x['personId'] as String, x['relationship'] as String,
-          x['conditionText'] as String, x['certainty'] as String,
-          conditionCode: x['conditionCode'] as String?,
-          onsetAgeApprox: x['onsetAgeApprox'] as int?, outcome: x['outcome'] as String?,
-          notes: x['notes'] as String?,
-        ));
-      }
-      for (final x in list('allergies')) {
-        realm.add(AllergyRecordRow(
-          x['id'] as String, x['personId'] as String, x['substance'] as String,
-          x['reaction'] as String, x['certainty'] as String,
-          severity: x['severity'] as String?, notes: x['notes'] as String?,
-        ));
-      }
-      for (final x in list('courses')) {
-        realm.add(MedicationCourseRow(
-          x['id'] as String, x['personId'] as String, x['medicationName'] as String,
-          x['status'] as String, t(x['startDate']),
-          endDate: to(x['endDate']), prescriberName: x['prescriberName'] as String?,
-          reason: x['reason'] as String?,
-        ));
-      }
-      for (final x in list('phases')) {
-        realm.add(SchedulePhaseRow(
-          x['id'] as String, x['courseId'] as String, x['doseAmount'] as String,
-          x['frequency'] as int, x['period'] as int, x['periodUnit'] as String,
-          t(x['phaseStart']),
-          daysOfWeek: (x['daysOfWeek'] as List).cast<int>(),
-          timesOfDay: (x['timesOfDay'] as List).cast<String>(),
-          isPrn: x['isPrn'] as bool, prnReason: x['prnReason'] as String?,
-          prnMaxFrequency: x['prnMaxFrequency'] as String?, phaseEnd: to(x['phaseEnd']),
-          conflictGroupId: x['conflictGroupId'] as String?,
-        ));
-      }
-      for (final x in list('measurements')) {
-        realm.add(MeasurementRow(
-          x['id'] as String, x['personId'] as String, x['kind'] as String,
-          (x['value'] as num).toDouble(), t(x['measuredAt']),
-          value2: (x['value2'] as num?)?.toDouble(), note: x['note'] as String?,
-        ));
-      }
-      for (final x in list('history')) {
-        realm.add(HistoryEventRow(
-          x['id'] as String, x['personId'] as String, x['kind'] as String,
-          x['title'] as String, t(x['eventDate']),
-          provider: x['provider'] as String?, notes: x['notes'] as String?,
-        ));
-      }
-      for (final x in list('doseLogs')) {
-        realm.add(DoseLogRow(
-          x['id'] as String, x['personId'] as String, x['courseId'] as String,
-          t(x['scheduledAt']), x['status'] as String, t(x['loggedAt']),
-        ));
-      }
-      for (final x in list('careTeam')) {
-        realm.add(CareProviderRow(
-          x['id'] as String, x['kind'] as String, x['name'] as String,
-          x['isCurrent'] as bool,
-          specialty: x['specialty'] as String?, worksAt: x['worksAt'] as String?,
-          phone: x['phone'] as String?, location: x['location'] as String?,
-          personIds: (x['personIds'] as List).cast<String>(),
-        ));
-      }
-      for (final x in list('expenses')) {
-        realm.add(ExpenseRow(
-          x['id'] as String, x['personId'] as String, x['title'] as String,
-          x['amountPaise'] as int, x['category'] as String, t(x['spentOn']),
-          t(x['addedAt']),
-          payee: x['payee'] as String?, paidBy: x['paidBy'] as String?,
-        ));
+      for (final t in syncTables) {
+        for (final x in list(t)) {
+          realm.add(rowFromJson(t, x));
+        }
       }
       for (final x in list('records')) {
         realm.add(RecordRow(

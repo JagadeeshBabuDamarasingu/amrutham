@@ -7,6 +7,7 @@ import 'app_style.dart';
 import 'create_profile_screen.dart';
 import 'profile_detail_screen.dart';
 import 'expenses_screen.dart';
+import 'family_sync_screen.dart';
 import 'settings_screen.dart';
 
 class FamilyScreen extends ConsumerWidget {
@@ -61,6 +62,22 @@ class FamilyScreen extends ConsumerWidget {
                   style: const TextStyle(color: onboardMuted),
                 ),
                 const SizedBox(height: 16),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.devices_outlined),
+                    title: const Text('Family devices', style: TextStyle(fontWeight: FontWeight.w800)),
+                    subtitle: Text(
+                      ref.watch(syncSettingsProvider).valueOrNull?.ready == true
+                          ? 'Syncing with your family'
+                          : 'Keep every phone in the family the same',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const FamilySyncScreen()),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 if (list.isEmpty)
                   const Card(
                     child: Padding(

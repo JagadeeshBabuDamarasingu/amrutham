@@ -29,7 +29,8 @@ class FolderBlobStore implements BlobStore {
       : [];
 
   @override
-  Future<List<int>> read(String name) => File(p.join(dir.path, p.basename(name))).readAsBytes();
+  Future<List<int>> read(String name) =>
+      File(p.join(dir.path, p.basename(name))).readAsBytes();
 
   @override
   Future<void> write(String name, List<int> bytes) async {
@@ -55,8 +56,11 @@ class SyncException implements Exception {
 /// files (`<device>-<counter>`), so two phones can never overwrite each other;
 /// reading is "all files, merged".
 class SyncEngine {
-  SyncEngine({required this.store, required List<int> familyKey, required this.device})
-      : _key = SecretKey(familyKey);
+  SyncEngine({
+    required this.store,
+    required List<int> familyKey,
+    required this.device,
+  }) : _key = SecretKey(familyKey);
 
   final BlobStore store;
   final String device;
@@ -78,7 +82,10 @@ class SyncEngine {
   static final _algo = AesGcm.with256bits();
 
   Future<List<int>> _seal(Object json) async {
-    final box = await _algo.encrypt(utf8.encode(jsonEncode(json)), secretKey: _key);
+    final box = await _algo.encrypt(
+      utf8.encode(jsonEncode(json)),
+      secretKey: _key,
+    );
     return [...utf8.encode(_magic), ...box.concatenation()];
   }
 
@@ -90,7 +97,11 @@ class SyncEngine {
     }
     try {
       final plain = await _algo.decrypt(
-        SecretBox.fromConcatenation(bytes.sublist(head), nonceLength: 12, macLength: 16),
+        SecretBox.fromConcatenation(
+          bytes.sublist(head),
+          nonceLength: 12,
+          macLength: 16,
+        ),
         secretKey: _key,
       );
       return jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
@@ -105,16 +116,29 @@ class SyncEngine {
     var last = 0;
     for (final n in await store.list()) {
       if (n.startsWith('$device-')) {
-        last = max(last, int.tryParse(n.substring(device.length + 1, n.length - _ext.length)) ?? 0);
+        last = max(
+          last,
+          int.tryParse(
+                n.substring(device.length + 1, n.length - _ext.length),
+              ) ??
+              0,
+        );
       }
     }
     final name = '$device-${(last + 1).toString().padLeft(6, '0')}$_ext';
-    await store.write(name, await _seal({'changes': [for (final c in changes) c.toJson()]}));
+    await store.write(
+      name,
+      await _seal({
+        'changes': [for (final c in changes) c.toJson()],
+      }),
+    );
   }
 
   /// Every change in shards not in [read]. Shards that are damaged or sealed
   /// with another family's key are skipped and named in [bad].
-  Future<({List<Change> changes, Set<String> read, List<String> bad})> pull(Set<String> read) async {
+  Future<({List<Change> changes, Set<String> read, List<String> bad})> pull(
+    Set<String> read,
+  ) async {
     final changes = <Change>[];
     final names = <String>{};
     final bad = <String>[];
@@ -122,7 +146,11 @@ class SyncEngine {
       if (read.contains(n)) continue;
       try {
         final j = await _open(await store.read(n));
-        changes.addAll((j['changes'] as List).cast<Map<String, dynamic>>().map(Change.fromJson));
+        changes.addAll(
+          (j['changes'] as List).cast<Map<String, dynamic>>().map(
+            Change.fromJson,
+          ),
+        );
         names.add(n);
       } on SyncException {
         bad.add(n);

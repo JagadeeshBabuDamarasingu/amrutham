@@ -10,8 +10,16 @@ library;
 /// yet (they are files, not rows).
 // ponytail: files sync later as content-addressed blobs; rows first.
 const syncTables = [
-  'people', 'familyHistory', 'allergies', 'courses', 'phases', 'measurements',
-  'history', 'doseLogs', 'careTeam', 'expenses',
+  'people',
+  'familyHistory',
+  'allergies',
+  'courses',
+  'phases',
+  'measurements',
+  'history',
+  'doseLogs',
+  'careTeam',
+  'expenses',
 ];
 
 /// Tables where two phones editing the same row at once must never be settled
@@ -27,12 +35,14 @@ String stampOf(int millis, String device) =>
 /// changes call [seen], so a phone with a slow clock still stamps after them.
 class Stamper {
   Stamper(this.device, {int Function()? now, int last = 0})
-      : _now = now ?? (() => DateTime.now().millisecondsSinceEpoch),
-        _last = last;
+    : _now = now ?? (() => DateTime.now().millisecondsSinceEpoch),
+      _last = last;
 
   final String device;
   final int Function() _now;
   int _last;
+
+  int get last => _last;
 
   String next() {
     final t = _now();
@@ -67,58 +77,80 @@ class Change {
   String get key => '$table/$id';
 
   Map<String, dynamic> toJson() => {
-        't': table, 'id': id, 'at': at, 'base': base, 'f': fields,
-      };
+    't': table,
+    'id': id,
+    'at': at,
+    'base': base,
+    'f': fields,
+  };
 
   factory Change.fromJson(Map<String, dynamic> j) => Change(
-        table: j['t'] as String,
-        id: j['id'] as String,
-        at: j['at'] as String,
-        base: j['base'] as String?,
-        fields: (j['f'] as Map?)?.cast<String, dynamic>(),
-      );
+    table: j['t'] as String,
+    id: j['id'] as String,
+    at: j['at'] as String,
+    base: j['base'] as String?,
+    fields: (j['f'] as Map?)?.cast<String, dynamic>(),
+  );
 }
 
 /// table -> id -> row, taken from a backup snapshot ([syncTables] only).
 typedef Rows = Map<String, Map<String, Map<String, dynamic>>>;
 
 Rows rowsOf(Map<String, dynamic> snapshot) => {
-      for (final t in syncTables)
-        t: {
-          for (final r in ((snapshot[t] as List?) ?? const []).cast<Map<String, dynamic>>())
-            r['id'] as String: r,
-        },
-    };
+  for (final t in syncTables)
+    t: {
+      for (final r
+          in ((snapshot[t] as List?) ?? const []).cast<Map<String, dynamic>>())
+        r['id'] as String: r,
+    },
+};
 
 bool _same(Object? a, Object? b) {
   if (a is Map && b is Map) {
-    return a.length == b.length && a.keys.every((k) => b.containsKey(k) && _same(a[k], b[k]));
+    return a.length == b.length &&
+        a.keys.every((k) => b.containsKey(k) && _same(a[k], b[k]));
   }
   if (a is List && b is List) {
-    return a.length == b.length && [for (var i = 0; i < a.length; i++) _same(a[i], b[i])].every((x) => x);
+    return a.length == b.length &&
+        [for (var i = 0; i < a.length; i++) _same(a[i], b[i])].every((x) => x);
   }
   return a == b;
 }
 
 /// What the owner of this phone did between [before] and [after].
-List<Change> diffRows(Rows before, Rows after, Map<String, String> versions, Stamper stamper) {
+List<Change> diffRows(
+  Rows before,
+  Rows after,
+  Map<String, String> versions,
+  Stamper stamper,
+) {
   final out = <Change>[];
   for (final t in syncTables) {
     final was = before[t] ?? const {};
     final now = after[t] ?? const {};
     for (final e in now.entries) {
       if (was[e.key] != null && _same(was[e.key], e.value)) continue;
-      out.add(Change(
-        table: t, id: e.key, at: stamper.next(),
-        base: versions['$t/${e.key}'], fields: e.value,
-      ));
+      out.add(
+        Change(
+          table: t,
+          id: e.key,
+          at: stamper.next(),
+          base: versions['$t/${e.key}'],
+          fields: e.value,
+        ),
+      );
     }
     for (final id in was.keys) {
       if (now.containsKey(id)) continue;
-      out.add(Change(
-        table: t, id: id, at: stamper.next(),
-        base: versions['$t/$id'], fields: null,
-      ));
+      out.add(
+        Change(
+          table: t,
+          id: id,
+          at: stamper.next(),
+          base: versions['$t/$id'],
+          fields: null,
+        ),
+      );
     }
   }
   return out;
@@ -138,9 +170,9 @@ class SyncConflict {
 /// changes have been applied (so reading a shard twice is harmless).
 class SyncState {
   SyncState({Rows? rows, Map<String, String>? versions, Set<String>? applied})
-      : rows = rows ?? {for (final t in syncTables) t: {}},
-        versions = versions ?? {},
-        applied = applied ?? {};
+    : rows = rows ?? {for (final t in syncTables) t: {}},
+      versions = versions ?? {},
+      applied = applied ?? {};
 
   final Rows rows;
   final Map<String, String> versions;
