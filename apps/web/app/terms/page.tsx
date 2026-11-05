@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 // Same text as apps/mobile/lib/about/legal_text.dart. Change both together.
-const updated = "1 November 2026";
+const updated = "5 November 2026";
 
 export default function Terms() {
 	return (

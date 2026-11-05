@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 // Same text as apps/mobile/lib/about/legal_text.dart. Change both together.
-const updated = "1 November 2026";
+const updated = "5 November 2026";
 
 export default function Privacy() {
 	return (
@@ -36,6 +36,10 @@ export default function Privacy() {
 			<p>Both are off until you turn them on. When on, the app keeps a small copy of only the details you chose to show (for example a name, blood group, allergies and phone numbers to dial) in a file on your phone, so the home screen or notification can display it.</p>
 			<p>That copy is not encrypted like the database. Anyone who can see your home screen or lock screen can read what is shown. The copy is left out of Android&apos;s cloud backup and device transfer, and it is deleted when you turn the feature off.</p>
 
+			<h2>Medicine alarms and photos</h2>
+			<p>Alarms are set on your phone by the phone&apos;s own alarm system. They work with no internet. When one rings it can open a full-screen alarm over the lock screen, so an elder can answer it without unlocking the phone. That screen shows only the medicine name, dose and the photo you chose.</p>
+			<p>A photo of a medicine (so that someone can recognise the tablet) is saved on your phone with your other records, and is included in your encrypted backup. It is never uploaded anywhere by the app.</p>
+
 			<h2>Backups</h2>
 			<p>A backup is a single file, encrypted with a key made from your recovery code before it leaves the database. You choose where it goes:</p>
 			<ul>
@@ -46,11 +50,11 @@ export default function Privacy() {
 
 			<h2>What the app can ask your phone for</h2>
 			<ul>
-				<li>Notifications and alarms, to remind you of medicine doses and to show the lock-screen notice.</li>
-				<li>Camera, photos and files, only when you choose to add a record.</li>
+				<li>Notifications, exact alarms and full-screen alerts, to ring medicine reminders on time and show them over the lock screen. Reminders work without the internet.</li>
+				<li>Camera, photos and files, only when you choose to add a record or a medicine photo.</li>
 				<li>The phone dialer, only when you tap a call button. The call is made by your phone, not by the app.</li>
 				<li>The share sheet, only when you choose to share or export something. What you share is sent by the app you pick, not by Amrutham.</li>
-				<li>Fingerprint, face or screen lock, only to unlock the app if you turn the app lock on.</li>
+				<li>Fingerprint, face or screen lock, only to unlock the app if you turn the app lock on. With the app lock on, Amrutham also hides its preview in the recent-apps list. Alarms are never blocked by the lock.</li>
 			</ul>
 
 			<h2>The internet</h2>

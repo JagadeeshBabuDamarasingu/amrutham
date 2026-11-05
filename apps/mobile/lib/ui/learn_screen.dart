@@ -316,7 +316,7 @@ class ReviewPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, bg) = guide.isDraft
-        ? ('Draft · not yet reviewed', const Color(0xFFFAEFD0))
+        ? ('Early guide · review in progress', const Color(0xFFFAEFD0))
         : guide.reviewOverdue
         ? ('Review overdue', const Color(0xFFFAEFD0))
         : ('Reviewed ${_monthYear(guide.reviewedOn!)}', const Color(0xFFD5E4DC));
@@ -820,7 +820,7 @@ class AboutContentScreen extends StatelessWidget {
             child: Column(
               children: [
                 item(Icons.check, onboardInk, 'Review dates on everything',
-                    'Every guide shows when it was reviewed and when it is next due. Guides not yet reviewed say Draft. Overdue ones are flagged.'),
+                    'Every guide shows when it was reviewed and when it is next due. Guides still waiting for a doctor\'s review say Early guide. Overdue ones are flagged.'),
                 item(Icons.check, onboardInk, 'Concepts inside, facts by link',
                     'Guides explain how things work. Current amounts, schedules and rules are always a link to the official site.'),
                 item(Icons.check, onboardInk, 'Links are checked each release',

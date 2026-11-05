@@ -1,6 +1,6 @@
 /// What the About screen says about the app. The version must match
 /// pubspec.yaml: test/about_test.dart fails if they drift apart.
-const appVersion = '1.0.0';
+const appVersion = '0.9.0';
 const appBuild = '1';
 
 const sourceUrl = 'https://github.com/JagadeeshBabuDamarasingu/amrutham';
